@@ -10,7 +10,7 @@
 
 #include <vector>
 
-#include "../src/lib/Particle.h"
+#include "Particle.h"
 
 
 
@@ -18,6 +18,7 @@ class Molecule {
 
 protected:
 	double Ekin;
+	double Epot;
 
 public:
 	unsigned NumberOfMonomers;
@@ -26,11 +27,16 @@ public:
 	Molecule(unsigned);
 	Molecule(unsigned, double);
 
-	void initialize_straight_chain();
+	void initialize_straight_chain(double);
 	double calculate_Ekin();
+
+
+	std::ostream& print(std::ostream& os) const;
+
 
 };
 
+std::ostream& operator <<(std::ostream& os, const Molecule& some);
 
 
 

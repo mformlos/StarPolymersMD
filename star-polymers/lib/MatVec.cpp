@@ -11,6 +11,13 @@
 	MatVec::MatVec() : Vec{} {
 	};
 
+	MatVec::MatVec(std::initializer_list<double> elements) : MatVec { } {
+		auto el_begin = elements.begin(), el_end = elements.end();
+		auto vec_begin = Vec.begin(), vec_end = Vec.end();
+		for (; el_begin != el_end && vec_begin != vec_end; ++el_begin, ++vec_begin) {
+			*vec_begin = *el_begin;
+		}
+	}
 	MatVec::MatVec(const MatVec& other) : Vec{} {
 		for (unsigned i = 0; i < 3; i++) {
 			Vec[i] = other.Vec[i];
@@ -126,6 +133,8 @@
 		os << el << " ";
 		}
 		return os;
-	}
+}
 
-
+std::ostream& operator <<(std::ostream& os, const MatVec& some) {
+	return some.print(os);
+}

@@ -7,23 +7,15 @@
 //============================================================================
 
 #include <iostream>
-#include "MatVec.h"
+#include <forward_list>
+#include "Box.h"
 
 int main(void) {
 
-	MatVec a{};
-	MatVec b{};
+	Box box(10., 10., 5., 1.);
+	box.add_chain(5, 1., 1.01);
 
-	a[0] = 1;
-	a[1] = 2;
-	a[2] = 3;
-
-	b[0] = b[1] = b[2] = 2;
-
-	std::cout << "a : " << std::endl;
-	std::cout << "b : " << std::endl;
-
-	std::cout << "Skalarprodukt a*b = " << a*b << std::endl;
+	box.print_molecules(std::cout);
 
 
 }

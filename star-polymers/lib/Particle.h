@@ -9,9 +9,8 @@
 #define PARTICLE_H_
 
 #include <iostream>
-
-
-using namespace std;
+#include <forward_list>
+#include "MatVec.h"
 
 class Particle {
 
@@ -19,20 +18,27 @@ class Particle {
   //members
   MatVec Position;
   MatVec Velocity;
+  MatVec Force;
   double Mass;
   bool AmphiType;
   bool Ghost;
+  std::forward_list<Particle*> Neighbors;
+
 
   //Constructor
   Particle();
   Particle(double, bool, bool);
   Particle(MatVec, MatVec, double, bool, bool);
 
+  void set_neighbor(Particle &neighbor);
+
+  void print_neighbor() {
+	  for (auto& m : Neighbors) {
+		  std::cout << m->Position << std::endl;
+	  }
+  }
+
   double mass() const;
 
 };
-
-
-
-
 #endif /* PARTICLE_H_ */

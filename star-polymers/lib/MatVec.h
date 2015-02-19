@@ -19,6 +19,7 @@ private:
 
 public:
 	MatVec();                      // standard Initialisierung
+	MatVec(std::initializer_list<double> elements); //elementweise Initialisierung
 	MatVec(const MatVec& other);   // Copy Constructor
 	MatVec(MatVec&& other);        // Move Constructor
 
@@ -54,12 +55,15 @@ public:
 
 	std::ostream& print(std::ostream& os) const;
 
+	template<class UnaryFunction>
+	UnaryFunction operator()(UnaryFunction func) {
+		for (auto& el : Vec) func( el );
+		return func;
+	}
 
 };
 
-std::ostream& operator << (std::ostream& os, const MatVec& some) {
-	return some.print(os);
-}
+std::ostream& operator <<(std::ostream& os, const MatVec& some);
 
 
 #endif /* SRC_LIB_MATVEC_H_ */
