@@ -16,6 +16,6 @@ int main(void) {
 	box.add_chain(5, 1., 1.01);
 
 	box.print_molecules(std::cout);
-
+	std::cout << "git test";
 
 }
