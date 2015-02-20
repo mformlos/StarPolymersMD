@@ -10,6 +10,7 @@
 
 #include <array>
 #include <ostream>
+#include <limits>
 #include <initializer_list>
 #include <cmath>
 
@@ -18,10 +19,11 @@ private:
 	std::array<double, 3> Vec;
 
 public:
-	MatVec();                      // standard Initialisierung
+	MatVec() = default;                      // standard Initialisierung
 	MatVec(std::initializer_list<double> elements); //elementweise Initialisierung
-	MatVec(const MatVec& other);   // Copy Constructor
-	MatVec(MatVec&& other);        // Move Constructor
+	MatVec(const MatVec& other) = default;   // Copy Constructor
+	MatVec(MatVec&& other) = default;        // Move Constructor
+	~MatVec() = default;
 
 	auto begin() -> decltype(Vec.begin()); // Iterators
 	auto end() -> decltype(Vec.end());
@@ -29,8 +31,12 @@ public:
 	double& operator [](int i);    // Elementweiser Zugriff
 	const double& operator [](int i) const;
 
-	MatVec& operator =(const MatVec& other);  // copy assignment
-	MatVec& operator =(MatVec&& other);       // move assignment
+	MatVec& operator =(const MatVec& other) = default;  // copy assignment
+	MatVec& operator =(MatVec&& other) = default;       // move assignment
+
+	friend void swap(MatVec& meca, MatVec& mecb) {
+		std::swap(meca.Vec, mecb.Vec);
+	}
 
 	bool operator ==(const MatVec& other) const;
 	bool operator !=(const MatVec& other) const;
@@ -46,6 +52,8 @@ public:
 	MatVec operator /(const double& scale) const;
 	MatVec operator -();                      // Negativer Vektor
 
+	MatVec operator /(const std::array<double,3>& other) const; //elementweise division
+	MatVec operator %(const std::array<double,3>& other) const; //elementweise multiplikation
 
 
 	double operator *(const MatVec& other) const;   // Skalarprodukt
@@ -65,5 +73,10 @@ public:
 
 std::ostream& operator <<(std::ostream& os, const MatVec& some);
 
+MatVec floor(MatVec mec);
+
+MatVec round(MatVec mec);
+
+double min(MatVec mec);
 
 #endif /* SRC_LIB_MATVEC_H_ */

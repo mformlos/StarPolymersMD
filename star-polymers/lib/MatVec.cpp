@@ -8,8 +8,8 @@
 		return Vec.end();
 	}
 
-	MatVec::MatVec() : Vec{} {
-	};
+	/*MatVec::MatVec() : Vec{} {
+	};*/
 
 	MatVec::MatVec(std::initializer_list<double> elements) : MatVec { } {
 		auto el_begin = elements.begin(), el_end = elements.end();
@@ -18,7 +18,7 @@
 			*vec_begin = *el_begin;
 		}
 	}
-	MatVec::MatVec(const MatVec& other) : Vec{} {
+	/*MatVec::MatVec(const MatVec& other) : Vec{} {
 		for (unsigned i = 0; i < 3; i++) {
 			Vec[i] = other.Vec[i];
 		}
@@ -26,7 +26,7 @@
 
 	MatVec::MatVec(MatVec&& other) : Vec{} {
 		Vec.swap(other.Vec);
-	}
+	}*/
 
 	double& MatVec::operator [](int i) {
 		return Vec[i];
@@ -37,7 +37,7 @@
 	}
 
 
-	MatVec& MatVec::operator =(const MatVec& other) {
+	/*MatVec& MatVec::operator =(const MatVec& other) {
 		Vec = other.Vec;
 		return *this;
 	}
@@ -45,7 +45,7 @@
 	MatVec& MatVec::operator =(MatVec&& other) {
 		Vec.swap(other.Vec);
 		return *this;
-	}
+	}*/
 
 	bool MatVec::operator ==(const MatVec& other) const {
 		return Vec == other.Vec;
@@ -116,6 +116,23 @@
 		return result;
 	}
 
+	MatVec MatVec::operator /(const std::array<double,3>& other) const {
+		MatVec result {};
+		for (unsigned i = 0; i < 3; ++i) {
+			if (other[i] == double{})
+				result[i] = std::numeric_limits<double>::max();
+			else result[i] = Vec[i] / other[i];
+		}
+		return result;
+	}
+
+	MatVec MatVec::operator %(const std::array<double,3>& other) const{
+		MatVec result {};
+		for (unsigned i = 0; i < 3; ++i)
+			result[i] = Vec[i] * other[i];
+		return result;
+	}
+
 	double MatVec::norm2() {
 		double result{};
 		for (unsigned i = 0; i < 3; i++) {
@@ -137,4 +154,24 @@
 
 std::ostream& operator <<(std::ostream& os, const MatVec& some) {
 	return some.print(os);
+}
+
+
+MatVec floor(MatVec mec) {
+	mec([&] (double& el) {el = floor(el); });
+	return mec;
+}
+
+
+MatVec round(MatVec mec) {
+	mec([&] (double& el) {el = round(el); });
+	return mec;
+}
+
+double min(MatVec mec) {
+	double result {mec[0]};
+	for (unsigned i = 1; i < 3; i++) {
+		result = !(mec[i]<result)?result:mec[i];
+	}
+	return result;
 }

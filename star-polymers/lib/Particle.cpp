@@ -1,14 +1,5 @@
 #include "Particle.h"
 
-Particle::Particle() :
-  Position { },
-  Velocity { },
-  Force { },
-  Mass { 0. },
-  AmphiType { },
-  Ghost { },
-  Neighbors { } {}
-
 Particle::Particle(double aMass, bool aAmphiType, bool aGhost) :
     Position { },
     Velocity { },
@@ -27,7 +18,8 @@ Particle::Particle(MatVec aPosition, MatVec aVelocity, double aMass, bool aAmphi
   Ghost { aGhost },
   Neighbors { } {}
 
-void Particle::set_neighbor(Particle &neighbor) {
+
+void Particle::set_neighbor(Particle& neighbor) {
 	Neighbors.push_front(&neighbor);
 }
 

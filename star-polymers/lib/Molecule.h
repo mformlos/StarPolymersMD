@@ -18,18 +18,20 @@ class Molecule {
 
 protected:
 	double Ekin;
-	double Epot;
 
 public:
+	double Epot;
 	unsigned NumberOfMonomers;
 	std::vector<Particle> Monomers;
 
 	Molecule(unsigned);
 	Molecule(unsigned, double);
 
+	Particle& operator [](int i);    // Elementweiser Zugriff
+	const Particle& operator [](int i) const;
+
 	void initialize_straight_chain(double);
 	double calculate_Ekin();
-
 
 	std::ostream& print(std::ostream& os) const;
 

@@ -5,20 +5,25 @@ Molecule::Molecule(unsigned N) :
 	Epot { },
 	NumberOfMonomers { N }
 	{
-		for ( unsigned i = 0 ; i < N ; i++ ) {
-			Monomers.push_back(Particle());
+		Monomers.reserve(N);
 	}
-}
 
 Molecule::Molecule(unsigned N, double mass) :
 		Ekin { },
 		Epot { },
 		NumberOfMonomers { N }
 		{
+			Monomers.reserve(N);
 			for ( unsigned i = 0 ; i < N ; i++ ) {
-			Monomers.push_back(Particle(mass, 0, 0));
+				//Particle newp(mass, 0, 0);
+				//Monomers[i] = newp;
+			    Monomers.push_back(Particle(mass, 0, 0));
 			}
 		}
+
+Particle& Molecule::operator [](int i) {return Monomers[i];}
+
+const Particle& Molecule::operator [](int i) const {return Monomers[i];}
 
 double Molecule::calculate_Ekin() {
 	Ekin = 0.0;
@@ -31,18 +36,21 @@ double Molecule::calculate_Ekin() {
 
 void Molecule::initialize_straight_chain(double bondLength) {
 	MatVec tempPos{};
-	tempPos[0] = 0.0 - bondLength*int(NumberOfMonomers/2.);
 	for (unsigned i = 0; i < NumberOfMonomers; i++) {
 		Monomers[i].Position = tempPos;
-		if (i != 0) Monomers[i].set_neighbor(Monomers[i-1]);
-		if (i != (NumberOfMonomers - 1)) Monomers[i].set_neighbor(Monomers[i+1]);
+		if (i != 0) {
+			Monomers[i].set_neighbor(Monomers[i-1]);
+		}
+		if (i != (NumberOfMonomers - 1)) {
+ 			Monomers[i].set_neighbor(Monomers[i+1]);
+		}
 		tempPos[0] += bondLength;
 	}
 }
 
 std::ostream& Molecule::print(std::ostream& os) const {
-	for (auto& m : Monomers) {
-		os << m.Position <<" ; " << m.Velocity << '\n';
+	for (unsigned i = 0; i < NumberOfMonomers; i++) {
+		os << Monomers[i].Position <<" ; " << Monomers[i].Velocity << '\n';
 	}
 	return os;
 }

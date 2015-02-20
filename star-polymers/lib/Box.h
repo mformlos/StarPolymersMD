@@ -8,11 +8,13 @@
 #ifndef LIB_BOX_H_
 #define LIB_BOX_H_
 
+#include <iostream>
 #include <array>
 #include <vector>
 #include <forward_list>
 #include "Molecule.h"
 #include "MatVec.h"
+#include "Potentials.h"
 
 class Box {
 protected:
@@ -32,7 +34,11 @@ public:
 
 	void add_chain(unsigned N, double mass, double bondLength);
 
-
+	MatVec& wrap (MatVec& pos);
+	MatVec wrap (MatVec&& pos);
+	void wrap(Particle& part);
+	void wrap(Molecule& mol);
+	void wrap();
 	void propagate(double dt);
 
 	void calculate_forces();

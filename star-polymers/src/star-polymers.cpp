@@ -17,5 +17,5 @@ int main(void) {
 
 	box.print_molecules(std::cout);
 	std::cout << "git test";
-
+	box.calculate_forces();
 }
