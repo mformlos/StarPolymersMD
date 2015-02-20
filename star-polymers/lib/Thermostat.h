@@ -1,0 +1,23 @@
+#ifndef LIB_THERMOSTAT_H_
+#define LIB_THERMOSTAT_H_
+
+#include <string>
+#include "Box.h"
+
+class Thermostat {
+protected:
+	Box& SimBox;
+	double DeltaT;
+public:
+	Thermostat() = default;
+	Thermostat(Box& box, double dt);
+
+	double dtime() const;
+	virtual void dtime(double new_dtime);
+	virtual void update_temp() = 0; // für mögliche Erwärmung
+	virtual void propagate() = 0;
+	virtual std::string name() const = 0;
+	virtual std::string info() const = 0;
+};
+
+#endif
