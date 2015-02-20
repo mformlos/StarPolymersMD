@@ -28,20 +28,37 @@ inline void Box::wrap(Molecule& mol) {
 	for (auto& mono : mol.Monomers) wrap(mono);
 }
 
-inline void Box::wrap() {
+void Box::wrap() {
 	for (auto& mol : Molecules) wrap(mol);
+}
+
+MatVec Box::relative_position(Particle& one, Particle& two) {
+	MatVec result { };
+	result = two.Position - one.Position;
+	result -= round(result/Size) % Size;
+	return result;
 }
 
 void Box::add_chain(unsigned N, double mass, double bondLength) {
 	Molecules.push_back(Molecule{N, mass});
 	Molecules.back().initialize_straight_chain(bondLength);
 	wrap(Molecules.back());
+	calculate_forces();
 }
 
 std::ostream& Box::print_molecules(std::ostream& os) const {
 	for (auto& mol : Molecules) {
 		os << mol << std::endl;
 	}
+	return os;
+}
+
+std::ostream& Box::print_Epot(std::ostream& os) const {
+	double PotentialEnergy { };
+	for (auto& mol : Molecules) {
+		PotentialEnergy += mol.Epot;
+	}
+	os << PotentialEnergy << std::endl;
 	return os;
 }
 
@@ -52,13 +69,12 @@ void Box::calculate_forces() {
 	MatVec force { };
 	for (auto& mol : Molecules) {
 		mol.Epot = 0.0;
+		for (auto& mono : mol.Monomers) mono.Force *= 0.0;
 		for (unsigned i = 0; i < mol.Monomers.size(); i++) {
-			mol[i].Force *= 0.0;
 			for (unsigned j = i + 1; j < mol.Monomers.size(); j++) {
-				distance = mol[i].Position - mol[j].Position;
-				wrap(distance);
+				distance = relative_position(mol[i], mol[j]);
 				radius2 = distance*distance;
-				if (mol[i].AmphiType == 1 && mol[i].AmphiType == 1) { // BB Type
+				if (mol[i].AmphiType == 1 && mol[j].AmphiType == 1) { // BB Type
 					mol.Epot += TypeBB_Potential(radius2, 1.0);
 					force_abs = TypeBB_Force(radius2, 1.0);
 					force = distance*force_abs;
@@ -85,4 +101,5 @@ void Box::calculate_forces() {
 		}
 	}
 }
+
 

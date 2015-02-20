@@ -50,7 +50,7 @@ void Molecule::initialize_straight_chain(double bondLength) {
 
 std::ostream& Molecule::print(std::ostream& os) const {
 	for (unsigned i = 0; i < NumberOfMonomers; i++) {
-		os << Monomers[i].Position <<" ; " << Monomers[i].Velocity << '\n';
+		os << Monomers[i].Position <<" ; " << Monomers[i].Velocity << " ; " << Monomers[i].Force << '\n';
 	}
 	return os;
 }

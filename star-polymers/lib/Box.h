@@ -16,7 +16,10 @@
 #include "MatVec.h"
 #include "Potentials.h"
 
+//class Thermostat;
+
 class Box {
+	friend class Thermostat_None;
 protected:
 	double SystemTime;
 	double Temperature;
@@ -39,12 +42,15 @@ public:
 	void wrap(Particle& part);
 	void wrap(Molecule& mol);
 	void wrap();
+
+	MatVec relative_position(Particle& one, Particle& two);
+
 	void propagate(double dt);
 
 	void calculate_forces();
 
 	std::ostream& print_molecules(std::ostream& os) const;
-
+	std::ostream& print_Epot(std::ostream& os) const;
 	// outputs
 };
 
