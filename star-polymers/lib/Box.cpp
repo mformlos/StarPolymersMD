@@ -56,18 +56,28 @@ std::ostream& Box::print_molecules(std::ostream& os) const {
 std::ostream& Box::print_Epot(std::ostream& os) const {
 	double PotentialEnergy { };
 	for (auto& mol : Molecules) {
-		PotentialEnergy += mol.Epot;
+		PotentialEnergy += mol.Epot/mol.NumberOfMonomers;
 	}
-	os << PotentialEnergy << std::endl;
+	os << PotentialEnergy<< " ";
 	return os;
 }
 
 std::ostream& Box::print_Ekin(std::ostream& os) {
 	double KineticEnergy { };
 	for (auto& mol : Molecules) {
-		KineticEnergy += mol.calculate_Ekin();
+		KineticEnergy += mol.calculate_Ekin()/mol.NumberOfMonomers;
 	}
-	os << KineticEnergy << std::endl;
+	os << KineticEnergy << " ";
+	return os;
+}
+
+std::ostream& Box::print_Temperature(std::ostream& os) {
+	double Temperature { };
+	for (auto& mol : Molecules) {
+		Temperature += mol.calculate_Ekin()/mol.NumberOfMonomers;
+	}
+	Temperature *= 2./3.;
+	os << Temperature << " ";
 	return os;
 }
 

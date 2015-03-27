@@ -53,6 +53,7 @@ public:
 	std::ostream& print_molecules(std::ostream& os) const;
 	std::ostream& print_Epot(std::ostream& os) const;
 	std::ostream& print_Ekin(std::ostream& os);
+	std::ostream& print_Temperature(std::ostream& os);
 	// outputs
 };
 

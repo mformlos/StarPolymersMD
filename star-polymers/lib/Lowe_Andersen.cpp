@@ -29,12 +29,12 @@ void Lowe_Andersen::collide(Particle& one, Particle& two) {
 	MatVec unit_sep = SimBox.relative_position(one, two);
 	double dist = unit_sep.norm();
 	if (dist < InteractionRadius) {
-		unit_sep /= unit_sep.norm();
-		double reduced_mass = one.Mass*two.Mass/(one.Mass + two.Mass);
+		unit_sep /= dist;
+		double reduced_mass = (one.Mass == two.Mass) ? 0.5 : one.Mass*two.Mass/(one.Mass + two.Mass);
 		double sigma = sqrt(TargetTemperature/reduced_mass);
 		double therm_v = Rand::real_normal(0, sigma);
 		MatVec velocity_diff = two.Velocity - one.Velocity;
-		MatVec dv = unit_sep*(therm_v - velocity_diff*unit_sep);
+		MatVec dv = unit_sep*(therm_v + velocity_diff*unit_sep);
 		one.Velocity += dv*(reduced_mass/one.Mass);
 		two.Velocity -= dv*(reduced_mass/two.Mass);
 	}
@@ -51,8 +51,8 @@ void Lowe_Andersen::propagate() {
 
 	for (unsigned i = 0; i < SimBox.Molecules.size(); i++) {
 		for (unsigned j = 0; j < SimBox.Molecules[i].Monomers.size(); j++) {
-			if (NuDt < Rand::real_uniform()) continue;
 			for (unsigned l = j+1; l < SimBox.Molecules[i].Monomers.size(); l++) {
+				if (NuDt < Rand::real_uniform()) continue;
 				std::cout << j << " " << l << std::endl;
 				collide(SimBox.Molecules[i].Monomers[j], SimBox.Molecules[i].Monomers[l]);
 			}
@@ -64,7 +64,7 @@ void Lowe_Andersen::propagate() {
 			}
 		}
 	}
-
+	SimBox.wrap();
 	SimBox.calculate_forces();
 
 	for (auto& mol : SimBox.Molecules) {
