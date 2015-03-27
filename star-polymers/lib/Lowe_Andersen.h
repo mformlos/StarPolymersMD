@@ -14,12 +14,12 @@ class Lowe_Andersen : public Thermostat {
 private:
 	double TargetTemperature;
 	double DeltaTHalf;
-	double Nu, NuDt, Sigma;
+	double Nu, NuDt, InteractionRadius;
 	static const std::string Name;
 public:
 	double time;
 
-	Lowe_Andersen(Box& box, double dt, double temp, double nu);
+	Lowe_Andersen(Box& box, double dt, double temp, double nu, double r);
 
 	void dtime(double dt);
 	void update_temp();

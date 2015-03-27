@@ -39,9 +39,9 @@ MatVec Box::relative_position(Particle& one, Particle& two) {
 	return result;
 }
 
-void Box::add_chain(unsigned N, double mass, double bondLength) {
+void Box::add_chain(unsigned N, double mass, double bondLength, double temperature) {
 	Molecules.push_back(Molecule{N, mass});
-	Molecules.back().initialize_straight_chain(bondLength);
+	Molecules.back().initialize_straight_chain(bondLength, temperature);
 	wrap(Molecules.back());
 	calculate_forces();
 }
@@ -62,6 +62,15 @@ std::ostream& Box::print_Epot(std::ostream& os) const {
 	return os;
 }
 
+std::ostream& Box::print_Ekin(std::ostream& os) {
+	double KineticEnergy { };
+	for (auto& mol : Molecules) {
+		KineticEnergy += mol.calculate_Ekin();
+	}
+	os << KineticEnergy << std::endl;
+	return os;
+}
+
 void Box::calculate_forces() {
 	double radius2 { };
 	double force_abs { };
@@ -78,23 +87,23 @@ void Box::calculate_forces() {
 					mol.Epot += TypeBB_Potential(radius2, 1.0);
 					force_abs = TypeBB_Force(radius2, 1.0);
 					force = distance*force_abs;
-					mol[i].Force += force;
-					mol[j].Force -= force;
+					mol[i].Force -= force;
+					mol[j].Force += force;
 				}
 				else { // AA Type
 					mol.Epot += TypeAA_Potential(radius2);
 					force_abs = TypeAA_Force(radius2);
 					force = distance*force_abs;
-					mol[i].Force += force;
-					mol[j].Force -= force;
+					mol[i].Force -= force;
+					mol[j].Force += force;
 				}
 				for (auto& neighbor : mol[i].Neighbors) { //Fene bonds
 					if (neighbor == &(mol.Monomers[j])) {
 						mol.Epot += Fene_Potential(radius2);
 						force_abs = Fene_Force(radius2);
 						force = distance*force_abs;
-						mol[i].Force += force;
-						mol[j].Force -= force;
+						mol[i].Force -= force;
+						mol[j].Force += force;
 					}
 				}
 			}

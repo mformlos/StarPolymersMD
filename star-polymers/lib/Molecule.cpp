@@ -34,10 +34,13 @@ double Molecule::calculate_Ekin() {
 	return Ekin;
 }
 
-void Molecule::initialize_straight_chain(double bondLength) {
+void Molecule::initialize_straight_chain(double bondLength, double temperature) {
 	MatVec tempPos{};
+	MatVec average_vel{};
 	for (unsigned i = 0; i < NumberOfMonomers; i++) {
 		Monomers[i].Position = tempPos;
+		Monomers[i].Velocity = MatVec{ Rand::real_uniform() -0.5, Rand::real_uniform() -0.5, Rand::real_uniform() -0.5};
+		average_vel += Monomers[i].Velocity;
 		if (i != 0) {
 			Monomers[i].set_neighbor(Monomers[i-1]);
 		}
@@ -46,6 +49,18 @@ void Molecule::initialize_straight_chain(double bondLength) {
 		}
 		tempPos[0] += bondLength;
 	}
+	average_vel /= NumberOfMonomers;
+	for (auto& mono : Monomers) {
+		mono.Velocity -= average_vel;
+	}
+	calculate_Ekin();
+	std::cout<< "ekin before: " << Ekin;
+	double vel_scale = sqrt(3.*(double)NumberOfMonomers*temperature/(Ekin*2.0));
+	std::cout << " vel scale: " << vel_scale;
+	for (auto& mono : Monomers) {
+		mono.Velocity *= vel_scale;
+	}
+	std::cout << " ekin after: " << calculate_Ekin() << std::endl;
 }
 
 std::ostream& Molecule::print(std::ostream& os) const {

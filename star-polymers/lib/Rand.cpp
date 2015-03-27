@@ -1,4 +1,4 @@
-#include "RandDist.h"
+#include "Rand.h"
 
 using namespace std;
 

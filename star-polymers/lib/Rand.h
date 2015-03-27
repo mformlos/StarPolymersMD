@@ -1,5 +1,5 @@
-#ifndef LIB_RANDDIST_H_
-#define LIB_RANDDIST_H_
+#ifndef LIB_RAND_H_
+#define LIB_RAND_H_
 
 #include <random>
 #include <chrono>

@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "Particle.h"
+#include "Rand.h"
 
 
 
@@ -30,7 +31,7 @@ public:
 	Particle& operator [](int i);    // Elementweiser Zugriff
 	const Particle& operator [](int i) const;
 
-	void initialize_straight_chain(double);
+	void initialize_straight_chain(double bond, double temperature);
 	double calculate_Ekin();
 
 	std::ostream& print(std::ostream& os) const;

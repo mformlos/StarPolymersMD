@@ -20,6 +20,7 @@
 
 class Box {
 	friend class Thermostat_None;
+	friend class Lowe_Andersen;
 protected:
 	double SystemTime;
 	double Temperature;
@@ -35,7 +36,7 @@ protected:
 public:
 	Box(double Lx, double Ly, double Lz, double temperature);
 
-	void add_chain(unsigned N, double mass, double bondLength);
+	void add_chain(unsigned N, double mass, double bondLength, double temperature);
 
 	MatVec& wrap (MatVec& pos);
 	MatVec wrap (MatVec&& pos);
@@ -51,6 +52,7 @@ public:
 
 	std::ostream& print_molecules(std::ostream& os) const;
 	std::ostream& print_Epot(std::ostream& os) const;
+	std::ostream& print_Ekin(std::ostream& os);
 	// outputs
 };
 
