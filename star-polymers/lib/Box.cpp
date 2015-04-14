@@ -148,6 +148,43 @@ void Box::calculate_forces() {
 	}
 }
 
+void Box::calculate_forces_verlet() {
+	double radius2 { };
+	double force_abs { };
+	MatVec distance { };
+	MatVec force { };
+	for (auto& mol : Molecules) {
+		mol.Epot = 0.0;
+		for (auto& mono : mol.Monomers) mono.Force *= 0.0;
+		for (auto& mono : mol.Monomers) {
+			for (auto& other : mono.VerletList) {
+				distance = relative_position(mono, *other);
+				radius2 = distance*distance;
+				if (mono.AmphiType == 1 && other -> AmphiType == 1) { // BB Type
+					mol.Epot += TypeBB_Potential(radius2, Lambda);
+					force_abs = TypeBB_Force(radius2, Lambda);
+					force = distance*force_abs;
+					mono.Force -= force;
+				}
+				else { // AA Type
+					mol.Epot += TypeAA_Potential(radius2);
+					force_abs = TypeAA_Force(radius2);
+					force = distance*force_abs;
+					mono.Force -= force;
+				}
+			}
+			for (auto& neighbor : mono.Neighbors) { //Fene bonds
+				distance = relative_position(mono, *neighbor);
+				radius2 = distance*distance;
+				mol.Epot += 0.5*Fene_Potential(radius2);
+				force_abs = Fene_Force(radius2);
+				force = distance*force_abs;
+				mono.Force -= force;
+			}
+		}
+	}
+}
+
 void Box::update_VerletLists() {
 	std::array<int,3> CellNumber { };
 	double radius2 { };

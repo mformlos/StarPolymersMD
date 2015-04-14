@@ -56,6 +56,7 @@ public:
 	void propagate(double dt);
 
 	void calculate_forces();
+	void calculate_forces_verlet();
 	double calculate_ekin();
 	unsigned numberOfMonomers();
 

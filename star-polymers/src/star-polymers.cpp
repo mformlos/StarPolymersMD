@@ -9,10 +9,12 @@
 #include <iostream>
 #include <fstream>
 #include <forward_list>
+#include <ctime>
 #include "Box.h"
 #include "Thermostat_None.h"
 #include "Lowe_Andersen.h"
 #include "Nose_Hoover.h"
+
 
 int main() {
 
@@ -32,9 +34,12 @@ int main() {
 	//thermostat = new Lowe_Andersen{ box, 0.001, 1., 20.0, 7.0 };
 	thermostat = new Nose_Hoover{box, 0.001, 0.5, 1., 1.};
 
-	for (int n = 0; n < 1e7; n++) {
+
+	clock_t begin = clock();
+
+	for (int n = 0; n < 1e6; n++) {
 		thermostat->propagate();
-		if ( n > 1e5 && !(n%1000)) {
+		if ( n > 1e4 && !(n%1000)) {
 			std::cout << n << " ";
 			box.print_Epot(std::cout);
 			box.print_Ekin(std::cout);
@@ -48,5 +53,7 @@ int main() {
 	    // box.print_molecules(std::cout);
 	}
 
+	clock_t end = clock();
 	box.print_molecules(std::cout);
+	std::cout << "time: " << double(end-begin)/CLOCKS_PER_SEC << std::endl;
 }
