@@ -55,5 +55,5 @@ int main() {
 
 	clock_t end = clock();
 	box.print_molecules(std::cout);
-	std::cout << "time: " << double(end-begin)/CLOCKS_PER_SEC << std::endl;
+	std::cout << "time = " << double(end-begin)/CLOCKS_PER_SEC << std::endl;
 }
