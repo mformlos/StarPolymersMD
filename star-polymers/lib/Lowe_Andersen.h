@@ -2,9 +2,6 @@
 #define LOWE_ANDERSEN_H
 
 #include "Thermostat.h"
-
-
-#include "Thermostat.h"
 #include "Box.h"
 #include "Rand.h"
 #include <cmath>

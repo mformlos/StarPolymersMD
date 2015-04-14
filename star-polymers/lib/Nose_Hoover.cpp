@@ -46,7 +46,7 @@ void Nose_Hoover::chain() {
 	g2 = (q1*nuxi1*nuxi1 - TargetTemperature) / q2;
 	nuxi2 += g2*DeltaT4;				// L_G2
 	nuxi1 *= exp(-nuxi2*DeltaT8);	// L_nuxi1
-	g1 = (2.0*ekin - (SimBox.NumberOfMonomers - 1)*TargetTemperature) / q1;
+	g1 = (2.0*ekin - (3.*SimBox.NumberOfMonomers - 1)*TargetTemperature) / q1;
 	nuxi1 += g1*DeltaT4;				// L_G1
 	nuxi1 *= exp(-nuxi2*DeltaT8);	// L_nuxi1
 	xi1 += nuxi1*DeltaTHalf;			// L_xi
@@ -61,7 +61,7 @@ void Nose_Hoover::chain() {
 
 	nuxi1 *= exp(-nuxi2*DeltaT8);	// L_nuxi1
 	ekin *= s*s;
-	g1 = (2.0*ekin - (SimBox.NumberOfMonomers - 1)*TargetTemperature) / q1;
+	g1 = (2.0*ekin - (3.*SimBox.NumberOfMonomers - 1)*TargetTemperature) / q1;
 	nuxi1 += g1*DeltaT4;				// L_G1
 	nuxi1 *= exp(-nuxi2*DeltaT8);	// L_nuxi1
 	g2 = (q1*nuxi1*nuxi1 - TargetTemperature) / q2;

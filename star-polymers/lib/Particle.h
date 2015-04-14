@@ -24,6 +24,7 @@ class Particle {
   bool AmphiType;
   bool Ghost;
   std::forward_list<Particle*> Neighbors;
+  std::forward_list<Particle*> VerletList;
 
 
   //Constructor
@@ -38,6 +39,7 @@ class Particle {
   Particle& operator =(Particle && mec) = default;
 
   void set_neighbor(Particle& neighbor);
+  void clear_VerletList();
 
   void print_neighbor() {
 	  for (auto& m : Neighbors) {
@@ -46,6 +48,7 @@ class Particle {
   }
 
   double mass() const;
+
 
 };
 #endif /* PARTICLE_H_ */

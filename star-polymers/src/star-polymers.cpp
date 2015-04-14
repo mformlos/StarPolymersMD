@@ -12,11 +12,12 @@
 #include "Box.h"
 #include "Thermostat_None.h"
 #include "Lowe_Andersen.h"
+#include "Nose_Hoover.h"
 
 int main() {
 
-	Box box(10., 10., 5., 1.);
-	box.add_chain(5, 1., 1.01, 1.);
+	Box box(30., 30., 30., 0.5, 0.9);
+	box.add_chain(20, 1., 1.01);
 
 	ofstream temp_file;
 	temp_file.open("temperature.dat", ios::out | ios::trunc);
@@ -28,16 +29,22 @@ int main() {
 
 	Thermostat *thermostat{};
 	//thermostat = new Thermostat_None{ box, 0.001 };
-	thermostat = new Lowe_Andersen{ box, 0.001, 1., 500., 7.0 };
+	//thermostat = new Lowe_Andersen{ box, 0.001, 1., 20.0, 7.0 };
+	thermostat = new Nose_Hoover{box, 0.001, 0.5, 1., 1.};
 
-	for (int n = 0; n < 1000; n++) {
+	for (int n = 0; n < 1e7; n++) {
 		thermostat->propagate();
-		std::cout << n << " ";
-		box.print_Epot(std::cout);
-		box.print_Ekin(std::cout);
-		box.print_Ekin(temp_file);
-		temp_file << "\n";
-		std::cout << '\n';
+		if ( n > 1e5 && !(n%1000)) {
+			std::cout << n << " ";
+			box.print_Epot(std::cout);
+			box.print_Ekin(std::cout);
+			temp_file << n << " ";
+			box.print_Epot(temp_file);
+			box.print_Ekin(temp_file);
+			box.print_Temperature(temp_file);
+			temp_file << "\n";
+			std::cout << '\n';
+		}
 	    // box.print_molecules(std::cout);
 	}
 

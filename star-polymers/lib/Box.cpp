@@ -1,8 +1,10 @@
 #include "Box.h"
 
-Box::Box(double Lx, double Ly, double Lz, double temperature) :
+Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
 	SystemTime { },
-	Temperature { temperature } {
+	Temperature { temperature },
+	Lambda { lambda },
+	NumberOfMonomers { } {
 		Size[0] = Lx;
 		Size[1] = Ly;
 		Size[2] = Lz;
@@ -39,13 +41,21 @@ MatVec Box::relative_position(Particle& one, Particle& two) {
 	return result;
 }
 
-void Box::add_chain(unsigned N, double mass, double bondLength, double temperature) {
+void Box::add_chain(unsigned N, double mass, double bondLength) {
 	Molecules.push_back(Molecule{N, mass});
-	Molecules.back().initialize_straight_chain(bondLength, temperature);
+	Molecules.back().initialize_straight_chain(bondLength, Temperature);
 	wrap(Molecules.back());
 	calculate_forces();
+	NumberOfMonomers += N;
 }
 
+unsigned Box::numberOfMonomers() {
+	unsigned N { };
+	for(auto& mol: Molecules) {
+		N += mol.Monomers.size();
+	}
+	return N;
+}
 std::ostream& Box::print_molecules(std::ostream& os) const {
 	for (auto& mol : Molecules) {
 		os << mol << std::endl;
@@ -56,17 +66,29 @@ std::ostream& Box::print_molecules(std::ostream& os) const {
 std::ostream& Box::print_Epot(std::ostream& os) const {
 	double PotentialEnergy { };
 	for (auto& mol : Molecules) {
-		PotentialEnergy += mol.Epot/mol.NumberOfMonomers;
+		PotentialEnergy += mol.Epot;
 	}
+	PotentialEnergy /= NumberOfMonomers;
 	os << PotentialEnergy<< " ";
 	return os;
 }
 
+double Box::calculate_ekin() {
+	double KineticEnergy { };
+	for (auto& mol : Molecules) {
+		KineticEnergy += mol.calculate_Ekin();
+	}
+
+	return KineticEnergy;
+}
+
+
 std::ostream& Box::print_Ekin(std::ostream& os) {
 	double KineticEnergy { };
 	for (auto& mol : Molecules) {
-		KineticEnergy += mol.calculate_Ekin()/mol.NumberOfMonomers;
+		KineticEnergy += mol.calculate_Ekin();
 	}
+	KineticEnergy /= NumberOfMonomers;
 	os << KineticEnergy << " ";
 	return os;
 }
@@ -94,8 +116,8 @@ void Box::calculate_forces() {
 				distance = relative_position(mol[i], mol[j]);
 				radius2 = distance*distance;
 				if (mol[i].AmphiType == 1 && mol[j].AmphiType == 1) { // BB Type
-					mol.Epot += TypeBB_Potential(radius2, 1.0);
-					force_abs = TypeBB_Force(radius2, 1.0);
+					mol.Epot += TypeBB_Potential(radius2, Lambda);
+					force_abs = TypeBB_Force(radius2, Lambda);
 					force = distance*force_abs;
 					mol[i].Force -= force;
 					mol[j].Force += force;
@@ -107,18 +129,38 @@ void Box::calculate_forces() {
 					mol[i].Force -= force;
 					mol[j].Force += force;
 				}
-				for (auto& neighbor : mol[i].Neighbors) { //Fene bonds
-					if (neighbor == &(mol.Monomers[j])) {
-						mol.Epot += Fene_Potential(radius2);
-						force_abs = Fene_Force(radius2);
-						force = distance*force_abs;
-						mol[i].Force -= force;
-						mol[j].Force += force;
-					}
-				}
+			}
+			for (auto& neighbor : mol[i].Neighbors) { //Fene bonds
+				distance = relative_position(mol[i], *neighbor);
+				radius2 = distance*distance;
+				mol.Epot += 0.5*Fene_Potential(radius2);
+				force_abs = Fene_Force(radius2);
+				force = distance*force_abs;
+				mol[i].Force -= force;
+
 			}
 		}
 	}
 }
+
+void Box::update_VerletLists() {
+	for (auto& sheet : CellList) {
+		for (auto& row : sheet) {
+			for (auto& list : row) {
+				for (auto pointer : list) {
+					delete(pointer);
+				}
+				list.clear();
+			}
+
+		}
+	}
+	for (auto& mol : Molecules) {
+		for (auto& mono : mol.Monomers) {
+			mono.clear_VerletList();
+		}
+	}
+}
+
 
 

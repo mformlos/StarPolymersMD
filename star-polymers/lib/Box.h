@@ -11,7 +11,6 @@
 #include <iostream>
 #include <array>
 #include <vector>
-#include <forward_list>
 #include "Molecule.h"
 #include "MatVec.h"
 #include "Potentials.h"
@@ -21,22 +20,25 @@
 class Box {
 	friend class Thermostat_None;
 	friend class Lowe_Andersen;
+	friend class Nose_Hoover;
 protected:
 	double SystemTime;
 	double Temperature;
+	double Lambda;
+	unsigned NumberOfMonomers;
+
 	std::array<double,3> Size;
 	std::vector<Molecule> Molecules;
 	std::vector<Particle> Fluid;
 	std::vector<std::vector<std::vector<std::forward_list<Particle*>>>> CellList;
-	std::forward_list<Particle*> VerletList;
 	//Thermostat Thermo;  //to be declared
 
 
 
 public:
-	Box(double Lx, double Ly, double Lz, double temperature);
+	Box(double Lx, double Ly, double Lz, double temperature, double Lambda);
 
-	void add_chain(unsigned N, double mass, double bondLength, double temperature);
+	void add_chain(unsigned N, double mass, double bondLength);
 
 	MatVec& wrap (MatVec& pos);
 	MatVec wrap (MatVec&& pos);
@@ -49,6 +51,10 @@ public:
 	void propagate(double dt);
 
 	void calculate_forces();
+	double calculate_ekin();
+	unsigned numberOfMonomers();
+
+	void update_VerletLists();
 
 	std::ostream& print_molecules(std::ostream& os) const;
 	std::ostream& print_Epot(std::ostream& os) const;

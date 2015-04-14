@@ -7,7 +7,8 @@ Particle::Particle(double aMass, bool aAmphiType, bool aGhost) :
     Mass { aMass },
     AmphiType {aAmphiType },
     Ghost { aGhost },
-	Neighbors { } {}
+	Neighbors { },
+	VerletList { } {}
 
 Particle::Particle(MatVec aPosition, MatVec aVelocity, double aMass, bool aAmphiType, bool aGhost) :
   Position { aPosition },
@@ -16,7 +17,8 @@ Particle::Particle(MatVec aPosition, MatVec aVelocity, double aMass, bool aAmphi
   Mass { aMass },
   AmphiType {aAmphiType },
   Ghost { aGhost },
-  Neighbors { } {}
+  Neighbors { },
+  VerletList { } {}
 
 
 void Particle::set_neighbor(Particle& neighbor) {
@@ -24,6 +26,13 @@ void Particle::set_neighbor(Particle& neighbor) {
 }
 
 double Particle::mass() const {return(Mass);}
+
+void Particle::clear_VerletList() {
+	for (auto pointer : VerletList) {
+		delete(pointer);
+	}
+	VerletList.clear();
+}
 
 
 
