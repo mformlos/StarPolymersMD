@@ -20,6 +20,7 @@ class Particle {
   MatVec Position;
   MatVec Velocity;
   MatVec Force;
+  MatVec VerletPosition;
   double Mass;
   bool AmphiType;
   bool Ghost;

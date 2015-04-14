@@ -4,12 +4,15 @@ Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
 	SystemTime { },
 	Temperature { temperature },
 	Lambda { lambda },
+	VerletRadius2 { 4.0 },
 	NumberOfMonomers { } {
 		Size[0] = Lx;
 		Size[1] = Ly;
 		Size[2] = Lz;
-		std::array<int, 3> cellSize { int(Size[0]/1.5), int(Size[1]/1.5), int(Size[2]/1.5)};
-		CellList = std::vector<std::vector<std::vector<std::forward_list<Particle*>>>>(cellSize[0], std::vector<std::vector<std::forward_list<Particle*>>>(cellSize[1], std::vector<std::forward_list<Particle*>>(cellSize[1], std::forward_list<Particle*>())));
+		CellSize[0] = int(Size[0]/1.5);
+		CellSize[1] = int(Size[1]/1.5);
+		CellSize[2] = int(Size[2]/1.5);
+		CellList = std::vector<std::vector<std::vector<std::forward_list<Particle*>>>>(CellSize[0], std::vector<std::vector<std::forward_list<Particle*>>>(CellSize[1], std::vector<std::forward_list<Particle*>>(CellSize[2], std::forward_list<Particle*>())));
 }
 
 
@@ -144,20 +147,57 @@ void Box::calculate_forces() {
 }
 
 void Box::update_VerletLists() {
+	std::array<int,3> CellNumber { };
+	double radius2 { };
+	MatVec distance { };
+	//clear all Lists;
 	for (auto& sheet : CellList) {
 		for (auto& row : sheet) {
 			for (auto& list : row) {
-				for (auto pointer : list) {
+				/*for (auto pointer : list) {
 					delete(pointer);
-				}
+				}*/
 				list.clear();
 			}
-
 		}
 	}
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
 			mono.clear_VerletList();
+		}
+	}
+
+	//sort into CellLists
+	for (auto& mol: Molecules) {
+		for (auto& mono : mol.Monomers) {
+			for (int i = 0; i < 3; i++) {
+				CellNumber[i] = (int)(mono.Position[i]/CellSize[i]);
+			}
+			mono.VerletPosition = mono.Position;
+			CellList[CellNumber[0]][CellNumber[1]][CellNumber[2]].push_front(&mono);
+		}
+	}
+
+	//make VerletLists
+	for (auto& mol : Molecules) {
+		for (auto& mono : mol.Monomers) {
+			for (int i = 0; i < 3; i++) {
+				CellNumber[i] = (int)(mono.Position[i]/CellSize[i]);
+			}
+			for (int j = CellNumber[0]-1; j < CellNumber[0]+2; j++) {
+				for (int k = CellNumber[1]-1; k < CellNumber[1]+2; k++) {
+					for (int l = CellNumber[2]-1; l < CellNumber[2]+2; l++) {
+						for (auto& other : CellList[CellNumber[0]][CellNumber[1]][CellNumber[2]]) {
+							if (other == &mono) continue;
+							distance = relative_position(mono, *other);
+							radius2 = distance*distance;
+							if (radius2 <= VerletRadius2) {
+								mono.VerletList.push_front(other);
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 }

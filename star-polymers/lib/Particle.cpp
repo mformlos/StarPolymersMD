@@ -14,6 +14,7 @@ Particle::Particle(MatVec aPosition, MatVec aVelocity, double aMass, bool aAmphi
   Position { aPosition },
   Velocity { aVelocity },
   Force { },
+  VerletPosition { },
   Mass { aMass },
   AmphiType {aAmphiType },
   Ghost { aGhost },
@@ -28,11 +29,9 @@ void Particle::set_neighbor(Particle& neighbor) {
 double Particle::mass() const {return(Mass);}
 
 void Particle::clear_VerletList() {
-	for (auto pointer : VerletList) {
-		delete(pointer);
-	}
 	VerletList.clear();
 }
+
 
 
 

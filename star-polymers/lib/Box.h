@@ -25,9 +25,12 @@ protected:
 	double SystemTime;
 	double Temperature;
 	double Lambda;
+	double VerletRadius2;
 	unsigned NumberOfMonomers;
 
+
 	std::array<double,3> Size;
+	std::array<double,3> CellSize;
 	std::vector<Molecule> Molecules;
 	std::vector<Particle> Fluid;
 	std::vector<std::vector<std::vector<std::forward_list<Particle*>>>> CellList;
