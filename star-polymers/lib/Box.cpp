@@ -4,14 +4,16 @@ Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
 	SystemTime { },
 	Temperature { temperature },
 	Lambda { lambda },
+	Cutoff { 1.5 },
+	VerletRadius { 2.0 },
 	VerletRadius2 { 4.0 },
 	NumberOfMonomers { } {
 		Size[0] = Lx;
 		Size[1] = Ly;
 		Size[2] = Lz;
-		CellSize[0] = int(Size[0]/1.5);
-		CellSize[1] = int(Size[1]/1.5);
-		CellSize[2] = int(Size[2]/1.5);
+		CellSize[0] = int(Size[0]/Cutoff);
+		CellSize[1] = int(Size[1]/Cutoff);
+		CellSize[2] = int(Size[2]/Cutoff);
 		CellList = std::vector<std::vector<std::vector<std::forward_list<Particle*>>>>(CellSize[0], std::vector<std::vector<std::forward_list<Particle*>>>(CellSize[1], std::vector<std::forward_list<Particle*>>(CellSize[2], std::forward_list<Particle*>())));
 }
 
@@ -202,5 +204,17 @@ void Box::update_VerletLists() {
 	}
 }
 
-
+void Box::check_VerletLists() {
+	MatVec displacement { };
+	for (auto& mol : Molecules) {
+		for (auto& mono : mol.Monomers) {
+			displacement = mono.Position - mono.VerletPosition;
+			displacement -= round(displacement/Size) % Size;
+			if (displacement.norm() > (VerletRadius - Cutoff)) {
+				update_VerletLists();
+				return;
+			}
+		}
+	}
+}
 

@@ -25,6 +25,8 @@ protected:
 	double SystemTime;
 	double Temperature;
 	double Lambda;
+	double Cutoff;
+	double VerletRadius;
 	double VerletRadius2;
 	unsigned NumberOfMonomers;
 
@@ -58,6 +60,7 @@ public:
 	unsigned numberOfMonomers();
 
 	void update_VerletLists();
+	void check_VerletLists();
 
 	std::ostream& print_molecules(std::ostream& os) const;
 	std::ostream& print_Epot(std::ostream& os) const;
