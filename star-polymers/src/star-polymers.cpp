@@ -37,7 +37,7 @@ int main() {
 
 	clock_t begin = clock();
 
-	for (int n = 0; n < 1e8; n++) {
+	for (int n = 0; n < 1e3; n++) {
 		thermostat->propagate();
 		if ( n > 1e6 && !(n%10000)) {
 			std::cout << n << " ";
@@ -54,6 +54,6 @@ int main() {
 	}
 
 	clock_t end = clock();
-	box.print_molecules(std::cout);
+	box.print_molecules(temp_file);
 	std::cout << "time: " << double(end-begin)/CLOCKS_PER_SEC << std::endl;
 }
