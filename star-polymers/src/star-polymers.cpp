@@ -19,7 +19,7 @@
 int main() {
 
 	Box box(30., 30., 30., 0.5, 0.9);
-	box.add_chain(20, 1., 1.01);
+	box.add_chain(5, 1., 1.01);
 
 	ofstream temp_file;
 	temp_file.open("temperature.dat", ios::out | ios::trunc);
@@ -37,8 +37,9 @@ int main() {
 
 	clock_t begin = clock();
 
-	for (int n = 0; n < 1e6; n++) {
+	for (int n = 0; n < 30; n++) {
 		thermostat->propagate();
+		box.print_molecules(std::cout);
 		if ( n > 1e4 && !(n%1000)) {
 			std::cout << n << " ";
 			box.print_Epot(std::cout);
