@@ -7,7 +7,8 @@ Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
 	Cutoff { 1.5 },
 	VerletRadius { 2.0 },
 	VerletRadius2 { 4.0 },
-	NumberOfMonomers { } {
+	NumberOfMonomers { },
+	count { } {
 		Size[0] = Lx;
 		Size[1] = Ly;
 		Size[2] = Lz;
@@ -113,6 +114,7 @@ void Box::calculate_forces() {
 	double force_abs { };
 	MatVec distance { };
 	MatVec force { };
+	count = 0.0;
 	for (auto& mol : Molecules) {
 		mol.Epot = 0.0;
 		for (auto& mono : mol.Monomers) mono.Force *= 0.0;
@@ -130,6 +132,7 @@ void Box::calculate_forces() {
 				else { // AA Type
 					mol.Epot += TypeAA_Potential(radius2);
 					force_abs = TypeAA_Force(radius2);
+					if (force_abs > 0) count++;
 					force = distance*force_abs;
 					mol[i].Force -= force;
 					mol[j].Force += force;
@@ -146,6 +149,7 @@ void Box::calculate_forces() {
 			}
 		}
 	}
+	std::cout << count*2 << std::endl;
 }
 
 void Box::calculate_forces_verlet() {

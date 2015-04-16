@@ -24,10 +24,10 @@ int main() {
 	ofstream temp_file;
 	temp_file.open("temperature.dat", ios::out | ios::trunc);
 
-	box.print_molecules(std::cout);
+	//box.print_molecules(std::cout);
 	box.calculate_forces();
-	box.print_Epot(std::cout);
-	box.print_Ekin(std::cout);
+	//box.print_Epot(std::cout);
+	//box.print_Ekin(std::cout);
 
 	Thermostat *thermostat{};
 	//thermostat = new Thermostat_None{ box, 0.001 };
@@ -38,8 +38,9 @@ int main() {
 	clock_t begin = clock();
 
 	for (int n = 0; n < 1e5; n++) {
+		std::cout << n << " ";
 		thermostat->propagate();
-		if (n == 18539) box.print_molecules(temp_file);
+		//if (n == 18539) box.print_molecules(temp_file);
 		/*if ( n > 1 && !(n%1)) {
 			std::cout << n << " ";
 			box.print_Epot(std::cout);
@@ -55,6 +56,6 @@ int main() {
 	}
 
 	clock_t end = clock();
-	box.print_molecules(std::cout);
+	//box.print_molecules(std::cout);
 	std::cout << "time: " << double(end-begin)/CLOCKS_PER_SEC << std::endl;
 }
