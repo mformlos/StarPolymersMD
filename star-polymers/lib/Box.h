@@ -11,6 +11,7 @@
 #include <iostream>
 #include <array>
 #include <vector>
+#include "Functions.h"
 #include "Molecule.h"
 #include "MatVec.h"
 #include "Potentials.h"
@@ -32,7 +33,8 @@ protected:
 
 
 	std::array<double,3> Size;
-	std::array<double,3> CellSize;
+	std::array<int,3> CellSize;
+	std::array<double,3> CellSideLength;
 	std::vector<Molecule> Molecules;
 	std::vector<Particle> Fluid;
 	std::vector<std::vector<std::vector<std::forward_list<Particle*>>>> CellList;

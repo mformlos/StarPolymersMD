@@ -18,7 +18,8 @@ Nose_Hoover::Nose_Hoover(Box& box, double dt, double temp, double a_q1, double a
 	DeltaT8 = 0.5*DeltaT4;
 	update_temp();
 	dtime(dt);
-	SimBox.calculate_forces();
+	SimBox.update_VerletLists();
+	SimBox.calculate_forces_verlet();
 }
 
 Nose_Hoover::~Nose_Hoover() {}
@@ -32,7 +33,8 @@ void Nose_Hoover::pos_vel() {
 	}
 
 	SimBox.wrap();
-	SimBox.calculate_forces();
+	SimBox.check_VerletLists();
+	SimBox.calculate_forces_verlet();
 
 	for (auto& mol : SimBox.Molecules) {
 			for (auto& mono : mol.Monomers) {

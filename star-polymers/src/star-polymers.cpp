@@ -22,10 +22,10 @@ int main() {
 	box.add_chain(20, 1., 1.01);
 
 	ofstream temp_file;
-	temp_file.open("temperature.dat", ios::out | ios::trunc);
+	temp_file.open("temperature2.dat", ios::out | ios::trunc);
 
-	box.print_molecules(std::cout);
 	box.calculate_forces();
+	box.print_molecules(std::cout);
 	box.print_Epot(std::cout);
 	box.print_Ekin(std::cout);
 
@@ -34,6 +34,9 @@ int main() {
 	//thermostat = new Lowe_Andersen{ box, 0.001, 1., 20.0, 7.0 };
 	thermostat = new Nose_Hoover{box, 0.001, 0.5, 1., 1.};
 
+	box.print_molecules(std::cout);
+	box.print_Epot(std::cout);
+	box.print_Ekin(std::cout);
 
 	clock_t begin = clock();
 

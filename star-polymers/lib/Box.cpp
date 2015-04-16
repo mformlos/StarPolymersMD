@@ -14,6 +14,9 @@ Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
 		CellSize[0] = int(Size[0]/Cutoff);
 		CellSize[1] = int(Size[1]/Cutoff);
 		CellSize[2] = int(Size[2]/Cutoff);
+		CellSideLength[0] = Size[0]/(double)CellSize[0];
+		CellSideLength[1] = Size[1]/(double)CellSize[1];
+		CellSideLength[2] = Size[2]/(double)CellSize[2];
 		CellList = std::vector<std::vector<std::vector<std::forward_list<Particle*>>>>(CellSize[0], std::vector<std::vector<std::forward_list<Particle*>>>(CellSize[1], std::vector<std::forward_list<Particle*>>(CellSize[2], std::forward_list<Particle*>())));
 }
 
@@ -50,7 +53,6 @@ void Box::add_chain(unsigned N, double mass, double bondLength) {
 	Molecules.push_back(Molecule{N, mass});
 	Molecules.back().initialize_straight_chain(bondLength, Temperature);
 	wrap(Molecules.back());
-	calculate_forces();
 	NumberOfMonomers += N;
 }
 
@@ -210,7 +212,7 @@ void Box::update_VerletLists() {
 	for (auto& mol: Molecules) {
 		for (auto& mono : mol.Monomers) {
 			for (int i = 0; i < 3; i++) {
-				CellNumber[i] = (int)(mono.Position[i]/CellSize[i]);
+				CellNumber[i] = (int)(mono.Position[i]/CellSideLength[i]);
 			}
 			mono.VerletPosition = mono.Position;
 			CellList[CellNumber[0]][CellNumber[1]][CellNumber[2]].push_front(&mono);
@@ -218,15 +220,20 @@ void Box::update_VerletLists() {
 	}
 
 	//make VerletLists
+	int p { }, q { }, r { };
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
 			for (int i = 0; i < 3; i++) {
-				CellNumber[i] = (int)(mono.Position[i]/CellSize[i]);
+				CellNumber[i] = (int)(mono.Position[i]/CellSideLength[i]);
 			}
-			for (int j = CellNumber[0]-1; j < CellNumber[0]+2; j++) {
-				for (int k = CellNumber[1]-1; k < CellNumber[1]+2; k++) {
-					for (int l = CellNumber[2]-1; l < CellNumber[2]+2; l++) {
-						for (auto& other : CellList[CellNumber[0]][CellNumber[1]][CellNumber[2]]) {
+			for (int j = (CellNumber[0]-1); j < CellNumber[0]+2; j++) {
+				for (int k = (CellNumber[1]-1); k < CellNumber[1]+2; k++) {
+					for (int l = (CellNumber[2]-1); l < CellNumber[2]+2; l++) {
+						p = my_modulus(j, CellSize[0]);
+						q = my_modulus(k, CellSize[1]);
+						r = my_modulus(l, CellSize[2]);
+
+						for (auto other : CellList[p][q][r]) {
 							if (other == &mono) continue;
 							distance = relative_position(mono, *other);
 							radius2 = distance*distance;
