@@ -40,10 +40,10 @@ int main() {
 
 	clock_t begin = clock();
 
-	for (int n = 0; n < 1e2; n++) {
+	for (int n = 0; n < 1e5; n++) {
 		thermostat->propagate();
 		//box.print_molecules(std::cout);
-		if ( n > 1e6 && !(n%10000)) {
+		if ( n > 1 && !(n%1)) {
 			std::cout << n << " ";
 			box.print_Epot(std::cout);
 			box.print_Ekin(std::cout);
