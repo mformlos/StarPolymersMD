@@ -40,7 +40,7 @@ int main() {
 
 	clock_t begin = clock();
 
-	for (int n = 0; n < 1e8; n++) {
+	for (int n = 0; n < 1e2; n++) {
 		thermostat->propagate();
 		//box.print_molecules(std::cout);
 		if ( n > 1e6 && !(n%10000)) {
