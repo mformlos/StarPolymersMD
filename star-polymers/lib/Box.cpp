@@ -115,6 +115,7 @@ void Box::calculate_forces() {
 	double force_abs { };
 	MatVec distance { };
 	MatVec force { };
+	int count { };
 	for (auto& mol : Molecules) {
 		mol.Epot = 0.0;
 		for (auto& mono : mol.Monomers) mono.Force *= 0.0;
@@ -125,6 +126,7 @@ void Box::calculate_forces() {
 				if (mol[i].AmphiType == 1 && mol[j].AmphiType == 1) { // BB Type
 					mol.Epot += TypeBB_Potential(radius2, Lambda);
 					force_abs = TypeBB_Force(radius2, Lambda);
+					if (force_abs > 0) count++;
 					force = distance*force_abs;
 					mol[i].Force -= force;
 					mol[j].Force += force;
@@ -132,6 +134,7 @@ void Box::calculate_forces() {
 				else { // AA Type
 					mol.Epot += TypeAA_Potential(radius2);
 					force_abs = TypeAA_Force(radius2);
+					if (force_abs > 0) count++;
 					force = distance*force_abs;
 					mol[i].Force -= force;
 					mol[j].Force += force;
@@ -142,12 +145,14 @@ void Box::calculate_forces() {
 				radius2 = distance*distance;
 				mol.Epot += 0.5*Fene_Potential(radius2);
 				force_abs = Fene_Force(radius2);
+				if (force_abs > 0) count++;
 				force = distance*force_abs;
 				mol[i].Force -= force;
 
 			}
 		}
 	}
+	std::cout << "without verlet: " << count << std::endl;
 }
 
 void Box::calculate_forces_verlet() {
@@ -155,6 +160,7 @@ void Box::calculate_forces_verlet() {
 	double force_abs { };
 	MatVec distance { };
 	MatVec force { };
+	int count { };
 	for (auto& mol : Molecules) {
 		mol.Epot = 0.0;
 		for (auto& mono : mol.Monomers) mono.Force *= 0.0;
@@ -165,12 +171,14 @@ void Box::calculate_forces_verlet() {
 				if (mono.AmphiType == 1 && other -> AmphiType == 1) { // BB Type
 					mol.Epot += TypeBB_Potential(radius2, Lambda);
 					force_abs = TypeBB_Force(radius2, Lambda);
+					if (force_abs > 0) count++;
 					force = distance*force_abs;
 					mono.Force -= force;
 				}
 				else { // AA Type
 					mol.Epot += TypeAA_Potential(radius2);
 					force_abs = TypeAA_Force(radius2);
+					if (force_abs > 0) count++;
 					force = distance*force_abs;
 					mono.Force -= force;
 				}
@@ -180,17 +188,20 @@ void Box::calculate_forces_verlet() {
 				radius2 = distance*distance;
 				mol.Epot += 0.5*Fene_Potential(radius2);
 				force_abs = Fene_Force(radius2);
+				if (force_abs > 0) count++;
 				force = distance*force_abs;
 				mono.Force -= force;
 			}
 		}
 	}
+	std::cout << "with verlet: " << count << std::endl;
 }
 
 void Box::update_VerletLists() {
 	std::array<int,3> CellNumber { };
 	double radius2 { };
 	MatVec distance { };
+	std::cout << "list is being made" << std::endl;
 	//clear all Lists;
 	for (auto& sheet : CellList) {
 		for (auto& row : sheet) {
