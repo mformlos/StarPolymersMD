@@ -40,10 +40,14 @@ int main() {
 
 	clock_t begin = clock();
 
-	for (int n = 0; n < 1e5; n++) {
+	for (int n = 0; n < 18550; n++) {
+		std::cout << n << " ";
 		thermostat->propagate();
+
 		//box.print_molecules(std::cout);
-		if ( n > 1 && !(n%1)) {
+		//if (n == 18539) box.print_molecules(temp_file);
+
+		/*if ( n > 1 && !(n%1)) {
 			std::cout << n << " ";
 			box.print_Epot(std::cout);
 			box.print_Ekin(std::cout);
@@ -53,11 +57,11 @@ int main() {
 			box.print_Temperature(temp_file);
 			temp_file << "\n";
 			std::cout << '\n';
-		}
+		}*/
 	    // box.print_molecules(std::cout);
 	}
 
 	clock_t end = clock();
-	box.print_molecules(std::cout);
+	//box.print_molecules(std::cout);
 	std::cout << "time = " << double(end-begin)/CLOCKS_PER_SEC << std::endl;
 }
