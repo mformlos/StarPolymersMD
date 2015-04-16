@@ -25,18 +25,18 @@ int main() {
 	temp_file.open("temperature2.dat", ios::out | ios::trunc);
 
 	box.calculate_forces();
-	box.print_molecules(std::cout);
-	box.print_Epot(std::cout);
-	box.print_Ekin(std::cout);
+	//box.print_molecules(std::cout);
+	//box.print_Epot(std::cout);
+	//box.print_Ekin(std::cout);
 
 	Thermostat *thermostat{};
 	//thermostat = new Thermostat_None{ box, 0.001 };
 	//thermostat = new Lowe_Andersen{ box, 0.001, 1., 20.0, 7.0 };
 	thermostat = new Nose_Hoover{box, 0.001, 0.5, 1., 1.};
 
-	box.print_molecules(std::cout);
-	box.print_Epot(std::cout);
-	box.print_Ekin(std::cout);
+	//box.print_molecules(std::cout);
+	//box.print_Epot(std::cout);
+	//box.print_Ekin(std::cout);
 
 	clock_t begin = clock();
 
