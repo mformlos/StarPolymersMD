@@ -163,14 +163,15 @@ void Box::calculate_forces_verlet() {
 				distance = relative_position(mono, *other);
 				radius2 = distance*distance;
 				if (mono.AmphiType == 1 && other -> AmphiType == 1) { // BB Type
-					mol.Epot += TypeBB_Potential(radius2, Lambda);
+					mol.Epot += 0.5*TypeBB_Potential(radius2, Lambda);
 					force_abs = TypeBB_Force(radius2, Lambda);
 					force = distance*force_abs;
 					mono.Force -= force;
 				}
 				else { // AA Type
-					mol.Epot += TypeAA_Potential(radius2);
+					mol.Epot += 0.5*TypeAA_Potential(radius2);
 					force_abs = TypeAA_Force(radius2);
+					if (force_abs > 1e5) std::cout << mono.Position << " " << other -> Position << " " << distance << std::endl;
 					force = distance*force_abs;
 					mono.Force -= force;
 				}

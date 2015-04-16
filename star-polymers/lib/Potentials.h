@@ -110,6 +110,7 @@ inline double TypeBB_Force(double r2, double lambda) {
 		rm24 *= rm24;
 		force = 192.0*lambda*rm2*rm24*(rm24 - 0.5);
 	}
+
 	return force;
 }
 

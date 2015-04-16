@@ -31,7 +31,6 @@ void Nose_Hoover::pos_vel() {
 			mono.Position += mono.Velocity*DeltaT;
 		}
 	}
-
 	SimBox.wrap();
 	SimBox.check_VerletLists();
 	SimBox.calculate_forces_verlet();
