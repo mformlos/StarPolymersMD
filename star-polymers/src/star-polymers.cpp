@@ -37,7 +37,7 @@ int main() {
 
 	clock_t begin = clock();
 
-	for (int n = 0; n < 1e5; n++) {
+	for (int n = 0; n < 18550; n++) {
 		std::cout << n << " ";
 		thermostat->propagate();
 		//if (n == 18539) box.print_molecules(temp_file);
