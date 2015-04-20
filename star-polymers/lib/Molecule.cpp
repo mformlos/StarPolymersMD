@@ -34,9 +34,10 @@ double Molecule::calculate_Ekin() {
 	return Ekin;
 }
 
-void Molecule::initialize_straight_chain(double bondLength, double temperature) {
+void Molecule::initialize_straight_chain(unsigned A, unsigned B, double bondLength, double temperature) {
 	MatVec tempPos{};
 	MatVec average_vel{};
+	for (unsigned i = A; i < (A+B); i++) Monomers[i].AmphiType = 1;
 	for (unsigned i = 0; i < NumberOfMonomers; i++) {
 		Monomers[i].Position = tempPos;
 		Monomers[i].Velocity = MatVec{ Rand::real_uniform() -0.5, Rand::real_uniform() -0.5, Rand::real_uniform() -0.5};

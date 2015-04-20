@@ -21,6 +21,7 @@ class Box {
 	friend class Thermostat_None;
 	friend class Lowe_Andersen;
 	friend class Nose_Hoover;
+	friend class Andersen;
 protected:
 	double SystemTime;
 	double Temperature;
@@ -45,6 +46,7 @@ public:
 	Box(double Lx, double Ly, double Lz, double temperature, double Lambda);
 
 	void add_chain(unsigned N, double mass, double bondLength);
+	void add_chain(unsigned A, unsigned B, double mass, double bondLength);
 
 	MatVec& wrap (MatVec& pos);
 	MatVec wrap (MatVec&& pos);
@@ -56,9 +58,10 @@ public:
 
 	void propagate(double dt);
 
-	void calculate_forces();
+	void calculate_forces(bool calc_epot = true);
 	void calculate_forces_verlet();
 	double calculate_ekin();
+	double calculate_radius_of_gyration();
 	unsigned numberOfMonomers();
 
 	void update_VerletLists();
@@ -68,6 +71,7 @@ public:
 	std::ostream& print_Epot(std::ostream& os) const;
 	std::ostream& print_Ekin(std::ostream& os);
 	std::ostream& print_Temperature(std::ostream& os);
+	std::ostream& print_radius_of_gyration(std::ostream& os);
 	// outputs
 };
 

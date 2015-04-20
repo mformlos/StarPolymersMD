@@ -49,11 +49,18 @@ MatVec Box::relative_position(Particle& one, Particle& two) {
 
 void Box::add_chain(unsigned N, double mass, double bondLength) {
 	Molecules.push_back(Molecule{N, mass});
-	Molecules.back().initialize_straight_chain(bondLength, Temperature);
+	Molecules.back().initialize_straight_chain(N, 0, bondLength, Temperature);
 	wrap(Molecules.back());
-	calculate_forces();
 	NumberOfMonomers += N;
 }
+
+void Box::add_chain(unsigned A, unsigned B, double mass, double bondLength) {
+	Molecules.push_back(Molecule{A+B, mass});
+	Molecules.back().initialize_straight_chain(A, B, bondLength, Temperature);
+	wrap(Molecules.back());
+	NumberOfMonomers += (A+B);
+}
+
 
 unsigned Box::numberOfMonomers() {
 	unsigned N { };
@@ -88,6 +95,25 @@ double Box::calculate_ekin() {
 	return KineticEnergy;
 }
 
+double Box::calculate_radius_of_gyration() {
+	double r_gyr { };
+	MatVec distance { };
+	for (auto& mol : Molecules) {
+		double r_gyr_mol { };
+		for (unsigned i = 0; i < mol.Monomers.size(); i++) {
+			for (unsigned j = i+1; j < mol.Monomers.size(); j++) {
+				distance = relative_position(mol[i], mol[j]);
+				r_gyr_mol += distance*distance;
+			}
+		}
+		r_gyr_mol /= (mol.Monomers.size()*mol.Monomers.size());
+		r_gyr_mol = sqrt(r_gyr_mol);
+		r_gyr += r_gyr_mol;
+	}
+	r_gyr /= Molecules.size();
+	return r_gyr;
+}
+
 
 std::ostream& Box::print_Ekin(std::ostream& os) {
 	double KineticEnergy { };
@@ -109,28 +135,33 @@ std::ostream& Box::print_Temperature(std::ostream& os) {
 	return os;
 }
 
-void Box::calculate_forces() {
+std::ostream& Box::print_radius_of_gyration(std::ostream& os) {
+	os << calculate_radius_of_gyration() << " ";
+	return os;
+}
+
+void Box::calculate_forces(bool calc_epot = true) {
 	double radius2 { };
 	double force_abs { };
 	MatVec distance { };
 	MatVec force { };
 	count = 0.0;
 	for (auto& mol : Molecules) {
-		mol.Epot = 0.0;
+		if (calc_epot) mol.Epot = 0.0;
 		for (auto& mono : mol.Monomers) mono.Force *= 0.0;
 		for (unsigned i = 0; i < mol.Monomers.size(); i++) {
 			for (unsigned j = i + 1; j < mol.Monomers.size(); j++) {
 				distance = relative_position(mol[i], mol[j]);
 				radius2 = distance*distance;
 				if (mol[i].AmphiType == 1 && mol[j].AmphiType == 1) { // BB Type
-					mol.Epot += TypeBB_Potential(radius2, Lambda);
+					if (calc_epot) mol.Epot += TypeBB_Potential(radius2, Lambda);
 					force_abs = TypeBB_Force(radius2, Lambda);
 					force = distance*force_abs;
 					mol[i].Force -= force;
 					mol[j].Force += force;
 				}
 				else { // AA Type
-					mol.Epot += TypeAA_Potential(radius2);
+					if (calc_epot) mol.Epot += TypeAA_Potential(radius2);
 					force_abs = TypeAA_Force(radius2);
 					if (force_abs > 0) count++;
 					force = distance*force_abs;
@@ -141,7 +172,7 @@ void Box::calculate_forces() {
 			for (auto& neighbor : mol[i].Neighbors) { //Fene bonds
 				distance = relative_position(mol[i], *neighbor);
 				radius2 = distance*distance;
-				mol.Epot += 0.5*Fene_Potential(radius2);
+				if (calc_epot) mol.Epot += 0.5*Fene_Potential(radius2);
 				force_abs = Fene_Force(radius2);
 				force = distance*force_abs;
 				mol[i].Force -= force;
@@ -149,7 +180,7 @@ void Box::calculate_forces() {
 			}
 		}
 	}
-	std::cout << count*2 << std::endl;
+	//std::cout << count*2 << std::endl;
 }
 
 void Box::calculate_forces_verlet() {
