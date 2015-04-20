@@ -48,6 +48,8 @@ public:
 
 	void add_chain(unsigned N, double mass, double bondLength);
 
+	void add_chain(unsigned A, unsigned B, double mass, double bondLength);
+
 	MatVec& wrap (MatVec& pos);
 	MatVec wrap (MatVec&& pos);
 	void wrap(Particle& part);

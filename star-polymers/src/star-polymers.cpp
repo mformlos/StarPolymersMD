@@ -18,8 +18,8 @@
 
 int main() {
 
-	Box box(30., 30., 30., 0.5, 0.9);
-	box.add_chain(20, 1., 1.01);
+	Box box(30., 30., 30., 0.5, 1.0);
+	box.add_chain(10, 10, 1., 1.01);
 
 	ofstream temp_file;
 	temp_file.open("temperature2.dat", ios::out | ios::trunc);

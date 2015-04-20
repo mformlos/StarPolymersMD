@@ -52,10 +52,18 @@ MatVec Box::relative_position(Particle& one, Particle& two) {
 
 void Box::add_chain(unsigned N, double mass, double bondLength) {
 	Molecules.push_back(Molecule{N, mass});
-	Molecules.back().initialize_straight_chain(bondLength, Temperature);
+	Molecules.back().initialize_straight_chain(N, 0, bondLength, Temperature);
 	wrap(Molecules.back());
 	NumberOfMonomers += N;
 }
+
+void Box::add_chain(unsigned A, unsigned B, double mass, double bondLength) {
+	Molecules.push_back(Molecule{A+B, mass});
+	Molecules.back().initialize_straight_chain(A, B, bondLength, Temperature);
+	wrap(Molecules.back());
+	NumberOfMonomers += (A+B);
+}
+
 
 unsigned Box::numberOfMonomers() {
 	unsigned N { };
@@ -160,6 +168,8 @@ void Box::calculate_forces_verlet() {
 	for (auto& mol : Molecules) {
 		mol.Epot = 0.0;
 		for (auto& mono : mol.Monomers) mono.Force *= 0.0;
+	}
+	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
 			for (auto& other : mono.VerletList) {
 				distance = relative_position(mono, *other);
@@ -258,7 +268,7 @@ void Box::check_VerletLists() {
 		for (auto& mono : mol.Monomers) {
 			displacement = mono.Position - mono.VerletPosition;
 			displacement -= round(displacement/Size) % Size;
-			if (displacement.norm() > (VerletRadius - Cutoff)) {
+			if (displacement.norm() >= (VerletRadius - Cutoff)) {
 				update_VerletLists();
 				return;
 			}
