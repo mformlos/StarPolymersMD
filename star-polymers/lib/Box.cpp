@@ -172,10 +172,11 @@ void Box::calculate_forces(bool calc_epot = true) {
 			for (auto& neighbor : mol[i].Neighbors) { //Fene bonds
 				distance = relative_position(mol[i], *neighbor);
 				radius2 = distance*distance;
-				if (calc_epot) mol.Epot += 0.5*Fene_Potential(radius2);
+				if (calc_epot) mol.Epot += Fene_Potential(radius2);
 				force_abs = Fene_Force(radius2);
 				force = distance*force_abs;
 				mol[i].Force -= force;
+				*neighbor -> Force += force;
 
 			}
 		}

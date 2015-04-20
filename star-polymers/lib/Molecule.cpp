@@ -42,9 +42,9 @@ void Molecule::initialize_straight_chain(unsigned A, unsigned B, double bondLeng
 		Monomers[i].Position = tempPos;
 		Monomers[i].Velocity = MatVec{ Rand::real_uniform() -0.5, Rand::real_uniform() -0.5, Rand::real_uniform() -0.5};
 		average_vel += Monomers[i].Velocity;
-		if (i != 0) {
+		/*if (i != 0) {
 			Monomers[i].set_neighbor(Monomers[i-1]);
-		}
+		}*/
 		if (i != (NumberOfMonomers - 1)) {
  			Monomers[i].set_neighbor(Monomers[i+1]);
 		}
