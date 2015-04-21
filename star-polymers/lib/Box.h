@@ -14,6 +14,7 @@
 #include "Molecule.h"
 #include "MatVec.h"
 #include "Potentials.h"
+#include "Functions.h"
 
 //class Thermostat;
 
@@ -34,7 +35,8 @@ protected:
 
 
 	std::array<double,3> Size;
-	std::array<double,3> CellSize;
+	std::array<int,3> CellSize;
+	std::array<double,3> CellSideLength;
 	std::vector<Molecule> Molecules;
 	std::vector<Particle> Fluid;
 	std::vector<std::vector<std::vector<std::forward_list<Particle*>>>> CellList;
@@ -59,7 +61,7 @@ public:
 	void propagate(double dt);
 
 	void calculate_forces(bool calc_epot = false);
-	void calculate_forces_verlet();
+	void calculate_forces_verlet(bool calc_epot = false);
 	double calculate_ekin();
 	double calculate_radius_of_gyration();
 	unsigned numberOfMonomers();

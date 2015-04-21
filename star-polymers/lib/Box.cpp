@@ -15,6 +15,9 @@ Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
 		CellSize[0] = int(Size[0]/Cutoff);
 		CellSize[1] = int(Size[1]/Cutoff);
 		CellSize[2] = int(Size[2]/Cutoff);
+		CellSideLength[0] = Size[0]/(double)CellSize[0];
+		CellSideLength[1] = Size[1]/(double)CellSize[1];
+		CellSideLength[2] = Size[2]/(double)CellSize[2];
 		CellList = std::vector<std::vector<std::vector<std::forward_list<Particle*>>>>(CellSize[0], std::vector<std::vector<std::forward_list<Particle*>>>(CellSize[1], std::vector<std::forward_list<Particle*>>(CellSize[2], std::forward_list<Particle*>())));
 }
 
@@ -184,7 +187,7 @@ void Box::calculate_forces(bool calc_epot) {
 	//std::cout << count*2 << std::endl;
 }
 
-void Box::calculate_forces_verlet() {
+void Box::calculate_forces_verlet(bool calc_epot) {
 	double radius2 { };
 	double force_abs { };
 	MatVec distance { };
@@ -192,18 +195,20 @@ void Box::calculate_forces_verlet() {
 	for (auto& mol : Molecules) {
 		mol.Epot = 0.0;
 		for (auto& mono : mol.Monomers) mono.Force *= 0.0;
+	}
+	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
 			for (auto& other : mono.VerletList) {
 				distance = relative_position(mono, *other);
 				radius2 = distance*distance;
 				if (mono.AmphiType == 1 && other -> AmphiType == 1) { // BB Type
-					mol.Epot += TypeBB_Potential(radius2, Lambda);
+					if (calc_epot) mol.Epot += 0.5*TypeBB_Potential(radius2, Lambda);
 					force_abs = TypeBB_Force(radius2, Lambda);
 					force = distance*force_abs;
 					mono.Force -= force;
 				}
 				else { // AA Type
-					mol.Epot += TypeAA_Potential(radius2);
+					if (calc_epot) mol.Epot += 0.5*TypeAA_Potential(radius2);
 					force_abs = TypeAA_Force(radius2);
 					force = distance*force_abs;
 					mono.Force -= force;
@@ -212,10 +217,11 @@ void Box::calculate_forces_verlet() {
 			for (auto& neighbor : mono.Neighbors) { //Fene bonds
 				distance = relative_position(mono, *neighbor);
 				radius2 = distance*distance;
-				mol.Epot += 0.5*Fene_Potential(radius2);
+				if (calc_epot) mol.Epot += Fene_Potential(radius2);
 				force_abs = Fene_Force(radius2);
 				force = distance*force_abs;
 				mono.Force -= force;
+				neighbor -> Force += force;
 			}
 		}
 	}
@@ -229,9 +235,6 @@ void Box::update_VerletLists() {
 	for (auto& sheet : CellList) {
 		for (auto& row : sheet) {
 			for (auto& list : row) {
-				/*for (auto pointer : list) {
-					delete(pointer);
-				}*/
 				list.clear();
 			}
 		}
@@ -246,7 +249,7 @@ void Box::update_VerletLists() {
 	for (auto& mol: Molecules) {
 		for (auto& mono : mol.Monomers) {
 			for (int i = 0; i < 3; i++) {
-				CellNumber[i] = (int)(mono.Position[i]/CellSize[i]);
+				CellNumber[i] = (int)(mono.Position[i]/CellSideLength[i]);
 			}
 			mono.VerletPosition = mono.Position;
 			CellList[CellNumber[0]][CellNumber[1]][CellNumber[2]].push_front(&mono);
@@ -254,15 +257,21 @@ void Box::update_VerletLists() {
 	}
 
 	//make VerletLists
+	int p { }, q { }, r { };
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
 			for (int i = 0; i < 3; i++) {
-				CellNumber[i] = (int)(mono.Position[i]/CellSize[i]);
+				CellNumber[i] = (int)(mono.Position[i]/CellSideLength[i]);
 			}
 			for (int j = CellNumber[0]-1; j < CellNumber[0]+2; j++) {
 				for (int k = CellNumber[1]-1; k < CellNumber[1]+2; k++) {
 					for (int l = CellNumber[2]-1; l < CellNumber[2]+2; l++) {
-						for (auto& other : CellList[CellNumber[0]][CellNumber[1]][CellNumber[2]]) {
+
+						p = my_modulus(j, CellSize[0]);
+						q = my_modulus(k, CellSize[1]);
+						r = my_modulus(l, CellSize[2]);
+
+						for (auto& other : CellList[p][q][r]) {
 							if (other == &mono) continue;
 							distance = relative_position(mono, *other);
 							radius2 = distance*distance;
@@ -279,15 +288,18 @@ void Box::update_VerletLists() {
 
 void Box::check_VerletLists() {
 	MatVec displacement { };
+	bool update = false;
 	for (auto& mol : Molecules) {
+		if (update) break;
 		for (auto& mono : mol.Monomers) {
 			displacement = mono.Position - mono.VerletPosition;
 			displacement -= round(displacement/Size) % Size;
 			if (displacement.norm() > (VerletRadius - Cutoff)) {
-				update_VerletLists();
-				return;
+				update = true;
+				break;
 			}
 		}
 	}
+	if (update) update_VerletLists();
 }
 

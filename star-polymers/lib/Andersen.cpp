@@ -9,6 +9,9 @@ Andersen::Andersen(Box& box, double dt, double T, unsigned step):
 		Step { } {
 		update_temp();
 		dtime(dt);
+		SimBox.update_VerletLists();
+		SimBox.calculate_forces_verlet();
+
 	}
 
 void Andersen::update_temp() { }
@@ -27,7 +30,9 @@ void Andersen::propagate(bool calc_epot) {
 		}
 	}
 	SimBox.wrap();
-	SimBox.calculate_forces(calc_epot);
+ 	SimBox.check_VerletLists();
+	SimBox.calculate_forces_verlet(calc_epot);
+
 	for (auto& mol : SimBox.Molecules) {
 		for (auto& mono : mol.Monomers) {
 			mono.Velocity += (mono.Force/mono.Mass)*DeltaTHalf;
