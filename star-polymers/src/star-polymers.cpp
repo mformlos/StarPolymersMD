@@ -41,9 +41,9 @@ int main() {
 
 	for (int n = 0; n < 100000000; n++) {
 		//std::cout << n << " ";
-		thermostat->propagate();
 		//if (n == 18539) box.print_molecules(temp_file);
 		if ( n > 1e5 && !(n%10000)) {
+			thermostat -> propagate(true);
 			std::cout << n << " ";
 			box.print_Epot(std::cout);
 			box.print_Ekin(std::cout);
@@ -55,6 +55,7 @@ int main() {
 			temp_file << "\n";
 			std::cout << '\n';
 		}
+		else thermostat -> propagate(false);
 
 	}
 
