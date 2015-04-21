@@ -23,7 +23,9 @@ int main() {
 	box.add_chain(3, 3, 1., 1.01);
 
 	ofstream temp_file;
+	ofstream config_file;
 	temp_file.open("temperature3.dat", ios::out | ios::trunc);
+	config_file.open("config3.dat", ios::out | ios::trunc);
 
 	box.calculate_forces();
 	//box.print_Epot(std::cout);
@@ -39,7 +41,7 @@ int main() {
 
 	clock_t begin = clock();
 
-	for (int n = 0; n < 10; n++) {
+	for (int n = 0; n < 1000; n++) {
 		//std::cout << n << " ";
 		//if (n == 18539) box.print_molecules(temp_file);
 		if ( n > 1e5 && !(n%10000)) {
@@ -56,7 +58,7 @@ int main() {
 			std::cout << '\n';
 		}
 		else thermostat -> propagate(false);
-		box.print_molecules(std::cout);
+		box.print_molecules(config_file);
 
 	}
 
