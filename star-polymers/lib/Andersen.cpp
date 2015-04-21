@@ -18,7 +18,7 @@ void Andersen::dtime(double dt) {
 	DeltaTHalf = DeltaT * 0.50;
 }
 
-void Andersen::propagate() {
+void Andersen::propagate(bool calc_epot) {
 	Step++;
 	for (auto& mol : SimBox.Molecules) {
 		for (auto& mono : mol.Monomers) {
@@ -27,7 +27,7 @@ void Andersen::propagate() {
 		}
 	}
 	SimBox.wrap();
-	SimBox.calculate_forces();
+	SimBox.calculate_forces(calc_epot);
 	for (auto& mol : SimBox.Molecules) {
 		for (auto& mono : mol.Monomers) {
 			mono.Velocity += (mono.Force/mono.Mass)*DeltaTHalf;

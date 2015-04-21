@@ -41,7 +41,7 @@ void Lowe_Andersen::collide(Particle& one, Particle& two) {
 	}
 }
 
-void Lowe_Andersen::propagate() {
+void Lowe_Andersen::propagate(bool calc_epot) {
 	// velocity verlet
 	for (auto& mol : SimBox.Molecules) {
 		for (auto& mono : mol.Monomers) {
@@ -67,7 +67,7 @@ void Lowe_Andersen::propagate() {
 		}
 	}
 
-	SimBox.calculate_forces();
+	SimBox.calculate_forces(calc_epot);
 
 	for (auto& mol : SimBox.Molecules) {
 		for (auto& mono : mol.Monomers) {

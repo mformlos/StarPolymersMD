@@ -23,7 +23,7 @@ Nose_Hoover::Nose_Hoover(Box& box, double dt, double temp, double a_q1, double a
 
 Nose_Hoover::~Nose_Hoover() {}
 
-void Nose_Hoover::pos_vel() {
+void Nose_Hoover::pos_vel(bool calc_epot) {
 	for (auto& mol : SimBox.Molecules) {
 		for (auto& mono : mol.Monomers) {
 			mono.Velocity += (mono.Force/mono.Mass)*DeltaTHalf;
@@ -32,7 +32,7 @@ void Nose_Hoover::pos_vel() {
 	}
 
 	SimBox.wrap();
-	SimBox.calculate_forces();
+	SimBox.calculate_forces(calc_epot);
 
 	for (auto& mol : SimBox.Molecules) {
 			for (auto& mono : mol.Monomers) {
@@ -68,9 +68,9 @@ void Nose_Hoover::chain() {
 	nuxi2 += g2*DeltaT4;				// L_G2
 }
 
-void Nose_Hoover::propagate() {
+void Nose_Hoover::propagate(bool calc_epot) {
 	chain();
-	pos_vel();
+	pos_vel(calc_epot);
 	chain();
 }
 

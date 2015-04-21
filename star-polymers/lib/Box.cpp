@@ -140,7 +140,7 @@ std::ostream& Box::print_radius_of_gyration(std::ostream& os) {
 	return os;
 }
 
-void Box::calculate_forces(bool calc_epot = true) {
+void Box::calculate_forces(bool calc_epot) {
 	double radius2 { };
 	double force_abs { };
 	MatVec distance { };
@@ -176,7 +176,7 @@ void Box::calculate_forces(bool calc_epot = true) {
 				force_abs = Fene_Force(radius2);
 				force = distance*force_abs;
 				mol[i].Force -= force;
-				*neighbor -> Force += force;
+				neighbor -> Force += force;
 
 			}
 		}

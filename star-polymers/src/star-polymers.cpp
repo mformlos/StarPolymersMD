@@ -23,7 +23,7 @@ int main() {
 	box.add_chain(10, 10, 1., 1.01);
 
 	ofstream temp_file;
-	temp_file.open("temperature.dat", ios::out | ios::trunc);
+	temp_file.open("temperature2.dat", ios::out | ios::trunc);
 
 	box.calculate_forces();
 	//box.print_Epot(std::cout);

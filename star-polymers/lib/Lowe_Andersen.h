@@ -21,7 +21,7 @@ public:
 	void dtime(double dt);
 	void update_temp();
 	void collide(Particle& one, Particle& two);
-	void propagate();
+	void propagate(bool calc_epot = false);
 	std::string name() const;
 	std::string info() const;
 };

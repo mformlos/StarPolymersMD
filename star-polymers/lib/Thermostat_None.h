@@ -14,7 +14,7 @@ public:
 	Thermostat_None(Box& box, double dt);
 	void update_temp();
 	void dtime(double delta_time);
-	void propagate();
+	void propagate(bool calc_epot = false);
 	std::string name() const;
 	std::string info() const;
 };

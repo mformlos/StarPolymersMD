@@ -58,7 +58,7 @@ public:
 
 	void propagate(double dt);
 
-	void calculate_forces(bool calc_epot = true);
+	void calculate_forces(bool calc_epot = false);
 	void calculate_forces_verlet();
 	double calculate_ekin();
 	double calculate_radius_of_gyration();
