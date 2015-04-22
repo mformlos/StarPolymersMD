@@ -18,7 +18,9 @@ Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
 		CellSideLength[0] = Size[0]/(double)CellSize[0];
 		CellSideLength[1] = Size[1]/(double)CellSize[1];
 		CellSideLength[2] = Size[2]/(double)CellSize[2];
+		std::cout << "CellSizes: " << CellSize[0] << " " << CellSize[1] << " " << CellSize[2] << " " << std::endl;
 		CellList = std::vector<std::vector<std::vector<std::forward_list<Particle*>>>>(CellSize[0], std::vector<std::vector<std::forward_list<Particle*>>>(CellSize[1], std::vector<std::forward_list<Particle*>>(CellSize[2], std::forward_list<Particle*>())));
+		std::cout << "CellLists: " << sizeof(CellList) << std::endl;
 }
 
 
@@ -192,13 +194,46 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 	double force_abs { };
 	MatVec distance { };
 	MatVec force { };
+	std::array<int,3> CellNumber { };
+	int p {}, q{}, r{};
 	for (auto& mol : Molecules) {
 		mol.Epot = 0.0;
 		for (auto& mono : mol.Monomers) mono.Force *= 0.0;
 	}
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
-			for (auto& other : mono.VerletList) {
+			for (int i = 0; i < 3; i++) {
+				CellNumber[i] = (int)(mono.Position[i]/CellSideLength[i]);
+			}
+			for (int j = CellNumber[0]-1; j < CellNumber[0]+2; j++) {
+				for (int k = CellNumber[1]-1; k < CellNumber[1]+2; k++) {
+					for (int l = CellNumber[2]-1; l < CellNumber[2]+2; l++) {
+
+						p = my_modulus(j, CellSize[0]);
+						q = my_modulus(k, CellSize[1]);
+						r = my_modulus(l, CellSize[2]);
+
+						for (auto& other : CellList[p][q][r]) {
+							if (other == &mono) continue;
+							distance = relative_position(mono, *other);
+							radius2 = distance*distance;
+							if (mono.AmphiType == 1 && other -> AmphiType == 1) { // BB Type
+								if (calc_epot) mol.Epot += 0.5*TypeBB_Potential(radius2, Lambda);
+								force_abs = TypeBB_Force(radius2, Lambda);
+								force = distance*force_abs;
+								mono.Force -= force;
+							}
+							else { // AA Type
+								if (calc_epot) mol.Epot += 0.5*TypeAA_Potential(radius2);
+								force_abs = TypeAA_Force(radius2);
+								force = distance*force_abs;
+								mono.Force -= force;
+							}
+						}
+					}
+				}
+			}
+			/*for (auto& other : mono.VerletList) {
 				distance = relative_position(mono, *other);
 				radius2 = distance*distance;
 				if (mono.AmphiType == 1 && other -> AmphiType == 1) { // BB Type
@@ -213,7 +248,7 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 					force = distance*force_abs;
 					mono.Force -= force;
 				}
-			}
+			}*/
 			for (auto& neighbor : mono.Neighbors) { //Fene bonds
 				distance = relative_position(mono, *neighbor);
 				radius2 = distance*distance;
@@ -232,13 +267,16 @@ void Box::update_VerletLists() {
 	double radius2 { };
 	MatVec distance { };
 	//clear all Lists;
+	int count { };
 	for (auto& sheet : CellList) {
 		for (auto& row : sheet) {
 			for (auto& list : row) {
+				count++;
 				list.clear();
 			}
 		}
 	}
+	std::cout << "Number of Lists in CellList: " << count << std::endl;
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
 			mono.clear_VerletList();
