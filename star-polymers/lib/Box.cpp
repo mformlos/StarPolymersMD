@@ -18,9 +18,7 @@ Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
 		CellSideLength[0] = Size[0]/(double)CellSize[0];
 		CellSideLength[1] = Size[1]/(double)CellSize[1];
 		CellSideLength[2] = Size[2]/(double)CellSize[2];
-		std::cout << "CellSizes: " << CellSize[0] << " " << CellSize[1] << " " << CellSize[2] << " " << std::endl;
 		CellList = std::vector<std::vector<std::vector<std::forward_list<Particle*>>>>(CellSize[0], std::vector<std::vector<std::forward_list<Particle*>>>(CellSize[1], std::vector<std::forward_list<Particle*>>(CellSize[2], std::forward_list<Particle*>())));
-		std::cout << "CellLists: " << sizeof(CellList) << std::endl;
 }
 
 
@@ -267,16 +265,13 @@ void Box::update_VerletLists() {
 	double radius2 { };
 	MatVec distance { };
 	//clear all Lists;
-	int count { };
 	for (auto& sheet : CellList) {
 		for (auto& row : sheet) {
 			for (auto& list : row) {
-				count++;
 				list.clear();
 			}
 		}
 	}
-	std::cout << "Number of Lists in CellList: " << count << std::endl;
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
 			mono.clear_VerletList();
