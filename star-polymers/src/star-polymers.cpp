@@ -41,7 +41,7 @@ int main() {
 
 	clock_t begin = clock();
 
-	for (int n = 0; n < 4000; n++) {
+	for (int n = 0; n < 10000; n++) {
 		std::cout << n << " ";
 		//if (n == 18539) box.print_molecules(temp_file);
 		//if ( n > 1e5 && !(n%10000)) {
