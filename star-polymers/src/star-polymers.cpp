@@ -39,23 +39,23 @@ int main() {
 
 	clock_t begin = clock();
 
-	for (int n = 0; n < 1000; n++) {
+	for (int n = 0; n < 100000; n++) {
 		//std::cout << n << " ";
 		//if (n == 18539) box.print_molecules(temp_file);
-		//if ( n > 1e5 && !(n%10000)) {
-		thermostat -> propagate(true);
+		if ( n > 1e3 && !(n%1000)) {
+			thermostat -> propagate(true);
 		//std::cout << n << " ";
 		//box.print_Epot(std::cout);
 		//box.print_Ekin(std::cout);
-		temp_file << n << " ";
-		box.print_Epot(temp_file);
-		box.print_Ekin(temp_file);
-		box.print_Temperature(temp_file);
-		box.print_radius_of_gyration(temp_file);
-		temp_file << "\n";
+			temp_file << n << " ";
+			box.print_Epot(temp_file);
+			box.print_Ekin(temp_file);
+			box.print_Temperature(temp_file);
+			box.print_radius_of_gyration(temp_file);
+			temp_file << "\n";
 		//std::cout << '\n';
-		//}
-		//else thermostat -> propagate(false);
+		}
+		else thermostat -> propagate(false);
 		config_file << n << " ";
 		box.print_molecules(config_file);
 	}
