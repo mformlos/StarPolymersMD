@@ -44,20 +44,20 @@ int main() {
 	for (int n = 0; n < 2400; n++) {
 		std::cout << n << " ";
 		//if (n == 18539) box.print_molecules(temp_file);
-		if ( n > 1e5 && !(n%10000)) {
-			thermostat -> propagate(true);
-			std::cout << n << " ";
-			box.print_Epot(std::cout);
-			box.print_Ekin(std::cout);
-			temp_file << n << " ";
-			box.print_Epot(temp_file);
-			box.print_Ekin(temp_file);
-			box.print_Temperature(temp_file);
-			box.print_radius_of_gyration(temp_file);
-			temp_file << "\n";
-			std::cout << '\n';
-		}
-		else thermostat -> propagate(false);
+		//if ( n > 1e5 && !(n%10000)) {
+		thermostat -> propagate(true);
+		//std::cout << n << " ";
+		//box.print_Epot(std::cout);
+		//box.print_Ekin(std::cout);
+		temp_file << n << " ";
+		box.print_Epot(temp_file);
+		box.print_Ekin(temp_file);
+		box.print_Temperature(temp_file);
+		box.print_radius_of_gyration(temp_file);
+		temp_file << "\n";
+		//std::cout << '\n';
+		//}
+		//else thermostat -> propagate(false);
 		config_file << n << " ";
 		box.print_molecules(config_file);
 	}
