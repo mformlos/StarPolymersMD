@@ -181,7 +181,7 @@ void Box::calculate_forces(bool calc_epot) {
 			}
 		}
 	}
-	std::cout << count*2 << std::endl;
+	//std::cout << count*2 << std::endl;
 }
 
 void Box::calculate_forces_verlet() {
