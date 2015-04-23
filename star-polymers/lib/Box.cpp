@@ -188,6 +188,7 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 	double force_abs { };
 	MatVec distance { };
 	MatVec force { };
+	unsigned count { };
 	std::array<int,3> CellNumber { };
 	int p {}, q{}, r{};
 	for (auto& mol : Molecules) {
@@ -214,12 +215,14 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 							if (mono.AmphiType == 1 && other -> AmphiType == 1) { // BB Type
 								if (calc_epot) mol.Epot += 0.5*TypeBB_Potential(radius2, Lambda);
 								force_abs = TypeBB_Force(radius2, Lambda);
+								if (force_abs > 0) count++;
 								force = distance*force_abs;
 								mono.Force -= force;
 							}
 							else { // AA Type
 								if (calc_epot) mol.Epot += 0.5*TypeAA_Potential(radius2);
 								force_abs = TypeAA_Force(radius2);
+								if (force_abs > 0) count++;
 								force = distance*force_abs;
 								mono.Force -= force;
 							}
@@ -254,6 +257,7 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 			}
 		}
 	}
+	std::cout << count << std::endl;
 }
 
 void Box::update_VerletLists() {
