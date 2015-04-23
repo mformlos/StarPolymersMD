@@ -260,7 +260,7 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 			}
 		}
 	}
-	std::cout << count << std::endl;
+	//std::cout << count << std::endl;
 }
 
 void Box::update_VerletLists() {
