@@ -200,7 +200,7 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 			for (int i = 0; i < 3; i++) {
 				CellNumber[i] = (int)(mono.Position[i]/CellSideLength[i]);
 			}
-			for (int j = CellNumber[0]-1; j < CellNumber[0]+2; j++) {
+			/*for (int j = CellNumber[0]-1; j < CellNumber[0]+2; j++) {
 				for (int k = CellNumber[1]-1; k < CellNumber[1]+2; k++) {
 					for (int l = CellNumber[2]-1; l < CellNumber[2]+2; l++) {
 
@@ -229,23 +229,26 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 						}
 					}
 				}
-			}
-			/*for (auto& other : mono.VerletList) {
+			}*/
+			for (auto& other : mono.VerletList) {
 				distance = relative_position(mono, *other);
 				radius2 = distance*distance;
 				if (mono.AmphiType == 1 && other -> AmphiType == 1) { // BB Type
 					if (calc_epot) mol.Epot += 0.5*TypeBB_Potential(radius2, Lambda);
 					force_abs = TypeBB_Force(radius2, Lambda);
+					if (force_abs > 0) count++;
 					force = distance*force_abs;
 					mono.Force -= force;
 				}
 				else { // AA Type
 					if (calc_epot) mol.Epot += 0.5*TypeAA_Potential(radius2);
 					force_abs = TypeAA_Force(radius2);
+					if (force_abs > 0) count++;
+
 					force = distance*force_abs;
 					mono.Force -= force;
 				}
-			}*/
+			}
 			for (auto& neighbor : mono.Neighbors) { //Fene bonds
 				distance = relative_position(mono, *neighbor);
 				radius2 = distance*distance;

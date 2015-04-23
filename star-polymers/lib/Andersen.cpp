@@ -25,25 +25,28 @@ void Andersen::propagate(bool calc_epot) {
 	Step++;
 	for (auto& mol : SimBox.Molecules) {
 		for (auto& mono : mol.Monomers) {
-			mono.Velocity += (mono.Force/mono.Mass)*DeltaTHalf;
+			if (mono.Mass == 1.0) mono.Velocity += mono.Force*DeltaTHalf;
+			else mono.Velocity += mono.Force*(DeltaTHalf/mono.Mass);
 			mono.Position += mono.Velocity*DeltaT;
 		}
 	}
 	SimBox.wrap();
- 	//SimBox.check_VerletLists();
-	SimBox.update_VerletLists();
+ 	SimBox.check_VerletLists();
+	//SimBox.update_VerletLists();
 	SimBox.calculate_forces_verlet(calc_epot);
 
 	for (auto& mol : SimBox.Molecules) {
 		for (auto& mono : mol.Monomers) {
-			mono.Velocity += (mono.Force/mono.Mass)*DeltaTHalf;
+			if (mono.Mass == 1.0) mono.Velocity += mono.Force*DeltaTHalf;
+			else mono.Velocity += mono.Force*(DeltaTHalf/mono.Mass);
 		}
 	}
 	if (!(Step%UpdateStep)) {
 		for (auto& mol : SimBox.Molecules) {
 			for (auto& mono : mol.Monomers) {
 				for (unsigned i = 0; i < 3; i++) {
-					mono.Velocity[i] = Rand::real_normal(0.0, sqrt(TargetTemperature/mono.Mass));
+					if (mono.Mass == 1.0) mono.Velocity[i] = Rand::real_normal(0.0, sqrt(TargetTemperature));
+					else mono.Velocity[i] = Rand::real_normal(0.0, sqrt(TargetTemperature/mono.Mass));
 				}
 			}
 		}
