@@ -7,14 +7,13 @@ Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
 	Cutoff { 1.5 },
 	VerletRadius { 2.0 },
 	VerletRadius2 { 4.0 },
-	NumberOfMonomers { },
-	count { } {
+	NumberOfMonomers { } {
 		Size[0] = Lx;
 		Size[1] = Ly;
 		Size[2] = Lz;
-		CellSize[0] = int(Size[0]/Cutoff);
-		CellSize[1] = int(Size[1]/Cutoff);
-		CellSize[2] = int(Size[2]/Cutoff);
+		CellSize[0] = int(Size[0]/VerletRadius);
+		CellSize[1] = int(Size[1]/VerletRadius);
+		CellSize[2] = int(Size[2]/VerletRadius);
 		CellSideLength[0] = Size[0]/(double)CellSize[0];
 		CellSideLength[1] = Size[1]/(double)CellSize[1];
 		CellSideLength[2] = Size[2]/(double)CellSize[2];
@@ -148,7 +147,6 @@ void Box::calculate_forces(bool calc_epot) {
 	double force_abs { };
 	MatVec distance { };
 	MatVec force { };
-	count = 0.0;
 	for (auto& mol : Molecules) {
 		if (calc_epot) mol.Epot = 0.0;
 		for (auto& mono : mol.Monomers) mono.Force *= 0.0;
@@ -166,7 +164,6 @@ void Box::calculate_forces(bool calc_epot) {
 				else { // AA Type
 					if (calc_epot) mol.Epot += TypeAA_Potential(radius2);
 					force_abs = TypeAA_Force(radius2);
-					if (force_abs > 0) count++;
 					force = distance*force_abs;
 					mol[i].Force -= force;
 					mol[j].Force += force;
@@ -184,7 +181,6 @@ void Box::calculate_forces(bool calc_epot) {
 			}
 		}
 	}
-	//std::cout << count*2 << std::endl;
 }
 
 void Box::calculate_forces_verlet(bool calc_epot) {
@@ -321,18 +317,15 @@ void Box::update_VerletLists() {
 
 void Box::check_VerletLists() {
 	MatVec displacement { };
-	bool update = false;
 	for (auto& mol : Molecules) {
-		if (update) break;
 		for (auto& mono : mol.Monomers) {
 			displacement = mono.Position - mono.VerletPosition;
-			displacement -= round(displacement/Size) % Size;
+			//displacement -= round(displacement/Size) % Size;
 			if (displacement.norm() > (VerletRadius - Cutoff)) {
-				update = true;
-				break;
+				update_VerletLists();
+				return;
 			}
 		}
 	}
-	if (update) update_VerletLists();
 }
 
