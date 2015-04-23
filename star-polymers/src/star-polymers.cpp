@@ -41,7 +41,7 @@ int main() {
 
 	clock_t begin = clock();
 
-	for (int n = 0; n < 2400; n++) {
+	for (int n = 0; n < 3000; n++) {
 		std::cout << n << " ";
 		//if (n == 18539) box.print_molecules(temp_file);
 		//if ( n > 1e5 && !(n%10000)) {
@@ -54,7 +54,7 @@ int main() {
 		box.print_Ekin(temp_file);
 		box.print_Temperature(temp_file);
 		box.print_radius_of_gyration(temp_file);
-		//temp_file << "\n";
+		temp_file << "\n";
 		//std::cout << '\n';
 		//}
 		//thermostat -> propagate(false);
