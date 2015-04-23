@@ -30,7 +30,7 @@ protected:
 	double VerletRadius;
 	double VerletRadius2;
 	unsigned NumberOfMonomers;
-	unsigned count;
+
 
 
 	std::array<double,3> Size;

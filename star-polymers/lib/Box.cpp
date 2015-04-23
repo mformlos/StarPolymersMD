@@ -7,8 +7,7 @@ Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
 	Cutoff { 1.5 },
 	VerletRadius { 2.0 },
 	VerletRadius2 { 4.0 },
-	NumberOfMonomers { },
-	count { } {
+	NumberOfMonomers { } {
 		Size[0] = Lx;
 		Size[1] = Ly;
 		Size[2] = Lz;
@@ -145,7 +144,7 @@ void Box::calculate_forces(bool calc_epot) {
 	double force_abs { };
 	MatVec distance { };
 	MatVec force { };
-	count = 0.0;
+	unsigned count { };
 	for (auto& mol : Molecules) {
 		if (calc_epot) mol.Epot = 0.0;
 		for (auto& mono : mol.Monomers) mono.Force *= 0.0;
@@ -156,6 +155,7 @@ void Box::calculate_forces(bool calc_epot) {
 				if (mol[i].AmphiType == 1 && mol[j].AmphiType == 1) { // BB Type
 					if (calc_epot) mol.Epot += TypeBB_Potential(radius2, Lambda);
 					force_abs = TypeBB_Force(radius2, Lambda);
+					if (force_abs > 0) count++;
 					force = distance*force_abs;
 					mol[i].Force -= force;
 					mol[j].Force += force;
@@ -181,7 +181,7 @@ void Box::calculate_forces(bool calc_epot) {
 			}
 		}
 	}
-	//std::cout << count*2 << std::endl;
+	std::cout << count*2 << std::endl;
 }
 
 void Box::calculate_forces_verlet() {
