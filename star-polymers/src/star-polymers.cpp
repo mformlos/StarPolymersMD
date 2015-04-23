@@ -20,7 +20,7 @@
 int main() {
 
 	Box box(20., 20., 20., 0.5, 1.0);
-	box.add_chain(5, 5, 1., 1.01);
+	box.add_chain(3, 3, 1., 1.01);
 
 	ofstream temp_file;
 	ofstream config_file;
@@ -41,7 +41,7 @@ int main() {
 
 	clock_t begin = clock();
 
-	for (int n = 0; n < 1000; n++) {
+	for (int n = 0; n < 5000; n++) {
 		//std::cout << n << " ";
 		//if (n == 18539) box.print_molecules(temp_file);
 		if ( n > 1e5 && !(n%10000)) {
