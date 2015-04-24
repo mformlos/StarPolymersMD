@@ -23,6 +23,7 @@ class Box {
 	friend class Lowe_Andersen;
 	friend class Nose_Hoover;
 	friend class Andersen;
+	friend class MPC;
 protected:
 	double SystemTime;
 	double Temperature;
