@@ -17,8 +17,8 @@
 #include "Andersen.h"
 int main() {
 
-	Box box(20., 20., 20., 0.5, 1.0);
-	box.add_chain(3, 3, 1., 1.01);
+	Box box(50., 50., 50., 0.5, 1.0);
+	box.add_chain(10, 10, 1., 1.01);
 
 	ofstream temp_file;
 	ofstream config_file;
@@ -39,25 +39,25 @@ int main() {
 
 	clock_t begin = clock();
 
-	for (int n = 0; n < 100000; n++) {
+	for (int n = 0; n < 100000000; n++) {
 		//std::cout << n << " ";
 		//if (n == 18539) box.print_molecules(temp_file);
-		if ( n > 1e3 && !(n%1000)) {
+		if ( n > 1e6 && !(n%10000)) {
 			thermostat -> propagate(true);
-		//std::cout << n << " ";
-		//box.print_Epot(std::cout);
-		//box.print_Ekin(std::cout);
+			std::cout << n << " ";
+			box.print_Epot(std::cout);
+			box.print_Ekin(std::cout);
 			temp_file << n << " ";
 			box.print_Epot(temp_file);
 			box.print_Ekin(temp_file);
 			box.print_Temperature(temp_file);
 			box.print_radius_of_gyration(temp_file);
 			temp_file << "\n";
-		//std::cout << '\n';
+			std::cout << '\n';
 		}
 		else thermostat -> propagate(false);
-		config_file << n << " ";
-		box.print_molecules(config_file);
+		//config_file << n << " ";
+		//box.print_molecules(config_file);
 	}
 
 	clock_t end = clock();
