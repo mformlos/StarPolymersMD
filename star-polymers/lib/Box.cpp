@@ -188,63 +188,25 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 	double force_abs { };
 	MatVec distance { };
 	MatVec force { };
-	//unsigned count { };
-	/*std::array<int,3> CellNumber { };
-	int p {}, q{}, r{};*/
 	for (auto& mol : Molecules) {
 		mol.Epot = 0.0;
 		for (auto& mono : mol.Monomers) mono.Force *= 0.0;
 	}
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
-			/*for (int i = 0; i < 3; i++) {
-				CellNumber[i] = (int)(mono.Position[i]/CellSideLength[i]);
-			}
-			for (int j = CellNumber[0]-1; j < CellNumber[0]+2; j++) {
-				for (int k = CellNumber[1]-1; k < CellNumber[1]+2; k++) {
-					for (int l = CellNumber[2]-1; l < CellNumber[2]+2; l++) {
 
-						p = my_modulus(j, CellSize[0]);
-						q = my_modulus(k, CellSize[1]);
-						r = my_modulus(l, CellSize[2]);
-
-						for (auto& other : CellList[p][q][r]) {
-							if (other == &mono) continue;
-							distance = relative_position(mono, *other);
-							radius2 = distance*distance;
-							if (mono.AmphiType == 1 && other -> AmphiType == 1) { // BB Type
-								if (calc_epot) mol.Epot += 0.5*TypeBB_Potential(radius2, Lambda);
-								force_abs = TypeBB_Force(radius2, Lambda);
-								if (force_abs > 0) count++;
-								force = distance*force_abs;
-								mono.Force -= force;
-							}
-							else { // AA Type
-								if (calc_epot) mol.Epot += 0.5*TypeAA_Potential(radius2);
-								force_abs = TypeAA_Force(radius2);
-								if (force_abs > 0) count++;
-								force = distance*force_abs;
-								mono.Force -= force;
-							}
-						}
-					}
-				}
-			}*/
 			for (auto& other : mono.VerletList) {
 				distance = relative_position(mono, *other);
 				radius2 = distance*distance;
 				if (mono.AmphiType == 1 && other -> AmphiType == 1) { // BB Type
 					if (calc_epot) mol.Epot += 0.5*TypeBB_Potential(radius2, Lambda);
 					force_abs = TypeBB_Force(radius2, Lambda);
-					//if (force_abs > 0) count++;
 					force = distance*force_abs;
 					mono.Force -= force;
 				}
 				else { // AA Type
 					if (calc_epot) mol.Epot += 0.5*TypeAA_Potential(radius2);
 					force_abs = TypeAA_Force(radius2);
-					//if (force_abs > 0) count++;
-
 					force = distance*force_abs;
 					mono.Force -= force;
 				}
@@ -260,7 +222,6 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 			}
 		}
 	}
-	//std::cout << count << std::endl;
 }
 
 void Box::update_VerletLists() {
@@ -327,7 +288,7 @@ void Box::check_VerletLists() {
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
 			displacement = mono.Position - mono.VerletPosition;
-			//displacement -= round(displacement/Size) % Size;
+			displacement -= round(displacement/Size) % Size;
 			if (displacement.norm() > (VerletRadius - Cutoff)*0.5) {
 				update_VerletLists();
 				return;
