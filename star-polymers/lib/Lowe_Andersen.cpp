@@ -27,15 +27,15 @@ void Lowe_Andersen::dtime(double dt) {
 }
 
 void Lowe_Andersen::collide(Particle& one, Particle& two) {
-	MatVec unit_sep = SimBox.relative_position(one, two);
+	Vector3d unit_sep = SimBox.relative_position(one, two);
 	double dist = unit_sep.norm();
 	if (dist < InteractionRadius) {
 		unit_sep /= dist;
 		double reduced_mass = (one.Mass == two.Mass) ? 0.5*one.Mass : one.Mass*two.Mass/(one.Mass + two.Mass);
 		double sigma = sqrt(TargetTemperature/(reduced_mass));// TODO: why does this work?
 		double therm_v = sigma*Rand::real_normal();
-		MatVec velocity_diff = two.Velocity - one.Velocity;
-		MatVec dv = unit_sep*(therm_v + velocity_diff*unit_sep);
+		Vector3d velocity_diff = two.Velocity - one.Velocity;
+		Vector3d dv = unit_sep*(therm_v + velocity_diff.dot(unit_sep));
 		one.Velocity += dv*(reduced_mass/one.Mass);
 		two.Velocity -= dv*(reduced_mass/two.Mass);
 	}

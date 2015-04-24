@@ -12,6 +12,7 @@
 
 #include "Particle.h"
 #include "Rand.h"
+#include <../eigen/Eigen/Dense>
 
 
 
@@ -23,13 +24,13 @@ protected:
 public:
 	double Epot;
 	unsigned NumberOfMonomers;
-	std::vector<Particle> Monomers;
+	std::vector<MDParticle> Monomers;
 
 	Molecule(unsigned);
 	Molecule(unsigned, double);
 
-	Particle& operator [](int i);    // Elementweiser Zugriff
-	const Particle& operator [](int i) const;
+	MDParticle& operator [](int i);    // Elementweiser Zugriff
+	const MDParticle& operator [](int i) const;
 
 	void initialize_straight_chain(unsigned A, unsigned B, double bond, double temperature);
 	double calculate_Ekin();

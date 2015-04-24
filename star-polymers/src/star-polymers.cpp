@@ -12,8 +12,8 @@
 #include <ctime>
 #include "Box.h"
 #include "Thermostat_None.h"
-#include "Lowe_Andersen.h"
-#include "Nose_Hoover.h"
+//#include "Lowe_Andersen.h"
+//#include "Nose_Hoover.h"
 #include "Andersen.h"
 
 

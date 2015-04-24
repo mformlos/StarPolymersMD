@@ -11,44 +11,71 @@
 #include <iostream>
 #include <algorithm>
 #include <forward_list>
-#include "MatVec.h"
+#include <../eigen/Eigen/Dense>
+using namespace Eigen;
 
 class Particle {
+public:
+	Vector3d Position;
+	Vector3d Velocity;
+	double Mass;
+
+	//Constructors
+	//Particle() = default;
+	Particle(double);
+	Particle(Vector3d, Vector3d, double);
+	//Particle(const Particle& other) = default;
+	//Particle(Particle&& other) = default;
+	~Particle() = default;
+
+	//Particle& operator =(const Particle& mec) = default;
+	//Particle& operator =(Particle && mec) = default;
+
+
+};
+
+class MPCParticle : public Particle {
+public:
+	unsigned CellIndex;
+
+	//MPCParticle()=default;
+	MPCParticle(double);
+	MPCParticle(Vector3d, Vector3d, double);
+	//MPCParticle& operator =(const MPCParticle& mec) = default;
+	//MPCParticle& operator =(MPCParticle && mec) = default;
+};
+
+class MDParticle : public MPCParticle {
 
  public:
   //members
-  MatVec Position;
-  MatVec Velocity;
-  MatVec Force;
-  MatVec VerletPosition;
-  double Mass;
-  bool AmphiType;
-  bool Ghost;
-  std::forward_list<Particle*> Neighbors;
-  std::forward_list<Particle*> VerletList;
+
+	Vector3d Force;
+	Vector3d VerletPosition;
+	bool AmphiType;
+	std::forward_list<MDParticle*> Neighbors;
+	std::forward_list<MDParticle*> VerletList;
 
 
-  //Constructor
-  Particle() = default;
-  Particle(double, bool, bool);
-  Particle(MatVec, MatVec, double, bool, bool);
-  Particle(const Particle& other) = default;
-  Particle(Particle&& other) = default;
-  ~Particle() = default;
+	//Constructor
 
-  Particle& operator =(const Particle& mec) = default;
-  Particle& operator =(Particle && mec) = default;
+	MDParticle(double, bool);
+	MDParticle(Vector3d, Vector3d, double, bool);
+	//MDParticle(const MDParticle& other) = default;
+	//MDParticle(MDParticle&& other) = default;
+	//~MDParticle() = default;
 
-  void set_neighbor(Particle& neighbor);
-  void clear_VerletList();
+	//MDParticle& operator =(const MDParticle& mec) = default;
+	//MDParticle& operator =(MDParticle && mec) = default;
 
-  void print_neighbor() {
-	  for (auto& m : Neighbors) {
-		  std::cout << m->Position << std::endl;
-	  }
-  }
+	void set_neighbor(MDParticle& neighbor);
+	void clear_VerletList();
 
-  double mass() const;
+	void print_neighbor() {
+		for (auto& m : Neighbors) {
+			std::cout << m->Position.transpose() << std::endl;
+		}
+	}
 
 
 };

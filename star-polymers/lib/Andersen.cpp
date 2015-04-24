@@ -44,8 +44,8 @@ void Andersen::propagate(bool calc_epot) {
 		for (auto& mol : SimBox.Molecules) {
 			for (auto& mono : mol.Monomers) {
 				for (unsigned i = 0; i < 3; i++) {
-					if (mono.Mass == 1.0) mono.Velocity[i] = Rand::real_normal(0.0, sqrt(TargetTemperature));
-					else mono.Velocity[i] = Rand::real_normal(0.0, sqrt(TargetTemperature/mono.Mass));
+					if (mono.Mass == 1.0) mono.Velocity(i) = Rand::real_normal(0.0, sqrt(TargetTemperature));
+					else mono.Velocity(i) = Rand::real_normal(0.0, sqrt(TargetTemperature/mono.Mass));
 				}
 			}
 		}

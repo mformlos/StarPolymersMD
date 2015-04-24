@@ -37,8 +37,8 @@ protected:
 	std::array<int,3> CellSize;
 	std::array<double,3> CellSideLength;
 	std::vector<Molecule> Molecules;
-	std::vector<Particle> Fluid;
-	std::vector<std::vector<std::vector<std::forward_list<Particle*>>>> CellList;
+	std::vector<MPCParticle> Fluid;
+	std::vector<std::vector<std::vector<std::forward_list<MDParticle*>>>> CellList;
 	//Thermostat Thermo;  //to be declared
 
 
@@ -49,13 +49,13 @@ public:
 	void add_chain(unsigned N, double mass, double bondLength);
 	void add_chain(unsigned A, unsigned B, double mass, double bondLength);
 
-	MatVec& wrap (MatVec& pos);
-	MatVec wrap (MatVec&& pos);
+	Vector3d& wrap (Vector3d& pos);
+	Vector3d wrap (Vector3d&& pos);
 	void wrap(Particle& part);
 	void wrap(Molecule& mol);
 	void wrap();
 
-	MatVec relative_position(Particle& one, Particle& two);
+	Vector3d relative_position(Particle& one, Particle& two);
 
 	void propagate(double dt);
 

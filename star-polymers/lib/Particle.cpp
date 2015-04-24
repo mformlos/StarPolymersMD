@@ -1,34 +1,43 @@
 #include "Particle.h"
 
-Particle::Particle(double aMass, bool aAmphiType, bool aGhost) :
-    Position { },
-    Velocity { },
-	Force { },
-    Mass { aMass },
-    AmphiType {aAmphiType },
-    Ghost { aGhost },
+Particle::Particle(double aMass) :
+    Position { Vector3d::Zero() },
+    Velocity { Vector3d::Zero() },
+	Mass { aMass } { }
+
+Particle::Particle(Vector3d aPosition, Vector3d aVelocity, double aMass) :
+	Position { aPosition },
+	Velocity { aVelocity },
+	Mass { aMass } {}
+
+MPCParticle::MPCParticle(double aMass) :
+	Particle ( aMass ),
+	CellIndex { } {}
+
+MPCParticle::MPCParticle(Vector3d aPosition, Vector3d aVelocity, double aMass) :
+	Particle(aPosition, aVelocity, aMass),
+	CellIndex { } {}
+
+MDParticle::MDParticle(double aMass, bool aAmphiType) :
+	MPCParticle ( aMass ),
+	Force { Vector3d::Zero() },
+	AmphiType {aAmphiType },
 	Neighbors { },
 	VerletList { } {}
 
-Particle::Particle(MatVec aPosition, MatVec aVelocity, double aMass, bool aAmphiType, bool aGhost) :
-  Position { aPosition },
-  Velocity { aVelocity },
-  Force { },
-  VerletPosition { },
-  Mass { aMass },
-  AmphiType {aAmphiType },
-  Ghost { aGhost },
-  Neighbors { },
-  VerletList { } {}
+MDParticle::MDParticle(Vector3d aPosition, Vector3d aVelocity, double aMass, bool aAmphiType) :
+	MPCParticle(aPosition, aVelocity, aMass),
+    AmphiType {aAmphiType },
+	Neighbors { },
+	VerletList { } {}
 
 
-void Particle::set_neighbor(Particle& neighbor) {
+void MDParticle::set_neighbor(MDParticle& neighbor) {
 	Neighbors.push_front(&neighbor);
 }
 
-double Particle::mass() const {return(Mass);}
 
-void Particle::clear_VerletList() {
+void MDParticle::clear_VerletList() {
 	VerletList.clear();
 }
 
