@@ -8,8 +8,8 @@
 #include "MPC.h"
 
 MPC::MPC(Box& box, double aTemperature, int Lx, int Ly, int Lz) :
-SimBox(box),
-Temperature(aTemperature) {
+SimBox { box },
+Temperature { aTemperature } {
 	NumberOfCells = Lx*Ly*Lz - 1;
 	NumberOfMPCParticles = 10*(NumberOfCells+1);
 	BoxSize[0] = Lx;
@@ -25,6 +25,7 @@ Temperature(aTemperature) {
 
 void MPC::initializeMPC() {
 	Vector3d CMV(0., 0., 0.);
+	double ekin { };
 	for (auto& part : Fluid) {
 		for (unsigned i = 0 ; i < 3; i++) {
 			part.Position(i) = BoxSize[i]*Rand::real_uniform();
@@ -35,15 +36,29 @@ void MPC::initializeMPC() {
 	CMV /= NumberOfMPCParticles;
 	for (auto& part : Fluid) {
 		part.Velocity -= CMV;
+		ekin += part.Velocity.squaredNorm();
 	}
-	//TODO: scale Velocities according to temperature
+	double vel_scale = sqrt(3.*(double)NumberOfMPCParticles*Temperature/(ekin*2.0));
+	for (auto& part : Fluid) {
+		part.Velocity *= vel_scale;
+	}
 }
 
 //MPC routine:
+void MPC::MPCstep(double dt) {
+	streaming(dt);
+	Vector3d Shift(Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5);
+	shiftParticles(Shift);
+	sort();
+	collide();
+	Shift = -Shift;
+	shiftParticles(Shift);
+}
 
 void MPC::streaming(double dt) {
 	for (auto& part : Fluid) {
 		part.Position += part.Velocity*dt;
+		SimBox.wrap(part);
 	}
 }
 
@@ -66,6 +81,7 @@ void MPC::collide() {
 	Matrix3d RotationMatrix;
 	for (unsigned i = 0; i <= NumberOfCells; i++) {
 		calculateCMV(i, CMV);
+		thermostat(i, CMV);
 		phi = 2.*M_PI*(Rand::real_uniform()-0.5);
 		theta = 2.*(Rand::real_uniform()-0.5);
 		RotationAxis(0) = sqrt(1-theta*theta)*cos(phi);
@@ -91,8 +107,34 @@ void MPC::collide() {
 		}
 	}
 }
-	void thermostat();
-	void MPCstep(double dt);
+
+void MPC::thermostat(unsigned index, Vector3d& CMV) {
+	double ekinOld { };
+	double scaling { };
+	unsigned count { };
+	for (auto& part : Fluid) {
+		if (part.CellIndex == index) {
+			ekinOld += part.Mass*(part.Velocity - CMV).squaredNorm();
+			count++;
+		}
+	}
+	if (count < 2) return;
+	ekinOld *= 0.5;
+	scaling = pow((Rand::real_gamma(3.*(count-1)/2.)/ekinOld), 0.5);
+	for (auto& part : Fluid) {
+		if (part.CellIndex == index) {
+			part.Velocity = scaling*part.Velocity + (1-scaling)*CMV;
+		}
+	}
+}
+
+void MPC::shiftParticles(Vector3d& Shift) {
+	for (auto& part : Fluid) {
+		part.Position += Shift;
+		SimBox.wrap(part);
+	}
+}
+
 
 
 inline void MPC::calculateCMV(unsigned Index, Vector3d& CMV) {
@@ -135,9 +177,9 @@ inline void MPC::calculateCMP(unsigned Index, Vector3d& CMP) {
 	CMP /= totalMass;
 }
 
-double MPC::calculateEkinInCell(unsigned Index) { }
+/*double MPC::calculateEkinInCell(unsigned Index) { }
 double MPC::calculateEkinTotal() {}
 double MPC::calculateCurrentTemperature() {}
-int MPC::filledCells() {}
+int MPC::filledCells() {}*/
 
 

@@ -36,7 +36,7 @@ inline Vector3d Box::wrap(Vector3d&& pos) {
 	return pos;
 }
 
-inline void Box::wrap(Particle& part) {
+void Box::wrap(Particle& part) {
 	part.Position = wrap(part.Position);
 }
 

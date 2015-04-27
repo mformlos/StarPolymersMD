@@ -8,6 +8,7 @@ normal_distribution<double> Rand::dis_normal;
 uniform_real_distribution<double> Rand::dis_uniform;
 uniform_int_distribution<int> Rand::dis_intuniform;
 chi_squared_distribution<double> Rand::dis_chisquared;
+gamma_distribution<double> Rand::dis_gamma;
 
 double Rand::real_normal(){
 	return Rand::dis_normal(Rand::generator);
@@ -30,4 +31,9 @@ double Rand::real_uniform(double min, double max){
 double Rand::real_chisquared(unsigned n){
 	dis_chisquared.param((chi_squared_distribution<double>::param_type)n);
 	return dis_chisquared(generator);
+}
+
+double Rand::real_gamma(double shape) {
+	dis_gamma.param(gamma_distribution<double>::param_type(shape, 1.0));
+	return dis_gamma(generator);
 }
