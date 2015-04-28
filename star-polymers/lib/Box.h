@@ -75,6 +75,10 @@ public:
 	std::ostream& print_Temperature(std::ostream& os);
 	std::ostream& print_radius_of_gyration(std::ostream& os);
 	// outputs
+
+
+	template<class UnitaryFunc>
+	UnitaryFunc unitary(UnitaryFunc&& func) const;
 };
 
 
