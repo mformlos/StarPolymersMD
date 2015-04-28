@@ -307,3 +307,8 @@ void Box::check_VerletLists() {
 	}
 }
 
+template<class UnitaryFunc>
+UnitaryFunc Box::unitary(UnitaryFunc&& func) const {
+	return for_each(Molecules.cbegin() -> Monomers.cbegin(), Molecules.cend() -> Monomers.cend(), func);
+}
+

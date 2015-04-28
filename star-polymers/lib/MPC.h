@@ -36,8 +36,8 @@ public:
 	void MPCstep(double dt);
 	void streaming(double dt);
 	void sort();
-	void collide();
-	void thermostat(unsigned i, Vector3d& CMV);
+	void collide(unsigned, const Vector3d&);
+	void thermostat(unsigned i, const Vector3d& CMV);
 	void shiftParticles(Vector3d& Shift);
 
 	//getter methods:
@@ -46,7 +46,7 @@ public:
 	double calculateEkinInCell(unsigned Index);
 	double calculateEkinTotal();
 	double calculateCurrentTemperature();
-	int filledCells();
+	unsigned filledCells();
 };
 
 

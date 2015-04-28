@@ -33,7 +33,7 @@ void MPC::initializeMPC() {
 		}
 		CMV += part.Velocity;
 	}
-	CMV /= NumberOfMPCParticles;
+	/*CMV /= NumberOfMPCParticles;
 	for (auto& part : Fluid) {
 		part.Velocity -= CMV;
 		ekin += part.Velocity.squaredNorm();
@@ -41,7 +41,7 @@ void MPC::initializeMPC() {
 	double vel_scale = sqrt(3.*(double)NumberOfMPCParticles*Temperature/(ekin*2.0));
 	for (auto& part : Fluid) {
 		part.Velocity *= vel_scale;
-	}
+	}*/
 }
 
 //MPC routine:
@@ -50,7 +50,12 @@ void MPC::MPCstep(double dt) {
 	Vector3d Shift(Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5);
 	shiftParticles(Shift);
 	sort();
-	collide();
+	for (unsigned Index = 0; Index <= NumberOfCells; Index++) {
+		Vector3d CMV;
+		calculateCMV(Index, CMV);
+		thermostat(Index, CMV);
+		collide(Index, CMV);
+	}
 	Shift = -Shift;
 	shiftParticles(Shift);
 }
@@ -73,42 +78,37 @@ void MPC::sort() {
 	}
 }
 
-void MPC::collide() {
-	Vector3d CMV;
+void MPC::collide(unsigned Index, const Vector3d& CMV) {
 	double phi { };
 	double theta { };
 	Vector3d RotationAxis;
 	Matrix3d RotationMatrix;
-	for (unsigned i = 0; i <= NumberOfCells; i++) {
-		calculateCMV(i, CMV);
-		thermostat(i, CMV);
-		phi = 2.*M_PI*(Rand::real_uniform()-0.5);
-		theta = 2.*(Rand::real_uniform()-0.5);
-		RotationAxis(0) = sqrt(1-theta*theta)*cos(phi);
-		RotationAxis(1) = sqrt(1-theta*theta)*sin(phi);
-		RotationAxis(2) = theta;
-		RotationMatrix(0,0) = RotationAxis(0)*RotationAxis(0) + (1 - RotationAxis(0)*RotationAxis(0))*c;
-		RotationMatrix(0,1) = RotationAxis(0)*RotationAxis(1)*(1 - c) - RotationAxis(2)*s;
-		RotationMatrix(0,2) = RotationAxis(0)*RotationAxis(2)*(1 - c) + RotationAxis(1)*s;
-		RotationMatrix(1,0) = RotationAxis(0)*RotationAxis(1)*(1 - c) + RotationAxis(2)*s;
-		RotationMatrix(1,1) = RotationAxis(1)*RotationAxis(1) + (1 - RotationAxis(1)*RotationAxis(1))*c;
-		RotationMatrix(1,2) = RotationAxis(1)*RotationAxis(2)*(1 - c) - RotationAxis(0)*s;
-		RotationMatrix(2,0) = RotationAxis(0)*RotationAxis(2)*(1 - c) - RotationAxis(1)*s;
-		RotationMatrix(2,1) = RotationAxis(1)*RotationAxis(2)*(1 - c) + RotationAxis(0)*s;
-		RotationMatrix(2,2) = RotationAxis(2)*RotationAxis(2) + (1 - RotationAxis(2)*RotationAxis(2))*c;
+	phi = 2.*M_PI*(Rand::real_uniform()-0.5);
+	theta = 2.*(Rand::real_uniform()-0.5);
+	RotationAxis(0) = sqrt(1-theta*theta)*cos(phi);
+	RotationAxis(1) = sqrt(1-theta*theta)*sin(phi);
+	RotationAxis(2) = theta;
+	RotationMatrix(0,0) = RotationAxis(0)*RotationAxis(0) + (1 - RotationAxis(0)*RotationAxis(0))*c;
+	RotationMatrix(0,1) = RotationAxis(0)*RotationAxis(1)*(1 - c) - RotationAxis(2)*s;
+	RotationMatrix(0,2) = RotationAxis(0)*RotationAxis(2)*(1 - c) + RotationAxis(1)*s;
+	RotationMatrix(1,0) = RotationAxis(0)*RotationAxis(1)*(1 - c) + RotationAxis(2)*s;
+	RotationMatrix(1,1) = RotationAxis(1)*RotationAxis(1) + (1 - RotationAxis(1)*RotationAxis(1))*c;
+	RotationMatrix(1,2) = RotationAxis(1)*RotationAxis(2)*(1 - c) - RotationAxis(0)*s;
+	RotationMatrix(2,0) = RotationAxis(0)*RotationAxis(2)*(1 - c) - RotationAxis(1)*s;
+	RotationMatrix(2,1) = RotationAxis(1)*RotationAxis(2)*(1 - c) + RotationAxis(0)*s;
+	RotationMatrix(2,2) = RotationAxis(2)*RotationAxis(2) + (1 - RotationAxis(2)*RotationAxis(2))*c;
 
-		for (auto& part : Fluid ) {
-			if (part.CellIndex == i) part.Velocity = CMV + RotationMatrix*(part.Velocity - CMV);
-		}
-		for (auto& mol : SimBox.Molecules ) {
-			for (auto& mono : mol.Monomers) {
-				if (mono.CellIndex == i) mono.Velocity = CMV + RotationMatrix*(mono.Velocity - CMV);
-			}
+	for (auto& part : Fluid ) {
+		if (part.CellIndex == Index) part.Velocity = CMV + RotationMatrix*(part.Velocity - CMV);
+	}
+	for (auto& mol : SimBox.Molecules ) {
+		for (auto& mono : mol.Monomers) {
+			if (mono.CellIndex == Index) mono.Velocity = CMV + RotationMatrix*(mono.Velocity - CMV);
 		}
 	}
 }
 
-void MPC::thermostat(unsigned index, Vector3d& CMV) {
+void MPC::thermostat(unsigned index, const Vector3d& CMV) {
 	double ekinOld { };
 	double scaling { };
 	unsigned count { };
@@ -120,7 +120,7 @@ void MPC::thermostat(unsigned index, Vector3d& CMV) {
 	}
 	if (count < 2) return;
 	ekinOld *= 0.5;
-	scaling = pow((Rand::real_gamma(3.*(count-1)/2.)/ekinOld), 0.5);
+	scaling = pow((Rand::real_gamma(3.*(count-1)*Temperature/2.)/ekinOld), 0.5);
 	for (auto& part : Fluid) {
 		if (part.CellIndex == index) {
 			part.Velocity = scaling*part.Velocity + (1-scaling)*CMV;
@@ -132,6 +132,12 @@ void MPC::shiftParticles(Vector3d& Shift) {
 	for (auto& part : Fluid) {
 		part.Position += Shift;
 		SimBox.wrap(part);
+	}
+	for (auto& mol : SimBox.Molecules ) {
+		for (auto& mono : mol.Monomers) {
+			mono.Position += Shift;
+			SimBox.wrap(mono);
+		}
 	}
 }
 
@@ -177,9 +183,42 @@ inline void MPC::calculateCMP(unsigned Index, Vector3d& CMP) {
 	CMP /= totalMass;
 }
 
-/*double MPC::calculateEkinInCell(unsigned Index) { }
-double MPC::calculateEkinTotal() {}
-double MPC::calculateCurrentTemperature() {}
-int MPC::filledCells() {}*/
+double MPC::calculateEkinInCell(unsigned Index) {
+	double ekin { };
+	Vector3d CMV;
+	calculateCMV(Index, CMV);
+	for (auto& part : Fluid) {
+		if (part.CellIndex == Index) ekin += part.Mass*(part.Velocity - CMV).squaredNorm();
+	}
+	ekin *= 0.5;
+	return ekin;
+}
+
+double MPC::calculateEkinTotal() {
+	double ekin { };
+	for (unsigned i = 0; i <= NumberOfCells; i++) {
+		ekin += calculateEkinInCell(i);
+	}
+	return ekin;
+}
+
+double MPC::calculateCurrentTemperature() {
+	double currenttemp { };
+	currenttemp = 2.*calculateEkinTotal()/(3.*(NumberOfMPCParticles - filledCells()));
+	return currenttemp;
+}
+
+unsigned MPC::filledCells() {
+	unsigned count { };
+	for (unsigned i = 0; i <= NumberOfCells; i++) {
+		for (auto& part : Fluid) {
+			if (part.CellIndex == i) {
+				count++;
+				break;
+			}
+		}
+	}
+	return count;
+}
 
 

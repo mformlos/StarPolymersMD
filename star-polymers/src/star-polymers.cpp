@@ -20,7 +20,7 @@
 int main() {
 
 	Box box(5., 5., 5., 0.5, 1.0);
-	//box.add_chain(10, 10, 1., 1.01);
+	box.add_chain(5, 0, 10., 1.01);
 	MPC MPCroutine{box, 0.5, 5, 5, 5};
 
 	ofstream temp_file;
@@ -32,8 +32,8 @@ int main() {
 	//box.print_Epot(std::cout);
 	//box.print_Ekin(std::cout);
 
-	//Thermostat *thermostat{};
-	//thermostat = new Thermostat_None{ box, 0.0001 };
+	Thermostat *thermostat{};
+	thermostat = new Thermostat_None{ box, 0.001 };
 	//thermostat = new Lowe_Andersen{ box, 0.001, 1., 20.0, 7.0 };
 	//thermostat = new Nose_Hoover{box, 0.001, 0.5, 1., 1.};
 	//thermostat = new Andersen{box, 0.001, 0.5, 1999};
@@ -42,8 +42,18 @@ int main() {
 	MPCroutine.initializeMPC();
 	clock_t begin = clock();
 
-	for (int n = 0; n < 10; n++) {
-		MPCroutine.MPCstep(0.001);
+	for (int n = 0; n < 1000; n++) {
+
+		thermostat -> propagate(true);
+		if (!(n%10)) {
+			MPCroutine.MPCstep(0.01);
+			std::cout << n << " ";
+			std::cout << MPCroutine.calculateCurrentTemperature() << " ";
+			box.print_Epot(std::cout);
+			box.print_Temperature(std::cout);
+		}
+
+		if (!(n%10)) std::cout << MPCroutine.calculateCurrentTemperature() << std::endl;
 	}
 	/*for (int n = 0; n < 100000000; n++) {
 		//std::cout << n << " ";
