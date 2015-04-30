@@ -19,13 +19,13 @@
 
 int main() {
 
-	Box box(5., 5., 5., 0.5, 1.0);
+	Box box(7., 7., 7., 0.5, 1.0);
 	box.add_chain(5, 0, 10., 1.01);
-	MPC MPCroutine{box, 0.5, 5, 5, 5};
+	MPC MPCroutine{box, 0.5, 7, 7, 7};
 
 	ofstream temp_file;
 	ofstream config_file;
-	temp_file.open("temperature3.dat", ios::out | ios::trunc);
+	temp_file.open("temperature2 .dat", ios::out | ios::trunc);
 	//config_file.open("config3.dat", ios::out | ios::trunc);
 
 	//box.calculate_forces();
@@ -33,27 +33,37 @@ int main() {
 	//box.print_Ekin(std::cout);
 
 	Thermostat *thermostat{};
-	thermostat = new Thermostat_None{ box, 0.001 };
+	//thermostat = new Thermostat_None{ box, 0.001 };
 	//thermostat = new Lowe_Andersen{ box, 0.001, 1., 20.0, 7.0 };
 	//thermostat = new Nose_Hoover{box, 0.001, 0.5, 1., 1.};
-	//thermostat = new Andersen{box, 0.001, 0.5, 1999};
+	thermostat = new Andersen{box, 0.001, 0.5, 1999};
 	//box.print_molecules(std::cout);
 
 	MPCroutine.initializeMPC();
 	clock_t begin = clock();
 
-	for (int n = 0; n < 1000; n++) {
+	for (int n = 0; n < 1000000; n++) {
 
-		thermostat -> propagate(true);
-		if (!(n%10)) {
-			MPCroutine.MPCstep(0.01);
+		thermostat -> propagate(false);
+		if (!(n%1000)) {
+			thermostat -> propagate(true);
 			std::cout << n << " ";
-			std::cout << MPCroutine.calculateCurrentTemperature() << " ";
 			box.print_Epot(std::cout);
-			box.print_Temperature(std::cout);
+			box.print_Ekin(std::cout);
+			std::cout << MPCroutine.calculateCurrentTemperature() << " ";
+			temp_file << n << " ";
+			box.print_Epot(temp_file);
+			box.print_Ekin(temp_file);
+			box.print_Temperature(temp_file);
+			box.print_radius_of_gyration(temp_file);
+			temp_file << "\n";
+			std::cout << '\n';
 		}
+		/*if (!(n%10)) {
+			MPCroutine.MPCstep(0.01);
+		}*/
 
-		if (!(n%10)) std::cout << MPCroutine.calculateCurrentTemperature() << std::endl;
+
 	}
 	/*for (int n = 0; n < 100000000; n++) {
 		//std::cout << n << " ";
