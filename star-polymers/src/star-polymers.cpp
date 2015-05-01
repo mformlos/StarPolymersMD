@@ -35,6 +35,7 @@ int main(int argc, char* argv[]) {
 	int BoxX { }, BoxY { }, BoxZ { }, TypeA { }, TypeB { }, Steps_Equil { }, Steps_Total { }, Steps_Output { };
 	double Temperature { }, Lambda { }, Shear { }, StepSize { };
 	bool MPC_on {false};
+	stringstream ss_para { };
 	Thermostat *thermostat{};
 
 
@@ -69,10 +70,10 @@ int main(int argc, char* argv[]) {
 			MPC_on = true;
 			thermostat = new Thermostat_None{ box, StepSize };
 			Shear = set_param(0., argv, argc, i_MPC + 1);
+
 		}
 	}
 	else thermostat = new Andersen{box, StepSize, Temperature, 1999};
-
 
 	MPC MPCroutine{box, Temperature, Shear};
 
@@ -80,15 +81,30 @@ int main(int argc, char* argv[]) {
 	std::cout << "Temperature: " << Temperature <<  std::endl;
 	std::cout << "Box Size: " << BoxX << " " << BoxY << " " << BoxZ << std::endl;
 	std::cout << "Step Size: " << StepSize << std::endl;
-	std::cout << "Total Steps: " << Steps_Total << "Equilibration: " << Steps_Equil << "Output every: " << Steps_Output << std::endl;
+	std::cout << "Total Steps: " << Steps_Total << " Equilibration: " << Steps_Equil << " Output every: " << Steps_Output << std::endl;
 	if (MPC_on) {
 		std::cout << "MPC is turned ON with shear rate: " << Shear << std::endl;
 	}
 	else std::cout << "MPC is turned OFF" << std::endl;
 
-	ofstream temp_file;
-	ofstream config_file;
-	temp_file.open("temperature2.dat", ios::out | ios::trunc);
+	ss_para.precision(0);
+	ss_para << "_A" << TypeA;
+	ss_para << "_B" << TypeB;
+	ss_para << "_Lx" << BoxX;
+	ss_para << "_Ly" << BoxY;
+	ss_para << "_Lz" << BoxZ;
+	ss_para << "_Lambda" << Lambda;
+	ss_para << "_T" << Temperature;
+	ss_para << "_run" << scientific << Steps_Total;
+	if (MPC_on) ss_para << "_MPCON_Shear" << Shear;
+	else ss_para << "_MPCOFF";
+
+
+	ofstream statistic_file { };
+	ofstream config_file { };
+	string statistic_file_name = "statistics"+ss_para.str()+".dat";
+	string config_file_name = "config"+ss_para.str()+".dat";
+	statistic_file.open(statistic_file_name, ios::out | ios::trunc);
 	//config_file.open("config3.dat", ios::out | ios::trunc);
 
 
@@ -105,12 +121,12 @@ int main(int argc, char* argv[]) {
 			box.print_Ekin(std::cout);
 			if (MPC_on) std::cout << MPCroutine.calculateCurrentTemperature() << " ";
 			else box.print_Temperature(std::cout);
-			temp_file << n << " ";
-			box.print_Epot(temp_file);
-			box.print_Ekin(temp_file);
-			box.print_Temperature(temp_file);
-			box.print_radius_of_gyration(temp_file);
-			temp_file << "\n";
+			statistic_file << n << " ";
+			box.print_Epot(statistic_file);
+			box.print_Ekin(statistic_file);
+			box.print_Temperature(statistic_file);
+			box.print_radius_of_gyration(statistic_file);
+			statistic_file << "\n";
 			std::cout << '\n';
 		}
 		if (MPC_on && !(n%10)) {
