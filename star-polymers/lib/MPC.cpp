@@ -7,16 +7,20 @@
 
 #include "MPC.h"
 
-MPC::MPC(Box& box, double aTemperature, int Lx, int Ly, int Lz) :
+MPC::MPC(Box& box, double aTemperature, double aShear) :
 SimBox { box },
-Temperature { aTemperature } {
-	NumberOfCells = Lx*Ly*Lz - 1;
+Temperature { aTemperature },
+Shear { aShear } {
+	NumberOfCells = SimBox.BoxSize[0]*SimBox.BoxSize[1]*SimBox.BoxSize[2] - 1;
 	NumberOfMPCParticles = 10*(NumberOfCells+1);
-	BoxSize[0] = Lx;
-	BoxSize[1] = Ly;
-	BoxSize[2] = Lz;
+	BoxSize[0] = SimBox.BoxSize[0];
+	BoxSize[1] = SimBox.BoxSize[1];
+	BoxSize[2] = SimBox.BoxSize[2];
 	c = cos(130.0*M_PI/180.0);
 	s = sin(130.0*M_PI/180.0);
+	delrx = 0.;
+	if (Shear != 0.) shear_on = true;
+	else shear_on = false;
 	Fluid.reserve(NumberOfMPCParticles);
 	for ( unsigned i = 0 ; i < NumberOfMPCParticles ; i++ ) {
 		Fluid.push_back(MPCParticle(1.0));
@@ -25,7 +29,7 @@ Temperature { aTemperature } {
 
 void MPC::initializeMPC() {
 	Vector3d CMV(0., 0., 0.);
-	double ekin { };
+	//double ekin { };
 	for (auto& part : Fluid) {
 		for (unsigned i = 0 ; i < 3; i++) {
 			part.Position(i) = BoxSize[i]*Rand::real_uniform();
@@ -46,12 +50,14 @@ void MPC::initializeMPC() {
 
 //MPC routine:
 void MPC::MPCstep(double dt) {
+	delrx += Shear*BoxSize[0]*dt;
+	delrx -= BoxSize[0]*floor(delrx/BoxSize[0]*0.5);
 	streaming(dt);
 	Vector3d Shift(Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5);
 	shiftParticles(Shift);
 	sort();
 	for (unsigned Index = 0; Index <= NumberOfCells; Index++) {
-		Vector3d CMV;
+		Vector3d CMV { };
 		calculateCMV(Index, CMV);
 		thermostat(Index, CMV);
 		collide(Index, CMV);
@@ -63,7 +69,8 @@ void MPC::MPCstep(double dt) {
 void MPC::streaming(double dt) {
 	for (auto& part : Fluid) {
 		part.Position += part.Velocity*dt;
-		SimBox.wrap(part);
+		if (shear_on) LEBC(part);
+		else wrap(part);
 	}
 }
 
@@ -81,8 +88,8 @@ void MPC::sort() {
 void MPC::collide(unsigned Index, const Vector3d& CMV) {
 	double phi { };
 	double theta { };
-	Vector3d RotationAxis;
-	Matrix3d RotationMatrix;
+	Vector3d RotationAxis { };
+	Matrix3d RotationMatrix { };
 	phi = 2.*M_PI*(Rand::real_uniform()-0.5);
 	theta = 2.*(Rand::real_uniform()-0.5);
 	RotationAxis(0) = sqrt(1-theta*theta)*cos(phi);
@@ -128,15 +135,17 @@ void MPC::thermostat(unsigned index, const Vector3d& CMV) {
 	}
 }
 
-void MPC::shiftParticles(Vector3d& Shift) {
+inline void MPC::shiftParticles(Vector3d& Shift) {
 	for (auto& part : Fluid) {
 		part.Position += Shift;
-		SimBox.wrap(part);
+		if(shear_on) LEBC(part);
+		else wrap(part);
 	}
 	for (auto& mol : SimBox.Molecules ) {
 		for (auto& mono : mol.Monomers) {
 			mono.Position += Shift;
-			SimBox.wrap(mono);
+			if(shear_on) LEBC(mono);
+			else wrap(mono);
 		}
 	}
 }
@@ -185,7 +194,7 @@ inline void MPC::calculateCMP(unsigned Index, Vector3d& CMP) {
 
 double MPC::calculateEkinInCell(unsigned Index) {
 	double ekin { };
-	Vector3d CMV;
+	Vector3d CMV { };
 	calculateCMV(Index, CMV);
 	for (auto& part : Fluid) {
 		if (part.CellIndex == Index) ekin += part.Mass*(part.Velocity - CMV).squaredNorm();
@@ -219,6 +228,34 @@ unsigned MPC::filledCells() {
 		}
 	}
 	return count;
+}
+
+inline void MPC::LEBC(Particle &part) {
+	double cy { (int) (part.Position(1)) / (BoxSize[1] * 0.5) };
+	part.Position(0) -= BoxSize[0]*(int)(part.Position(0)/(BoxSize[0]*0.5));
+	part.Position(0) -= cy*delrx;
+	part.Position(0) -= BoxSize[0]*(int)(part.Position(0)/(BoxSize[0]*0.5));
+	part.Position(1) -= cy*BoxSize[1];
+	part.Position(2) -= BoxSize[2]*(int)(part.Position(2)/(BoxSize[2]*0.5));
+	part.Velocity(0) -= cy*Shear*BoxSize[0];
+}
+
+inline Vector3d& MPC::wrap(Vector3d& pos) {
+	for (unsigned i = 0; i < 3; i++) {
+		pos(i) -= floor(pos(i)/BoxSize[i]) * BoxSize[i];
+	}
+	return pos;
+}
+
+inline Vector3d MPC::wrap(Vector3d&& pos) {
+	for (unsigned i = 0; i < 3; i++) {
+		pos(i) -= floor(pos(i)/BoxSize[i]) * BoxSize[i];
+	}
+	return pos;
+}
+
+inline void MPC::wrap(Particle& part) {
+	part.Position = wrap(part.Position);
 }
 
 

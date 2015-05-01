@@ -14,7 +14,7 @@ Andersen::Andersen(Box& box, double dt, double T, unsigned step):
 
 	}
 
-void Andersen::update_temp() { }
+void Andersen::update_temp() {}
 
 void Andersen::dtime(double dt) {
 	Thermostat::dtime(dt);

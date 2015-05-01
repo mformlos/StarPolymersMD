@@ -34,7 +34,7 @@ protected:
 	unsigned NumberOfMonomers;
 
 
-	std::array<double,3> Size;
+	std::array<int,3> BoxSize;
 	std::array<int,3> CellSize;
 	std::array<double,3> CellSideLength;
 	std::vector<Molecule> Molecules;

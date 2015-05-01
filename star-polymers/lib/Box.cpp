@@ -8,15 +8,15 @@ Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
 	VerletRadius { 2.0 },
 	VerletRadius2 { 4.0 },
 	NumberOfMonomers { } {
-		Size[0] = Lx;
-		Size[1] = Ly;
-		Size[2] = Lz;
-		CellSize[0] = int(Size[0]/VerletRadius);
-		CellSize[1] = int(Size[1]/VerletRadius);
-		CellSize[2] = int(Size[2]/VerletRadius);
-		CellSideLength[0] = Size[0]/(double)CellSize[0];
-		CellSideLength[1] = Size[1]/(double)CellSize[1];
-		CellSideLength[2] = Size[2]/(double)CellSize[2];
+		BoxSize[0] = Lx;
+		BoxSize[1] = Ly;
+		BoxSize[2] = Lz;
+		CellSize[0] = int(BoxSize[0]/VerletRadius);
+		CellSize[1] = int(BoxSize[1]/VerletRadius);
+		CellSize[2] = int(BoxSize[2]/VerletRadius);
+		CellSideLength[0] = BoxSize[0]/(double)CellSize[0];
+		CellSideLength[1] = BoxSize[1]/(double)CellSize[1];
+		CellSideLength[2] = BoxSize[2]/(double)CellSize[2];
 		CellList = std::vector<std::vector<std::vector<std::forward_list<MDParticle*>>>>(CellSize[0], std::vector<std::vector<std::forward_list<MDParticle*>>>(CellSize[1], std::vector<std::forward_list<MDParticle*>>(CellSize[2], std::forward_list<MDParticle*>())));
 }
 
@@ -24,19 +24,19 @@ Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
 
 inline Vector3d& Box::wrap(Vector3d& pos) {
 	for (unsigned i = 0; i < 3; i++) {
-		pos(i) -= floor(pos(i)/Size[i]) * Size[i];
+		pos(i) -= floor(pos(i)/BoxSize[i]) * BoxSize[i];
 	}
 	return pos;
 }
 
 inline Vector3d Box::wrap(Vector3d&& pos) {
 	for (unsigned i = 0; i < 3; i++) {
-		pos(i) -= floor(pos(i)/Size[i]) * Size[i];
+		pos(i) -= floor(pos(i)/BoxSize[i]) * BoxSize[i];
 	}
 	return pos;
 }
 
-void Box::wrap(Particle& part) {
+inline void Box::wrap(Particle& part) {
 	part.Position = wrap(part.Position);
 }
 
@@ -49,10 +49,10 @@ void Box::wrap() {
 }
 
 Vector3d Box::relative_position(Particle& one, Particle& two) {
-	Vector3d result;
+	Vector3d result { };
 	result = two.Position - one.Position;
 	for (unsigned i = 0; i < 3; i++) {
-		result(i) -= round(result(i)/Size[i]) * Size[i];
+		result(i) -= round(result(i)/BoxSize[i]) * BoxSize[i];
 	}
 	return result;
 }
@@ -107,7 +107,7 @@ double Box::calculate_ekin() {
 
 double Box::calculate_radius_of_gyration() {
 	double r_gyr { };
-	Vector3d distance;
+	Vector3d distance { };
 	for (auto& mol : Molecules) {
 		double r_gyr_mol { };
 		for (unsigned i = 0; i < mol.Monomers.size(); i++) {
@@ -153,8 +153,8 @@ std::ostream& Box::print_radius_of_gyration(std::ostream& os) {
 void Box::calculate_forces(bool calc_epot) {
 	double radius2 { };
 	double force_abs { };
-	Vector3d distance;
-	Vector3d force;
+	Vector3d distance { };
+	Vector3d force { };
 	for (auto& mol : Molecules) {
 		if (calc_epot) mol.Epot = 0.0;
 		for (auto& mono : mol.Monomers) mono.Force *= 0.0;
@@ -235,7 +235,7 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 void Box::update_VerletLists() {
 	std::array<int,3> CellNumber { };
 	double radius2 { };
-	Vector3d distance;
+	Vector3d distance { };
 	//clear all Lists;
 	for (auto& sheet : CellList) {
 		for (auto& row : sheet) {
@@ -297,7 +297,7 @@ void Box::check_VerletLists() {
 		for (auto& mono : mol.Monomers) {
 			displacement = mono.Position - mono.VerletPosition;
 			for (unsigned i = 0; i < 3; i++) {
-				displacement(i) -= round(displacement(i)/Size[i]) * Size[i];
+				displacement(i) -= round(displacement(i)/BoxSize[i]) * BoxSize[i];
 			}
 			if (displacement.norm() > (VerletRadius - Cutoff)*0.5) {
 				update_VerletLists();
