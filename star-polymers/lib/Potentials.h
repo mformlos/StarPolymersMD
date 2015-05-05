@@ -71,7 +71,6 @@ inline double TypeAA_Force(double r2) {
 		rm24 *= rm24;
 		rm24 *= rm24;
 		force = 192.0*rm2*rm24*(rm24 - 0.5);
-		if (force > 1e5) std::cout << "AA!" << std::cout;
 	}
 	return force;
 }

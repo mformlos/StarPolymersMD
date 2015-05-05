@@ -47,8 +47,8 @@ protected:
 public:
 	Box(double Lx, double Ly, double Lz, double temperature, double Lambda);
 
-	void add_chain(unsigned N, double mass, double bondLength);
-	void add_chain(unsigned A, unsigned B, double mass, double bondLength);
+	void add_chain(unsigned A, unsigned B, double Mass, double Bond = 1.01);
+	void add_star(unsigned A, unsigned B, unsigned Arms, double Mass, double Bond = 1.01, double AnchorBond = 2.0);
 
 	Vector3d& wrap (Vector3d& pos);
 	Vector3d wrap (Vector3d&& pos);

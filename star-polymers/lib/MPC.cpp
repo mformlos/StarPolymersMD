@@ -56,12 +56,16 @@ void MPC::MPCstep(double dt) {
 	Vector3d Shift(Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5);
 	shiftParticles(Shift);
 	sort();
-	for (unsigned Index = 0; Index <= NumberOfCells; Index++) {
-		Vector3d CMV { };
-		calculateCMV(Index, CMV);
-		thermostat(Index, CMV);
-		collide(Index, CMV);
-	}
+	//#pragma omp parallel num_threads(3)
+	//{
+    	//#pragma omp for
+		for (unsigned Index = 0; Index <= NumberOfCells; Index++) {
+			Vector3d CMV { };
+			calculateCMV(Index, CMV);
+			thermostat(Index, CMV);
+			collide(Index, CMV);
+		}
+	//}
 	Shift = -Shift;
 	shiftParticles(Shift);
 }

@@ -32,7 +32,7 @@ double Molecule::calculate_Ekin() {
 	return Ekin;
 }
 
-void Molecule::initialize_straight_chain(unsigned A, unsigned B, double bondLength, double temperature) {
+void Molecule::initialize_straight_chain(unsigned A, unsigned B, double temperature, double bondLength) {
 	Vector3d tempPos{Vector3d::Zero()};
 	Vector3d average_vel{Vector3d::Zero()};
 	for (unsigned i = A; i < (A+B); i++) Monomers[i].AmphiType = 1;
@@ -60,6 +60,56 @@ void Molecule::initialize_straight_chain(unsigned A, unsigned B, double bondLeng
 	}
 	std::cout << " ekin after: " << calculate_Ekin() << std::endl;
 }
+
+void Molecule::initialize_open_star(unsigned A, unsigned B, unsigned Arms, double Temperature, double Bond, double AnchorBond) {
+	Vector3d direction{Vector3d::Zero()};
+	Vector3d average_vel{Vector3d::Zero()};
+	double phi { }, theta { }, scale { };
+	unsigned n {(unsigned)ceil(sqrt(Arms))};
+	unsigned arm_count {0};
+	unsigned index { };
+	unsigned monomers_per_arm {A+B};
+	Monomers[0].Anchor = 1; //set anchor monomer;
+	for (unsigned i = 0; i < n; i++) {
+		phi = 2.*M_PI*i/n;
+		for (unsigned j = 1; j < n+1; j++) {
+			if (arm_count >= Arms) break;
+			theta = M_PI*j/(n+1);
+			direction(0) = cos(phi)*sin(theta);
+			direction(1) = sin(phi)*sin(theta);
+			direction(2) = cos(theta);
+			for (unsigned k = 1; k <= monomers_per_arm; k++) {
+				index = arm_count*monomers_per_arm+k;
+				if (k > A) Monomers[index].AmphiType = 1;
+				if (k==1) {
+					Monomers[index].Position = AnchorBond*direction;
+					Monomers[0].set_neighbor(Monomers[index]);
+					Monomers[index].set_neighbor(Monomers[index+1]);
+				}
+				else {
+					Monomers[index].Position = (AnchorBond+(k-1)*Bond)*direction;
+					if (k != monomers_per_arm) Monomers[index].set_neighbor(Monomers[index+1]);
+				}
+				for (unsigned l = 0; l < 3; l++) {
+					Monomers[index].Velocity(l) = Rand::real_uniform() -0.5;
+				}
+				average_vel += Monomers[index].Velocity;
+
+			}
+			arm_count++;
+		}
+	}
+	average_vel /= NumberOfMonomers;
+	for (auto& mono : Monomers) {
+		mono.Velocity -= average_vel;
+	}
+	calculate_Ekin();
+	scale = sqrt(3.*(double)NumberOfMonomers*Temperature/(Ekin*2.0));
+	for (auto& mono : Monomers) {
+		mono.Velocity *= scale;
+	}
+}
+
 
 std::ostream& Molecule::print(std::ostream& os) const {
 	for (unsigned i = 0; i < NumberOfMonomers; i++) {

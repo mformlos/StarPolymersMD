@@ -22,12 +22,14 @@ MDParticle::MDParticle(double aMass, bool aAmphiType) :
 	MPCParticle ( aMass ),
 	Force { Vector3d::Zero() },
 	AmphiType {aAmphiType },
+	Anchor { },
 	Neighbors { },
 	VerletList { } {}
 
 MDParticle::MDParticle(Vector3d aPosition, Vector3d aVelocity, double aMass, bool aAmphiType) :
 	MPCParticle(aPosition, aVelocity, aMass),
     AmphiType {aAmphiType },
+	Anchor { },
 	Neighbors { },
 	VerletList { } {}
 

@@ -53,6 +53,7 @@ class MDParticle : public MPCParticle {
 	Vector3d Force;
 	Vector3d VerletPosition;
 	bool AmphiType;
+	bool Anchor;
 	std::forward_list<MDParticle*> Neighbors;
 	std::forward_list<MDParticle*> VerletList;
 

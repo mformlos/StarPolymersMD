@@ -32,7 +32,8 @@ public:
 	MDParticle& operator [](int i);    // Elementweiser Zugriff
 	const MDParticle& operator [](int i) const;
 
-	void initialize_straight_chain(unsigned A, unsigned B, double bond, double temperature);
+	void initialize_straight_chain(unsigned A, unsigned B, double Temperature, double bond = 1.01);
+	void initialize_open_star(unsigned A, unsigned B, unsigned Arms, double Temperature, double Bond = 1.01, double AnchorBond = 2.0);
 	double calculate_Ekin();
 
 	std::ostream& print(std::ostream& os) const;

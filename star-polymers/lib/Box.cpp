@@ -57,18 +57,18 @@ Vector3d Box::relative_position(Particle& one, Particle& two) {
 	return result;
 }
 
-void Box::add_chain(unsigned N, double mass, double bondLength) {
-	Molecules.push_back(Molecule{N, mass});
-	Molecules.back().initialize_straight_chain(N, 0, bondLength, Temperature);
-	wrap(Molecules.back());
-	NumberOfMonomers += N;
-}
-
 void Box::add_chain(unsigned A, unsigned B, double mass, double bondLength) {
 	Molecules.push_back(Molecule{A+B, mass});
-	Molecules.back().initialize_straight_chain(A, B, bondLength, Temperature);
+	Molecules.back().initialize_straight_chain(A, B, Temperature, bondLength);
 	wrap(Molecules.back());
 	NumberOfMonomers += (A+B);
+}
+
+void Box::add_star(unsigned A, unsigned B, unsigned Arms, double Mass, double Bond, double AnchorBond) {
+	Molecules.push_back(Molecule{(A+B)*Arms+1, Mass});
+	Molecules.back().initialize_open_star(A, B, Arms, Temperature, Bond, AnchorBond);
+	wrap(Molecules.back());
+	NumberOfMonomers += (A+B)*Arms + 1;
 }
 
 
@@ -172,6 +172,7 @@ void Box::calculate_forces(bool calc_epot) {
 				else { // AA Type
 					if (calc_epot) mol.Epot += TypeAA_Potential(radius2);
 					force_abs = TypeAA_Force(radius2);
+					if (force_abs > 1e5) std::cout << "AA! " << i <<  " " << j << " " << radius2 <<  std::cout;
 					force = distance*force_abs;
 					mol[i].Force -= force;
 					mol[j].Force += force;
@@ -180,8 +181,14 @@ void Box::calculate_forces(bool calc_epot) {
 			for (auto& neighbor : mol[i].Neighbors) { //Fene bonds
 				distance = relative_position(mol[i], *neighbor);
 				radius2 = distance.dot(distance);
-				if (calc_epot) mol.Epot += Fene_Potential(radius2);
-				force_abs = Fene_Force(radius2);
+				if (mol[i].Anchor) {
+					if (calc_epot) mol.Epot += Fene_Anchor_Potential(radius2);
+					force_abs = Fene_Anchor_Force(radius2);
+				}
+				else {
+					if (calc_epot) mol.Epot += Fene_Potential(radius2);
+					force_abs = Fene_Force(radius2);
+				}
 				force = distance*force_abs;
 				mol[i].Force -= force;
 				neighbor -> Force += force;
@@ -215,6 +222,8 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 				else { // AA Type
 					if (calc_epot) mol.Epot += 0.5*TypeAA_Potential(radius2);
 					force_abs = TypeAA_Force(radius2);
+					if (force_abs > 1e5) std::cout << "AA! " << mono.Position.transpose() <<  " " << other -> Position.transpose() << " " << radius2 <<  std::cout;
+
 					force = distance*force_abs;
 					mono.Force -= force;
 				}
@@ -222,8 +231,14 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 			for (auto& neighbor : mono.Neighbors) { //Fene bonds
 				distance = relative_position(mono, *neighbor);
 				radius2 = distance.dot(distance);
-				if (calc_epot) mol.Epot += Fene_Potential(radius2);
-				force_abs = Fene_Force(radius2);
+				if (mono.Anchor) {
+					if (calc_epot) mol.Epot += Fene_Anchor_Potential(radius2);
+					force_abs = Fene_Anchor_Force(radius2);
+				}
+				else {
+					if (calc_epot) mol.Epot += Fene_Potential(radius2);
+					force_abs = Fene_Force(radius2);
+				}
 				force = distance*force_abs;
 				mono.Force -= force;
 				neighbor -> Force += force;
