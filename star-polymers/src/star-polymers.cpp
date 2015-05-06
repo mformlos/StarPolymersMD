@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
 
 
 	//defaults für: TypeA, TypeB, Arms, Lambda, Temperature, BoxSize(x, y, z), stepsize, step_aufwärm, step_total, step_output
-	double a_para[]{5, 5, 5, 1.0, 0.5, 30, 30, 30, 0.001, 1E5, 1E7, 1E4};
+	double a_para[]{5, 5, 5, 1.0, 0.5, 30, 30, 30, 0.001, 1E5, 1E8, 1E4};
 	int a_para_size = sizeof(a_para) / sizeof(*a_para);
 	int i_para { }, start_i_para { };
 	if (argc > 1) {
@@ -72,7 +72,7 @@ int main(int argc, char* argv[]) {
 
 	while (i_para < argc - 1 && is_number(argv[i_para])) ++i_para;
 	int i_MPC { i_para };
-	++i_para;
+	i_para++;
 	if (argc > 1 && i_MPC < argc) {
 		if (strcmp(argv[i_MPC], "MPC") == 0) {
 			MPC_on = true;
@@ -97,8 +97,11 @@ int main(int argc, char* argv[]) {
 	else std::cout << "MPC is turned OFF" << std::endl;
 
 	ss_para.precision(0);
+	if (argc > 1 && strcmp(argv[1], "Chain") == 0) ss_para << "_Chain";
+	else ss_para << "_Star";
 	ss_para << "_A" << TypeA;
 	ss_para << "_B" << TypeB;
+	if (!(argc > 1 && strcmp(argv[1], "Chain") == 0)) ss_para << "_Arms" << Arms;
 	ss_para << "_Lx" << BoxX;
 	ss_para << "_Ly" << BoxY;
 	ss_para << "_Lz" << BoxZ;
@@ -131,7 +134,7 @@ int main(int argc, char* argv[]) {
 	if (MPC_on) MPCroutine.initializeMPC();
 	clock_t begin = clock();
 
-	for (int n = 0; n < Steps_Total; n++) {
+	for (int n = 0; n < Steps_Total; ++n) {
 
 		thermostat -> propagate(false);
 		if (n > Steps_Equil && !(n%Steps_Output)) {
@@ -157,5 +160,5 @@ int main(int argc, char* argv[]) {
 	clock_t end = clock();
 	//box.print_molecules(std::cout);
 	std::cout << "time: " << double(end-begin)/CLOCKS_PER_SEC << std::endl;
-	delete thermostat;
+	//delete thermostat;
 }

@@ -121,3 +121,20 @@ std::ostream& Molecule::print(std::ostream& os) const {
 std::ostream& operator <<(std::ostream& os, const Molecule& some) {
 	return some.print(os);
 }
+
+template<class UnitaryFunc>
+UnitaryFunc Molecule::unitary(UnitaryFunc&& func) const {
+	return for_each(Monomers.cbegin(), Monomers.cend(), func);
+}
+
+template<class UnaryFunc, class BinaryFunc>
+void Molecule::operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const {
+	auto first = Monomers.cbegin(), last = Monomers.cend();
+	auto second = first;
+
+	for(; first != last; ++first) {
+		ufunc( *first );
+		for( second = first + 1; second != last; ++second )
+			bfunc( *first, *second );
+	}
+}

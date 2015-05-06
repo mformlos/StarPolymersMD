@@ -16,7 +16,7 @@ Andersen::Andersen(Box& box, double dt, double T, unsigned step):
 
 void Andersen::update_temp() {}
 
-void Andersen::dtime(double dt) {
+void Andersen::dtime(double& dt) {
 	Thermostat::dtime(dt);
 	DeltaTHalf = DeltaT * 0.50;
 }

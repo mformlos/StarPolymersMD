@@ -30,7 +30,7 @@ inline Vector3d& Box::wrap(Vector3d& pos) {
 }
 
 inline Vector3d Box::wrap(Vector3d&& pos) {
-	for (unsigned i = 0; i < 3; i++) {
+	for (unsigned i = 0; i < 3; ++i) {
 		pos(i) -= floor(pos(i)/BoxSize[i]) * BoxSize[i];
 	}
 	return pos;
@@ -49,13 +49,13 @@ void Box::wrap() {
 }
 
 Vector3d Box::relative_position(Particle& one, Particle& two) {
-	Vector3d result { };
-	result = two.Position - one.Position;
-	for (unsigned i = 0; i < 3; i++) {
+	Vector3d result {two.Position - one.Position};
+	for (unsigned i = 0; i < 3; ++i) {
 		result(i) -= round(result(i)/BoxSize[i]) * BoxSize[i];
 	}
 	return result;
 }
+
 
 void Box::add_chain(unsigned A, unsigned B, double mass, double bondLength) {
 	Molecules.push_back(Molecule{A+B, mass});
@@ -110,9 +110,9 @@ double Box::calculate_radius_of_gyration() {
 	Vector3d distance { };
 	for (auto& mol : Molecules) {
 		double r_gyr_mol { };
-		for (unsigned i = 0; i < mol.Monomers.size(); i++) {
-			for (unsigned j = i+1; j < mol.Monomers.size(); j++) {
-				distance = relative_position(mol[i], mol[j]);
+		for (unsigned i = 0; i < mol.Monomers.size(); ++i) {
+			for (unsigned j = i+1; j < mol.Monomers.size(); ++j) {
+				Vector3d distance {relative_position(mol[i], mol[j])};
 				r_gyr_mol += distance.dot(distance);
 			}
 		}
@@ -199,9 +199,9 @@ void Box::calculate_forces(bool calc_epot) {
 }
 
 void Box::calculate_forces_verlet(bool calc_epot) {
-	double radius2 { };
+	//double radius2 { };
 	double force_abs { };
-	Vector3d distance { };
+	//Vector3d distance { };
 	Vector3d force { };
 	for (auto& mol : Molecules) {
 		mol.Epot = 0.0;
@@ -211,8 +211,10 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 		for (auto& mono : mol.Monomers) {
 
 			for (auto& other : mono.VerletList) {
-				distance = relative_position(mono, *other);
-				radius2 = distance.dot(distance);
+				Vector3d distance {relative_position(mono, *other)};
+				double radius2 {distance.dot(distance)};
+				//distance = relative_position(mono, *other);
+				//radius2 = distance.dot(distance);
 				if (mono.AmphiType == 1 && other -> AmphiType == 1) { // BB Type
 					if (calc_epot) mol.Epot += 0.5*TypeBB_Potential(radius2, Lambda);
 					force_abs = TypeBB_Force(radius2, Lambda);
@@ -229,8 +231,10 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 				}
 			}
 			for (auto& neighbor : mono.Neighbors) { //Fene bonds
-				distance = relative_position(mono, *neighbor);
-				radius2 = distance.dot(distance);
+				Vector3d distance {relative_position(mono, *neighbor)};
+				double radius2 {distance.dot(distance)};
+				//distance = relative_position(mono, *neighbor);
+				//radius2 = distance.dot(distance);
 				if (mono.Anchor) {
 					if (calc_epot) mol.Epot += Fene_Anchor_Potential(radius2);
 					force_abs = Fene_Anchor_Force(radius2);
@@ -268,7 +272,7 @@ void Box::update_VerletLists() {
 	//sort into CellLists
 	for (auto& mol: Molecules) {
 		for (auto& mono : mol.Monomers) {
-			for (int i = 0; i < 3; i++) {
+			for (int i = 0; i < 3; ++i) {
 				CellNumber[i] = (int)(mono.Position(i)/CellSideLength[i]);
 			}
 			mono.VerletPosition = mono.Position;
@@ -280,12 +284,12 @@ void Box::update_VerletLists() {
 	int p { }, q { }, r { };
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
-			for (int i = 0; i < 3; i++) {
+			for (int i = 0; i < 3; ++i) {
 				CellNumber[i] = (int)(mono.Position(i)/CellSideLength[i]);
 			}
-			for (int j = CellNumber[0]-1; j < CellNumber[0]+2; j++) {
-				for (int k = CellNumber[1]-1; k < CellNumber[1]+2; k++) {
-					for (int l = CellNumber[2]-1; l < CellNumber[2]+2; l++) {
+			for (int j = CellNumber[0]-1; j < CellNumber[0]+2; ++j) {
+				for (int k = CellNumber[1]-1; k < CellNumber[1]+2; ++k) {
+					for (int l = CellNumber[2]-1; l < CellNumber[2]+2; ++l) {
 
 						p = my_modulus(j, CellSize[0]);
 						q = my_modulus(k, CellSize[1]);
@@ -311,7 +315,7 @@ void Box::check_VerletLists() {
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
 			displacement = mono.Position - mono.VerletPosition;
-			for (unsigned i = 0; i < 3; i++) {
+			for (unsigned i = 0; i < 3; ++i) {
 				displacement(i) -= round(displacement(i)/BoxSize[i]) * BoxSize[i];
 			}
 			if (displacement.norm() > (VerletRadius - Cutoff)*0.5) {
@@ -322,8 +326,17 @@ void Box::check_VerletLists() {
 	}
 }
 
+
 template<class UnitaryFunc>
 UnitaryFunc Box::unitary(UnitaryFunc&& func) const {
-	return for_each(Molecules.cbegin() -> Monomers.cbegin(), Molecules.cend() -> Monomers.cend(), func);
+	return for_each(Molecules.cbegin(), Molecules.cend(), func);
+}
+
+template<class UnaryFunc, class BinaryFunc>
+void Box::operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const {
+	auto first = Molecules.cbegin(), last = Molecules.cend();
+	for(; first != last; ++first) {
+		*first(ufunc, bfunc);
+	}
 }
 

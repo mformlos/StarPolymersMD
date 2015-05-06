@@ -37,6 +37,11 @@ public:
 	double calculate_Ekin();
 
 	std::ostream& print(std::ostream& os) const;
+	template<class UnitaryFunc>
+	UnitaryFunc unitary(UnitaryFunc&& func) const;
+
+	template<class UnaryFunc, class BinaryFunc>
+	void operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const;
 
 
 };

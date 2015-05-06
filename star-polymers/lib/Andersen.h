@@ -17,7 +17,7 @@ private:
 public:
 	Andersen(Box& box, double dt, double T, unsigned step);
 	void update_temp();
-	void dtime(double delta_time);
+	void dtime(double& delta_time);
 	void propagate(bool calc_epot = false);
 	std::string name() const;
 	std::string info() const;

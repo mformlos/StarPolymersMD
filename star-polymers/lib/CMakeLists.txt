@@ -28,3 +28,5 @@ target_link_libraries(Nose_Hoover Box Thermostat)
 
 add_library(MPC MPC.cpp)
 target_link_libraries(MPC Particle Rand Box)
+
+add_library(Function_Output Function_Output.cpp)

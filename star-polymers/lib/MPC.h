@@ -37,12 +37,12 @@ public:
 	void initializeMPC();
 
 	//MPC routine:
-	void MPCstep(double dt);
-	void streaming(double dt);
+	void MPCstep(const double& dt);
+	void streaming(const double& dt);
 	void sort();
 	void collide(unsigned, const Vector3d&);
 	void thermostat(unsigned i, const Vector3d& CMV);
-	inline void shiftParticles(Vector3d& Shift);
+	inline void shiftParticles(const Vector3d& Shift);
 	inline void LEBC(Particle&);
 	inline Vector3d& wrap(Vector3d&);
 	inline Vector3d wrap(Vector3d&&);
@@ -59,6 +59,15 @@ public:
 	double calculateEkinTotal();
 	double calculateCurrentTemperature();
 	unsigned filledCells();
+
+	template<class UnitaryFunc>
+	UnitaryFunc unitary(UnitaryFunc&& func) const;
+
+	template<class UnaryFunc, class BinaryFunc>
+	void operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const;
+
+	/*template<class UnaryFunc>
+	void operator() (UnaryFunc& ufunc) const;*/
 };
 
 

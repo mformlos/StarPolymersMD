@@ -49,7 +49,7 @@ void MPC::initializeMPC() {
 }
 
 //MPC routine:
-void MPC::MPCstep(double dt) {
+void MPC::MPCstep(const double& dt) {
 	delrx += Shear*BoxSize[0]*dt;
 	delrx -= BoxSize[0]*floor(delrx/BoxSize[0]*0.5);
 	streaming(dt);
@@ -59,7 +59,7 @@ void MPC::MPCstep(double dt) {
 	//#pragma omp parallel num_threads(3)
 	//{
     	//#pragma omp for
-		for (unsigned Index = 0; Index <= NumberOfCells; Index++) {
+		for (unsigned Index = 0; Index <= NumberOfCells; ++Index) {
 			Vector3d CMV { };
 			calculateCMV(Index, CMV);
 			thermostat(Index, CMV);
@@ -70,7 +70,7 @@ void MPC::MPCstep(double dt) {
 	shiftParticles(Shift);
 }
 
-void MPC::streaming(double dt) {
+void MPC::streaming(const double& dt) {
 	for (auto& part : Fluid) {
 		part.Position += part.Velocity*dt;
 		if (shear_on) LEBC(part);
@@ -139,7 +139,7 @@ void MPC::thermostat(unsigned index, const Vector3d& CMV) {
 	}
 }
 
-inline void MPC::shiftParticles(Vector3d& Shift) {
+inline void MPC::shiftParticles(const Vector3d& Shift) {
 	for (auto& part : Fluid) {
 		part.Position += Shift;
 		if(shear_on) LEBC(part);
@@ -260,6 +260,23 @@ inline Vector3d MPC::wrap(Vector3d&& pos) {
 
 inline void MPC::wrap(Particle& part) {
 	part.Position = wrap(part.Position);
+}
+
+template<class UnitaryFunc>
+UnitaryFunc MPC::unitary(UnitaryFunc&& func) const {
+	return for_each(Fluid.cbegin(), Fluid.cend(), func);
+}
+
+template<class UnaryFunc, class BinaryFunc>
+void MPC::operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const {
+	auto first = Fluid.cbegin(), last = Fluid.cend();
+	auto second = first;
+
+	for(; first != last; ++first) {
+		ufunc( *first );
+		for( second = first + 1; second != last; ++second )
+			bfunc( *first, *second );
+	}
 }
 
 

@@ -79,6 +79,9 @@ public:
 
 	template<class UnitaryFunc>
 	UnitaryFunc unitary(UnitaryFunc&& func) const;
+
+	template<class UnaryFunc, class BinaryFunc>
+	void operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const;
 };
 
 

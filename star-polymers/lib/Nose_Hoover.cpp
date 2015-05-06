@@ -21,7 +21,6 @@ Nose_Hoover::Nose_Hoover(Box& box, double dt, double temp, double a_q1, double a
 	SimBox.calculate_forces();
 }
 
-Nose_Hoover::~Nose_Hoover() {}
 
 void Nose_Hoover::pos_vel(bool calc_epot) {
 	for (auto& mol : SimBox.Molecules) {
