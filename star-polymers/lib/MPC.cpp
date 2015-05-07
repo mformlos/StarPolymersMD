@@ -50,7 +50,7 @@ void MPC::initializeMPC() {
 
 //MPC routine:
 void MPC::MPCstep(const double& dt) {
-	delrx += Shear*BoxSize[0]*dt;
+	delrx += Shear*BoxSize[1]*dt;
 	delrx -= BoxSize[0]*floor(delrx/BoxSize[0]);
 	streaming(dt);
 	Vector3d Shift(Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5);
@@ -235,10 +235,10 @@ unsigned MPC::filledCells() {
 }
 
 inline void MPC::LEBC(Particle &part) {
-	double cy {  round(part.Position(1) / BoxSize[1]) };
+	double cy { floor(part.Position(1) / BoxSize[1]) };
 	part.Position(0) -= cy*delrx;
 	part.Position(0) -= BoxSize[0]*floor(part.Position(0)/BoxSize[0]);
-	part.Position(1) -= BoxSize[1]*floor(part.Position(1)/BoxSize[1]);
+	part.Position(1) -= BoxSize[1]*cy;
 	part.Position(2) -= BoxSize[2]*floor(part.Position(2)/BoxSize[2]);
 	part.Velocity(0) -= cy*Shear*BoxSize[1];
 }
