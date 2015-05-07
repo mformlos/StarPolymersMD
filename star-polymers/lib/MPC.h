@@ -16,6 +16,7 @@
 #include "Molecule.h"
 #include "Rand.h"
 #include "Box.h"
+#include "Analysis.h"
 
 class MPC {
 protected:
@@ -29,9 +30,9 @@ protected:
 	double delrx;
 	bool shear_on;
 	std::array<unsigned,3> BoxSize;
-	std::vector<MPCParticle> Fluid;
 
 public:
+	std::vector<MPCParticle> Fluid;
 	MPC(Box&, double, double aShear = 0.);
 
 	void initializeMPC();
@@ -60,14 +61,29 @@ public:
 	double calculateCurrentTemperature();
 	unsigned filledCells();
 
-	template<class UnitaryFunc>
+	/*template<class UnitaryFunc>
 	UnitaryFunc unitary(UnitaryFunc&& func) const;
 
 	template<class UnaryFunc, class BinaryFunc>
-	void operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const;
+	void operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const;*/
 
-	/*template<class UnaryFunc>
-	void operator() (UnaryFunc& ufunc) const;*/
+	template<class UnitaryFunc>
+	UnitaryFunc unitary(UnitaryFunc&& func) const {
+		return for_each(Fluid.cbegin(), Fluid.cend(), func);
+	}
+
+	template<class UnaryFunc, class BinaryFunc>
+	void operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const {
+		auto first = Fluid.cbegin(), last = Fluid.cend();
+		auto second = first;
+
+		for(; first != last; ++first) {
+			ufunc( *first );
+			for( second = first + 1; second != last; ++second )
+				bfunc( *first, *second );
+		}
+	}
+
 };
 
 

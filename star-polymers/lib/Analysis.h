@@ -13,7 +13,7 @@
 template<class ... Args>
 class Analysis {
 public:
-	virtual ~Analysis();
+	virtual ~Analysis() {}
 	virtual void operator() (const Args& ... args){}
 	virtual double value(){return -1.0;}
 	virtual std::ostream& print_result(std::ostream& os) {return os;}

@@ -51,7 +51,7 @@ void MPC::initializeMPC() {
 //MPC routine:
 void MPC::MPCstep(const double& dt) {
 	delrx += Shear*BoxSize[0]*dt;
-	delrx -= BoxSize[0]*floor(delrx/BoxSize[0]*0.5);
+	delrx -= BoxSize[0]*floor(delrx/BoxSize[0]);
 	streaming(dt);
 	Vector3d Shift(Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5);
 	shiftParticles(Shift);
@@ -94,7 +94,7 @@ void MPC::collide(unsigned Index, const Vector3d& CMV) {
 	double theta { };
 	Vector3d RotationAxis { };
 	Matrix3d RotationMatrix { };
-	phi = 2.*M_PI*(Rand::real_uniform()-0.5);
+	phi = 2.*M_PI*(Rand::real_uniform());
 	theta = 2.*(Rand::real_uniform()-0.5);
 	RotationAxis(0) = sqrt(1-theta*theta)*cos(phi);
 	RotationAxis(1) = sqrt(1-theta*theta)*sin(phi);
@@ -235,13 +235,12 @@ unsigned MPC::filledCells() {
 }
 
 inline void MPC::LEBC(Particle &part) {
-	double cy { (int) (part.Position(1)) / (BoxSize[1] * 0.5) };
-	part.Position(0) -= BoxSize[0]*(int)(part.Position(0)/(BoxSize[0]*0.5));
+	double cy {  round(part.Position(1) / BoxSize[1]) };
 	part.Position(0) -= cy*delrx;
-	part.Position(0) -= BoxSize[0]*(int)(part.Position(0)/(BoxSize[0]*0.5));
-	part.Position(1) -= cy*BoxSize[1];
-	part.Position(2) -= BoxSize[2]*(int)(part.Position(2)/(BoxSize[2]*0.5));
-	part.Velocity(0) -= cy*Shear*BoxSize[0];
+	part.Position(0) -= BoxSize[0]*floor(part.Position(0)/BoxSize[0]);
+	part.Position(1) -= BoxSize[1]*floor(part.Position(1)/BoxSize[1]);
+	part.Position(2) -= BoxSize[2]*floor(part.Position(2)/BoxSize[2]);
+	part.Velocity(0) -= cy*Shear*BoxSize[1];
 }
 
 inline Vector3d& MPC::wrap(Vector3d& pos) {
@@ -262,21 +261,6 @@ inline void MPC::wrap(Particle& part) {
 	part.Position = wrap(part.Position);
 }
 
-template<class UnitaryFunc>
-UnitaryFunc MPC::unitary(UnitaryFunc&& func) const {
-	return for_each(Fluid.cbegin(), Fluid.cend(), func);
-}
 
-template<class UnaryFunc, class BinaryFunc>
-void MPC::operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const {
-	auto first = Fluid.cbegin(), last = Fluid.cend();
-	auto second = first;
-
-	for(; first != last; ++first) {
-		ufunc( *first );
-		for( second = first + 1; second != last; ++second )
-			bfunc( *first, *second );
-	}
-}
 
 
