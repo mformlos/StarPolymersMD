@@ -37,13 +37,13 @@ void MPC::initializeMPC() {
 		}
 		CMV += part.Velocity;
 	}
-	/*CMV /= NumberOfMPCParticles;
+	CMV /= NumberOfMPCParticles;
 	for (auto& part : Fluid) {
 		part.Velocity -= CMV;
-		ekin += part.Velocity.squaredNorm();
+		//ekin += part.Velocity.squaredNorm();
 	}
-	double vel_scale = sqrt(3.*(double)NumberOfMPCParticles*Temperature/(ekin*2.0));
-	for (auto& part : Fluid) {
+	//double vel_scale = sqrt(3.*(double)NumberOfMPCParticles*Temperature/(ekin*2.0));
+	/*for (auto& part : Fluid) {
 		part.Velocity *= vel_scale;
 	}*/
 }
@@ -236,6 +236,7 @@ unsigned MPC::filledCells() {
 
 inline void MPC::LEBC(Particle &part) {
 	double cy { floor(part.Position(1) / BoxSize[1]) };
+	part.Position(0) -= BoxSize[0]*floor(part.Position(0)/BoxSize[0]);
 	part.Position(0) -= cy*delrx;
 	part.Position(0) -= BoxSize[0]*floor(part.Position(0)/BoxSize[0]);
 	part.Position(1) -= BoxSize[1]*cy;

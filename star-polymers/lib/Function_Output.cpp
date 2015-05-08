@@ -11,7 +11,6 @@ void Function_Output::add(double x, double func_x) {
 	function[klass] += func_x;
 	function_iter = function.begin();
 	count++;
-	scale = 1. / (count);
 }
 
 Function_Output::Function_Output() :
@@ -30,6 +29,7 @@ void Function_Output::operator ()(double x, double func_x) {
 }
 
 bool Function_Output::output(std::ostream& os) {
+	scale = 1./count;
 	os.precision(8);
 	os << std::scientific;
 	os << function_iter->first << '\t';

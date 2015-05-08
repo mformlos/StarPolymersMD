@@ -29,7 +29,7 @@ protected:
 	double s;
 	double delrx;
 	bool shear_on;
-	std::array<unsigned,3> BoxSize;
+	std::array<int,3> BoxSize;
 
 public:
 	std::vector<MPCParticle> Fluid;

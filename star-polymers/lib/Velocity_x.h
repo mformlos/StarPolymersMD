@@ -9,36 +9,55 @@
 #define LIB_VELOCITY_X_H_
 
 #include "Analysis.h"
+#include <map>
+#include <iterator>
 #include "Function_Output.h"
 #include <../eigen/Eigen/Dense>
 
 class VelocityX: public Analysis<Particle> {
 protected:
-	Function_Output vel_x_average;
-	Vector3d x_hat;
+	std::map<double, double> vel_x_average;
+	std::map<double, double>::iterator vel_x_average_iter;
+	std::map<double, double> vel_x_average_count;
+	std::map<double, double>::iterator vel_x_average_count_iter;
+
+	double width;
+	//Function_Output vel_x_average;
 
 public:
-	VelocityX(double width, double offset = 0.0, bool center = true) :
-		vel_x_average {width, offset, center},
-		x_hat {1.0, 0.0, 0.0} {}
-
-	VelocityX() :
+	VelocityX(double a_width = 0.5) :
 		vel_x_average { },
-		x_hat {1.0, 0.0, 0.0}{ }
+		vel_x_average_iter { },
+		vel_x_average_count { },
+		vel_x_average_count_iter { },
+		width {a_width} {}
 
-	~VelocityX() = default;
 
 	void operator() (const Particle& part) {
-		vel_x_average(part.Position(1), part.Velocity.dot(x_hat));
+		double y {floor(part.Position(1)/ width) * width };
+		vel_x_average[y] += part.Velocity(0);
+		vel_x_average_iter = vel_x_average.begin();
+		vel_x_average_count[y]++;
+		vel_x_average_count_iter = vel_x_average_count.begin();
 	}
+
 	double value() {return 1.0; }
 	std::ostream& print_result(std::ostream& os) {
-		bool out {};
-	  	do {
-		  	out = vel_x_average.output(os);
-		  	os << '\n';
-	  	} while(out);
-	  	vel_x_average.output_reset();
+		bool out {true};
+		do {
+			os.precision(8);
+			os << std::scientific;
+			os << vel_x_average_iter->first << '\t';
+			os << (vel_x_average_iter->second) / (vel_x_average_count_iter -> second) << '\n';
+			os << std::flush;
+			auto vel_x_average_iter_buf = vel_x_average_iter;
+			if (++vel_x_average_iter_buf == vel_x_average.end()) out = false;
+			++vel_x_average_iter;
+			++vel_x_average_count_iter;
+
+		} while(out);
+		vel_x_average_iter = vel_x_average.begin();
+		vel_x_average_count_iter = vel_x_average_count.begin();
 		return os;
 	}
 };
