@@ -30,7 +30,8 @@ protected:
 	double delrx;
 	bool shear_on;
 	std::array<int,3> BoxSize;
-
+	std::vector<std::vector<MPCParticle*>> MPCCellList;
+	std::vector<unsigned> MPCCellListFluidParticles;
 public:
 	std::vector<MPCParticle> Fluid;
 	MPC(Box&, double, double aShear = 0.);
@@ -41,8 +42,11 @@ public:
 	void MPCstep(const double& dt);
 	void streaming(const double& dt);
 	void sort();
+	void sort(std::vector<std::vector<MPCParticle*>>&);
 	void collide(unsigned, const Vector3d&);
+	void collide(const std::vector<MPCParticle*>& List, const Vector3d& CMV);
 	void thermostat(unsigned i, const Vector3d& CMV);
+	void thermostat(const std::vector<MPCParticle*>&, const Vector3d&);
 	inline void shiftParticles(const Vector3d& Shift);
 	inline void LEBC(Particle&);
 	inline Vector3d& wrap(Vector3d&);
@@ -55,6 +59,7 @@ public:
 
 	//getter methods:
 	inline void calculateCMV(unsigned Index, Vector3d&);
+	inline void calculateCMV(std::vector<MPCParticle*>& List, Vector3d& CMV );
 	inline void calculateCMP(unsigned Index, Vector3d&);
 	double calculateEkinInCell(unsigned Index);
 	double calculateEkinTotal();

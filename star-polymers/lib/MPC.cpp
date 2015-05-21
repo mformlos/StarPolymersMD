@@ -16,6 +16,8 @@ Shear { aShear } {
 	BoxSize[0] = SimBox.BoxSize[0];
 	BoxSize[1] = SimBox.BoxSize[1];
 	BoxSize[2] = SimBox.BoxSize[2];
+	MPCCellList = std::vector<std::vector<MPCParticle*>>(NumberOfCells+1, std::vector<MPCParticle*>());
+	MPCCellListFluidParticles = std::vector<unsigned>(NumberOfCells+1, 0);
 	c = cos(130.0*M_PI/180.0);
 	s = sin(130.0*M_PI/180.0);
 	delrx = 0.;
@@ -56,11 +58,15 @@ void MPC::MPCstep(const double& dt) {
 	Vector3d Shift(Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5);
 	shiftParticles(Shift);
 	sort();
+	//sort(MPCCellList);
 	//#pragma omp parallel num_threads(3)
 	//{
     	//#pragma omp for
 		for (unsigned Index = 0; Index <= NumberOfCells; ++Index) {
 			Vector3d CMV { };
+			/*calculateCMV(MPCCellList[Index], CMV);
+			thermostat(MPCCellList[Index], CMV);
+			collide(MPCCellList[Index], CMV);*/
 			calculateCMV(Index, CMV);
 			thermostat(Index, CMV);
 			collide(Index, CMV);
@@ -78,18 +84,43 @@ void MPC::streaming(const double& dt) {
 	}
 }
 
-void MPC::sort() {
+/*void MPC::sort() {
 	for (auto& part : Fluid) {
 		part.CellIndex = (int)part.Position(0) + BoxSize[0]*(int)part.Position(1)+BoxSize[0]*BoxSize[1]*(int)part.Position(2);
+		if (part.CellIndex > NumberOfCells) std::cout << part.CellIndex << std::endl;
 	}
 	for (auto& mol : SimBox.Molecules) {
 		for (auto& mono : mol.Monomers) {
 			mono.CellIndex = (int)mono.Position(0) + BoxSize[0]*(int)mono.Position(1)+BoxSize[0]*BoxSize[1]*(int)mono.Position(2);
+			if (mono.CellIndex > NumberOfCells) std::cout << mono.CellIndex << std::endl;
+
+		}
+	}
+}*/
+
+void MPC::sort() {
+	for (auto& element : MPCCellList) {
+		element.clear();
+	}
+	for (auto& number : MPCCellListFluidParticles) {
+		number = 0;
+	}
+	for (auto& part : Fluid) {
+		part.CellIndex = (int)part.Position(0) + BoxSize[0]*(int)part.Position(1)+BoxSize[0]*BoxSize[1]*(int)part.Position(2);
+		//std::cout << part.CellIndex << std::endl;
+		MPCCellList[part.CellIndex].push_back(&part);
+		MPCCellListFluidParticles[part.CellIndex]++;
+	}
+	for (auto& mol : SimBox.Molecules) {
+		for (auto& mono : mol.Monomers) {
+			mono.CellIndex = (int)mono.Position(0) + BoxSize[0]*(int)mono.Position(1)+BoxSize[0]*BoxSize[1]*(int)mono.Position(2);
+			//std::cout << mono.CellIndex << std::endl;
+			MPCCellList[mono.CellIndex].push_back(&mono);
 		}
 	}
 }
 
-void MPC::collide(unsigned Index, const Vector3d& CMV) {
+/*void MPC::collide(unsigned Index, const Vector3d& CMV) {
 	double phi { };
 	double theta { };
 	Vector3d RotationAxis { };
@@ -117,9 +148,34 @@ void MPC::collide(unsigned Index, const Vector3d& CMV) {
 			if (mono.CellIndex == Index) mono.Velocity = CMV + RotationMatrix*(mono.Velocity - CMV);
 		}
 	}
+}*/
+
+void MPC::collide(unsigned Index, const Vector3d& CMV) {
+	double phi { };
+	double theta { };
+	Vector3d RotationAxis { };
+	Matrix3d RotationMatrix { };
+	phi = 2.*M_PI*(Rand::real_uniform());
+	theta = 2.*(Rand::real_uniform()-0.5);
+	RotationAxis(0) = sqrt(1-theta*theta)*cos(phi);
+	RotationAxis(1) = sqrt(1-theta*theta)*sin(phi);
+	RotationAxis(2) = theta;
+	RotationMatrix(0,0) = RotationAxis(0)*RotationAxis(0) + (1 - RotationAxis(0)*RotationAxis(0))*c;
+	RotationMatrix(0,1) = RotationAxis(0)*RotationAxis(1)*(1 - c) - RotationAxis(2)*s;
+	RotationMatrix(0,2) = RotationAxis(0)*RotationAxis(2)*(1 - c) + RotationAxis(1)*s;
+	RotationMatrix(1,0) = RotationAxis(0)*RotationAxis(1)*(1 - c) + RotationAxis(2)*s;
+	RotationMatrix(1,1) = RotationAxis(1)*RotationAxis(1) + (1 - RotationAxis(1)*RotationAxis(1))*c;
+	RotationMatrix(1,2) = RotationAxis(1)*RotationAxis(2)*(1 - c) - RotationAxis(0)*s;
+	RotationMatrix(2,0) = RotationAxis(0)*RotationAxis(2)*(1 - c) - RotationAxis(1)*s;
+	RotationMatrix(2,1) = RotationAxis(1)*RotationAxis(2)*(1 - c) + RotationAxis(0)*s;
+	RotationMatrix(2,2) = RotationAxis(2)*RotationAxis(2) + (1 - RotationAxis(2)*RotationAxis(2))*c;
+
+	for (auto& part : MPCCellList[Index] ) {
+		part -> Velocity = CMV + RotationMatrix*(part -> Velocity - CMV);
+	}
 }
 
-void MPC::thermostat(unsigned index, const Vector3d& CMV) {
+/*void MPC::thermostat(unsigned index, const Vector3d& CMV) {
 	double ekinOld { };
 	double scaling { };
 	unsigned count { };
@@ -131,12 +187,38 @@ void MPC::thermostat(unsigned index, const Vector3d& CMV) {
 	}
 	if (count < 2) return;
 	ekinOld *= 0.5;
-	scaling = pow((Rand::real_gamma(3.*(count-1)*Temperature/2.)/ekinOld), 0.5);
+	scaling = sqrt(Rand::real_gamma(3.*(count-1)*Temperature/2.)/ekinOld);
 	for (auto& part : Fluid) {
 		if (part.CellIndex == index) {
 			part.Velocity = scaling*part.Velocity + (1-scaling)*CMV;
 		}
 	}
+}*/
+
+void MPC::thermostat(unsigned Index, const Vector3d& CMV){
+	double ekinOld { };
+	double scaling { };
+	unsigned count { };
+	for (unsigned i = 0; i < MPCCellListFluidParticles[Index]; i++) {
+		MPCParticle * part {MPCCellList[Index][i]};
+		ekinOld += part -> Mass * (part -> Velocity -CMV).squaredNorm();
+		count++;
+	}
+	/*for (auto& part : MPCCellList[Index]) {
+		ekinOld += part -> Mass*(part -> Velocity - CMV).squaredNorm();
+		count++;
+	}*/
+
+	if (count < 2) return;
+	ekinOld *= 0.5;
+	scaling = sqrt(Rand::real_gamma(3.*(count-1)*Temperature/2.)/ekinOld);
+	for (unsigned i = 0; i < MPCCellListFluidParticles[Index]; i++) {
+		MPCParticle * part {MPCCellList[Index][i]};
+		part -> Velocity = scaling * part -> Velocity + (1-scaling)*CMV;
+	}
+	/*for (auto& part : MPCCellList[Index]) {
+		part -> Velocity = scaling * part -> Velocity + (1-scaling)*CMV;
+	}*/
 }
 
 inline void MPC::shiftParticles(const Vector3d& Shift) {
@@ -156,7 +238,7 @@ inline void MPC::shiftParticles(const Vector3d& Shift) {
 
 
 
-inline void MPC::calculateCMV(unsigned Index, Vector3d& CMV) {
+/*inline void MPC::calculateCMV(unsigned Index, Vector3d& CMV) {
 	CMV(0) = CMV(1) = CMV(2) = 0.;
 	double totalMass { };
 	for (auto& part : Fluid) {
@@ -172,6 +254,16 @@ inline void MPC::calculateCMV(unsigned Index, Vector3d& CMV) {
 				totalMass += mono.Mass;
 			}
 		}
+	}
+	CMV /= totalMass;
+}*/
+
+inline void MPC::calculateCMV(unsigned Index, Vector3d& CMV ){
+	CMV(0) = CMV(1) = CMV(2) = 0.;
+	double totalMass { };
+	for (auto& part : MPCCellList[Index]) {
+		CMV += part -> Velocity * part -> Mass;
+		totalMass += part -> Mass;
 	}
 	CMV /= totalMass;
 }

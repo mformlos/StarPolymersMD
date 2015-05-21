@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
 
 
 	//defaults für: TypeA, TypeB, Arms, Lambda, Temperature, BoxSize(x, y, z), stepsize, step_aufwärm, step_total, step_output
-	double a_para[]{5, 5, 5, 1.0, 0.5, 30, 30, 30, 0.001, 1E5, 1E8, 1E4};
+	double a_para[]{3, 0, 3, 1.0, 0.5, 10, 10, 50, 0.001, 1E2, 1E4, 1E2};
 	int a_para_size = sizeof(a_para) / sizeof(*a_para);
 	int i_para { }, start_i_para { };
 	if (argc > 1) {
