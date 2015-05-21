@@ -152,8 +152,8 @@ int main(int argc, char* argv[]) {
 			statistic_file << "\n";
 			std::cout << '\n';
 		}
-		if (MPC_on && !(n%10)) {
-			MPCroutine.MPCstep(0.01);
+		if (MPC_on && !(n%100)) {
+			MPCroutine.MPCstep(0.1);
 		}
 	}
 

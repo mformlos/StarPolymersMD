@@ -292,12 +292,25 @@ double MPC::calculateEkinInCell(unsigned Index) {
 	double ekin { };
 	Vector3d CMV { };
 	calculateCMV(Index, CMV);
+	for (unsigned i = 0; i < MPCCellListFluidParticles[Index]; i++) {
+		MPCParticle * part {MPCCellList[Index][i]};
+		ekin += part -> Mass*(part -> Velocity - CMV).squaredNorm();
+	}
+	ekin *= 0.5;
+	return ekin;
+}
+
+
+/*double MPC::calculateEkinInCell(unsigned Index) {
+	double ekin { };
+	Vector3d CMV { };
+	calculateCMV(Index, CMV);
 	for (auto& part : Fluid) {
 		if (part.CellIndex == Index) ekin += part.Mass*(part.Velocity - CMV).squaredNorm();
 	}
 	ekin *= 0.5;
 	return ekin;
-}
+}*/
 
 double MPC::calculateEkinTotal() {
 	double ekin { };
@@ -313,7 +326,7 @@ double MPC::calculateCurrentTemperature() {
 	return currenttemp;
 }
 
-unsigned MPC::filledCells() {
+/*unsigned MPC::filledCells() {
 	unsigned count { };
 	for (unsigned i = 0; i <= NumberOfCells; i++) {
 		for (auto& part : Fluid) {
@@ -324,7 +337,16 @@ unsigned MPC::filledCells() {
 		}
 	}
 	return count;
+}*/
+
+unsigned MPC::filledCells() {
+	unsigned count { };
+	for (unsigned i = 0; i <= NumberOfCells; i++) {
+		if (MPCCellListFluidParticles[i] > 0) count++;
+	}
+	return count;
 }
+
 
 inline void MPC::LEBC(Particle &part) {
 	double cy { floor(part.Position(1) / BoxSize[1]) };
