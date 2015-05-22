@@ -21,6 +21,7 @@ MPCParticle::MPCParticle(Vector3d aPosition, Vector3d aVelocity, double aMass) :
 MDParticle::MDParticle(double aMass, bool aAmphiType) :
 	MPCParticle ( aMass ),
 	Force { Vector3d::Zero() },
+	VerletPosition { Vector3d::Zero() },
 	AmphiType {aAmphiType },
 	Anchor { },
 	Neighbors { },
@@ -28,6 +29,7 @@ MDParticle::MDParticle(double aMass, bool aAmphiType) :
 
 MDParticle::MDParticle(Vector3d aPosition, Vector3d aVelocity, double aMass, bool aAmphiType) :
 	MPCParticle(aPosition, aVelocity, aMass),
+	VerletPosition { Vector3d::Zero() },
     AmphiType {aAmphiType },
 	Anchor { },
 	Neighbors { },

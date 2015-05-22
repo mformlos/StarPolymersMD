@@ -124,6 +124,136 @@ double Box::calculate_radius_of_gyration() {
 	return r_gyr;
 }
 
+std::list<unsigned> Box::calculate_clusters() {
+	std::list<unsigned> cluster_sizes { };
+	for (auto& mol : Molecules) {
+		std::list<MDParticle*> copy_Particles { };
+		for(auto& mono : mol.Monomers) {
+			copy_Particles.push_back(&mono);
+		}
+		/*std::cout << "\n Particles in copy list: ";
+		for (auto& part : copy_Particles) std::cout << part << ' ';*/
+		std::list<MDParticle*> Particles_in_cluster { };
+		while (!copy_Particles.empty()) {
+			MDParticle* part1 { };
+			if (Particles_in_cluster.empty()) {
+				part1 = &*copy_Particles.back();
+				//std::cout << "part1: " << part1 << std::endl;
+				copy_Particles.pop_back();
+				//Particles_in_cluster.splice(Particles_in_cluster.end(), copy_Particles, copy_Particles.end());
+				/*std::cout << "particles in cluster: ";
+				for (auto& part : Particles_in_cluster) std::cout << part << ' ';
+				std::cout << "\n Particles left: ";
+				for (auto& part : copy_Particles) std::cout << part << ' ';*/
+				cluster_sizes.push_back(1);
+			}
+			else {
+				part1 = &*Particles_in_cluster.back();
+				Particles_in_cluster.pop_back();
+			}
+			for (auto& part2 : part1 -> VerletList) {
+				auto iter = std::find(copy_Particles.begin(), copy_Particles.end(), part2);
+ 				if (iter != copy_Particles.end()){
+					if (calculate_epot(*part1, *part2) < 0.0) {
+						Particles_in_cluster.splice(Particles_in_cluster.end(), copy_Particles, iter);
+						/*Particles_in_cluster.push_back(part2);
+						copy_Particles.remove(part2);*/
+						cluster_sizes.back()++;
+					}
+				}
+			}
+		}
+	}
+	cluster_sizes.sort();
+	return cluster_sizes;
+}
+
+std::list<unsigned> Box::calculate_patches() {
+	std::list<unsigned> patches { };
+	for (auto& mol : Molecules) {
+		std::list<unsigned> copy_particles { };
+		std::list<unsigned> copy_arms { };
+		for (unsigned i = 1; i < mol.NumberOfMonomers; i++) copy_particles.push_back(i);
+		for (unsigned i = 0; i < mol.Arms; i++) copy_arms.push_back(i);
+
+		std::list<unsigned> arms_in_patch { };
+		unsigned f1 {};
+		while (!copy_arms.empty()){
+			/*std::cout << "arms in patch: ";
+			for (auto& arm : arms_in_patch) std::cout << arm << ' ';
+			std::cout << '\n';
+			std::cout << "arms left: ";
+			for (auto& arm : copy_arms) std::cout << arm << ' ';
+			std::cout << '\n';*/
+			if (arms_in_patch.empty()) {
+				f1 = copy_arms.front();
+				copy_arms.pop_front();
+				patches.push_back(1);
+			}
+			else {
+				f1 = arms_in_patch.front();
+				arms_in_patch.pop_front();
+			}
+			//arms_in_patch.push_back(f1);
+			//std::cout << "current arm: " << f1 << std::endl;
+			for (unsigned i = 1; i <= (mol.AType+mol.BType); i++) {
+				unsigned part1 { f1*(mol.AType+mol.BType) + i };
+				//std::cout << "current part1: " << part1 << std::endl;
+				copy_particles.remove(part1);
+				std::list<unsigned>::iterator part_it = copy_particles.begin();
+				while (part_it != copy_particles.end()){
+					unsigned part2 {*part_it};
+					if (part2 < part1 || part2 > (mol.AType+mol.BType)*(f1+1)) {
+						if (calculate_epot(mol.Monomers[part1], mol.Monomers[part2]) < 0.0) {
+							unsigned f2 {unsigned((part2-1)/(mol.AType+mol.BType))};
+							//unsigned adv {(mol.AType+ mol.BType) - (part2-1)%(mol.AType+mol.BType)};
+							int reg {(part2-1)%(mol.AType+mol.BType)};
+							//std::cout << "current part2: " << part2 << " current f2: " << f2 << std::endl;
+							arms_in_patch.push_back(f2);
+							copy_arms.remove(f2);
+							patches.back()++;
+							std::list<unsigned>::iterator erase_begin {part_it};
+							std::advance(erase_begin, -reg);
+							std::list<unsigned>::iterator erase_end {erase_begin};
+							std::advance(erase_end, mol.AType+mol.BType);
+							part_it = copy_particles.erase(erase_begin, erase_end);
+							//std::cout << "erase from " << *erase_begin << " to " << *erase_end << std::endl;
+
+							//std::cout << "iterator now at: " << *part_it << std::endl;
+							/*if (part2+adv >= mol.NumberOfMonomers)part_it = copy_particles.end();
+							else std::advance( part_it, adv );
+							std::cout << "iterator now at: " << *part_it << std::endl;
+							for (unsigned j = 1; j <= (mol.AType + mol.BType); j++) {
+								std::cout << "erasing particle: " <<  f2*(mol.AType+mol.BType) + j << std::endl;
+								copy_particles.remove(f2*(mol.AType+mol.BType) + j);
+							}
+							if (part2+adv >= mol.NumberOfMonomers)part_it = copy_particles.end();*/
+						}
+						else part_it++;
+					}
+					else part_it++;
+				}
+			}
+		}
+	}
+	patches.sort();
+	return patches;
+}
+
+double Box::calculate_epot(MDParticle& part1, MDParticle& part2) {
+	double epot { };
+	Vector3d distance = relative_position(part1, part2);
+	double radius2 = distance.dot(distance);
+	if (part1.AmphiType == 1 && part2.AmphiType == 1) epot += TypeBB_Potential(radius2, Lambda);
+	else epot += TypeAA_Potential(radius2);
+	for (auto& neighbor : part1.Neighbors) {
+		if (neighbor == &part2) {
+			if (part1.Anchor || part2.Anchor) epot += Fene_Anchor_Potential(radius2);
+			else epot += Fene_Potential(radius2);
+		}
+	}
+	return epot;
+}
 
 std::ostream& Box::print_Ekin(std::ostream& os) {
 	double KineticEnergy { };
@@ -311,7 +441,7 @@ void Box::update_VerletLists() {
 }
 
 void Box::check_VerletLists() {
-	Vector3d displacement { };
+	Vector3d displacement {Vector3d::Zero()};
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
 			displacement = mono.Position - mono.VerletPosition;
@@ -324,6 +454,7 @@ void Box::check_VerletLists() {
 			}
 		}
 	}
+	return;
 }
 
 

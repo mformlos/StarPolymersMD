@@ -11,6 +11,7 @@
 #include <iostream>
 #include <array>
 #include <vector>
+#include <list>
 #include "Molecule.h"
 #include "MatVec.h"
 #include "Potentials.h"
@@ -38,7 +39,6 @@ protected:
 	std::array<int,3> CellSize;
 	std::array<double,3> CellSideLength;
 	std::vector<Molecule> Molecules;
-	std::vector<MPCParticle> Fluid;
 	std::vector<std::vector<std::vector<std::forward_list<MDParticle*>>>> CellList;
 	//Thermostat Thermo;  //to be declared
 
@@ -64,6 +64,10 @@ public:
 	void calculate_forces_verlet(bool calc_epot = false);
 	double calculate_ekin();
 	double calculate_radius_of_gyration();
+	std::list<unsigned> calculate_clusters();
+	std::list<unsigned> calculate_patches();
+	double calculate_epot(MDParticle&, MDParticle&);
+
 	unsigned numberOfMonomers();
 
 	void update_VerletLists();

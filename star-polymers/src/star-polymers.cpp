@@ -144,6 +144,12 @@ int main(int argc, char* argv[]) {
 			box.print_Ekin(std::cout);
 			if (MPC_on) std::cout << MPCroutine.calculateCurrentTemperature() << " ";
 			else box.print_Temperature(std::cout);
+			/*std::list<unsigned> clusters = box.calculate_clusters();
+			for (auto& element : clusters) std::cout << element << ' ';
+			std::cout << '\n';*/
+			std::list<unsigned> patches = box.calculate_patches();
+			for (auto& element : patches) std::cout << element << ' ';
+			std::cout << '\n';
 			statistic_file << n << " ";
 			box.print_Epot(statistic_file);
 			box.print_Ekin(statistic_file);

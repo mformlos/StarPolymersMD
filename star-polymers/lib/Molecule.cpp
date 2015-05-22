@@ -3,7 +3,10 @@
 Molecule::Molecule(unsigned N) :
 	Ekin { },
 	Epot { },
-	NumberOfMonomers { N }
+	NumberOfMonomers { N },
+	AType { },
+	BType { },
+	Arms { }
 	{
 		Monomers.reserve(N);
 	}
@@ -11,7 +14,10 @@ Molecule::Molecule(unsigned N) :
 Molecule::Molecule(unsigned N, double mass) :
 		Ekin { },
 		Epot { },
-		NumberOfMonomers { N }
+		NumberOfMonomers { N },
+		AType { },
+		BType { },
+		Arms { }
 		{
 			Monomers.reserve(N);
 			for ( unsigned i = 0 ; i < N ; i++ ) {
@@ -35,6 +41,8 @@ double Molecule::calculate_Ekin() {
 void Molecule::initialize_straight_chain(unsigned A, unsigned B, double temperature, double bondLength) {
 	Vector3d tempPos{Vector3d::Zero()};
 	Vector3d average_vel{Vector3d::Zero()};
+	AType = A;
+	BType = B;
 	for (unsigned i = A; i < (A+B); i++) Monomers[i].AmphiType = 1;
 	for (unsigned i = 0; i < NumberOfMonomers; i++) {
 		Monomers[i].Position = tempPos;
@@ -61,9 +69,12 @@ void Molecule::initialize_straight_chain(unsigned A, unsigned B, double temperat
 	std::cout << " ekin after: " << calculate_Ekin() << std::endl;
 }
 
-void Molecule::initialize_open_star(unsigned A, unsigned B, unsigned Arms, double Temperature, double Bond, double AnchorBond) {
+void Molecule::initialize_open_star(unsigned A, unsigned B, unsigned arms, double Temperature, double Bond, double AnchorBond) {
 	Vector3d direction{Vector3d::Zero()};
 	Vector3d average_vel{Vector3d::Zero()};
+	AType = A;
+	BType = B;
+	Arms = arms;
 	double phi { }, theta { }, scale { };
 	unsigned n {(unsigned)ceil(sqrt(Arms))};
 	unsigned arm_count {0};

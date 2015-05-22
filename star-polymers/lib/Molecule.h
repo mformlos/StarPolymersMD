@@ -24,6 +24,9 @@ protected:
 public:
 	double Epot;
 	unsigned NumberOfMonomers;
+	unsigned AType;
+	unsigned BType;
+	unsigned Arms;
 	std::vector<MDParticle> Monomers;
 
 	Molecule(unsigned);
