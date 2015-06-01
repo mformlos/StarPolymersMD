@@ -73,7 +73,7 @@ public:
 	void operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const;*/
 
 	template<class UnitaryFunc>
-	UnitaryFunc unitary(UnitaryFunc&& func) const {
+	UnitaryFunc unitary(UnitaryFunc& func) const {
 		return for_each(Fluid.cbegin(), Fluid.cend(), func);
 	}
 

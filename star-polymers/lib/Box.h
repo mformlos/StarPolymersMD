@@ -58,20 +58,21 @@ public:
 
 	Vector3d relative_position(Particle& one, Particle& two);
 
-	void propagate(double dt);
+	void update_VerletLists();
+	void check_VerletLists();
 
 	void calculate_forces(bool calc_epot = false);
 	void calculate_forces_verlet(bool calc_epot = false);
+
 	double calculate_ekin();
+	double calculate_epot(MDParticle&, MDParticle&);
 	double calculate_radius_of_gyration();
+	Matrix3d calculate_gyration_tensor();
 	std::list<unsigned> calculate_clusters();
 	std::list<unsigned> calculate_patches();
-	double calculate_epot(MDParticle&, MDParticle&);
+
 
 	unsigned numberOfMonomers();
-
-	void update_VerletLists();
-	void check_VerletLists();
 
 	std::ostream& print_molecules(std::ostream& os) const;
 	std::ostream& print_Epot(std::ostream& os) const;

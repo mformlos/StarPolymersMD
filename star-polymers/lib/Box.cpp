@@ -21,6 +21,19 @@ Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
 }
 
 
+void Box::add_chain(unsigned A, unsigned B, double mass, double bondLength) {
+	Molecules.push_back(Molecule{A+B, mass});
+	Molecules.back().initialize_straight_chain(A, B, Temperature, bondLength);
+	wrap(Molecules.back());
+	NumberOfMonomers += (A+B);
+}
+
+void Box::add_star(unsigned A, unsigned B, unsigned Arms, double Mass, double Bond, double AnchorBond) {
+	Molecules.push_back(Molecule{(A+B)*Arms+1, Mass});
+	Molecules.back().initialize_open_star(A, B, Arms, Temperature, Bond, AnchorBond);
+	wrap(Molecules.back());
+	NumberOfMonomers += (A+B)*Arms + 1;
+}
 
 inline Vector3d& Box::wrap(Vector3d& pos) {
 	for (unsigned i = 0; i < 3; i++) {
@@ -56,228 +69,80 @@ Vector3d Box::relative_position(Particle& one, Particle& two) {
 	return result;
 }
 
-
-void Box::add_chain(unsigned A, unsigned B, double mass, double bondLength) {
-	Molecules.push_back(Molecule{A+B, mass});
-	Molecules.back().initialize_straight_chain(A, B, Temperature, bondLength);
-	wrap(Molecules.back());
-	NumberOfMonomers += (A+B);
-}
-
-void Box::add_star(unsigned A, unsigned B, unsigned Arms, double Mass, double Bond, double AnchorBond) {
-	Molecules.push_back(Molecule{(A+B)*Arms+1, Mass});
-	Molecules.back().initialize_open_star(A, B, Arms, Temperature, Bond, AnchorBond);
-	wrap(Molecules.back());
-	NumberOfMonomers += (A+B)*Arms + 1;
-}
-
-
-unsigned Box::numberOfMonomers() {
-	unsigned N { };
-	for(auto& mol: Molecules) {
-		N += mol.Monomers.size();
-	}
-	return N;
-}
-std::ostream& Box::print_molecules(std::ostream& os) const {
-	for (auto& mol : Molecules) {
-		os << mol << std::endl;
-	}
-	return os;
-}
-
-std::ostream& Box::print_Epot(std::ostream& os) const {
-	double PotentialEnergy { };
-	for (auto& mol : Molecules) {
-		PotentialEnergy += mol.Epot;
-	}
-	PotentialEnergy /= NumberOfMonomers;
-	os << PotentialEnergy<< " ";
-	return os;
-}
-
-double Box::calculate_ekin() {
-	double KineticEnergy { };
-	for (auto& mol : Molecules) {
-		KineticEnergy += mol.calculate_Ekin();
-	}
-
-	return KineticEnergy;
-}
-
-double Box::calculate_radius_of_gyration() {
-	double r_gyr { };
+void Box::update_VerletLists() {
+	std::array<int,3> CellNumber { };
+	double radius2 { };
 	Vector3d distance { };
-	for (auto& mol : Molecules) {
-		double r_gyr_mol { };
-		for (unsigned i = 0; i < mol.Monomers.size(); ++i) {
-			for (unsigned j = i+1; j < mol.Monomers.size(); ++j) {
-				Vector3d distance {relative_position(mol[i], mol[j])};
-				r_gyr_mol += distance.dot(distance);
-			}
-		}
-		r_gyr_mol /= (mol.Monomers.size()*mol.Monomers.size());
-		r_gyr_mol = sqrt(r_gyr_mol);
-		r_gyr += r_gyr_mol;
-	}
-	r_gyr /= Molecules.size();
-	return r_gyr;
-}
-
-std::list<unsigned> Box::calculate_clusters() {
-	std::list<unsigned> cluster_sizes { };
-	for (auto& mol : Molecules) {
-		std::list<MDParticle*> copy_Particles { };
-		for(auto& mono : mol.Monomers) {
-			copy_Particles.push_back(&mono);
-		}
-		/*std::cout << "\n Particles in copy list: ";
-		for (auto& part : copy_Particles) std::cout << part << ' ';*/
-		std::list<MDParticle*> Particles_in_cluster { };
-		while (!copy_Particles.empty()) {
-			MDParticle* part1 { };
-			if (Particles_in_cluster.empty()) {
-				part1 = &*copy_Particles.back();
-				//std::cout << "part1: " << part1 << std::endl;
-				copy_Particles.pop_back();
-				//Particles_in_cluster.splice(Particles_in_cluster.end(), copy_Particles, copy_Particles.end());
-				/*std::cout << "particles in cluster: ";
-				for (auto& part : Particles_in_cluster) std::cout << part << ' ';
-				std::cout << "\n Particles left: ";
-				for (auto& part : copy_Particles) std::cout << part << ' ';*/
-				cluster_sizes.push_back(1);
-			}
-			else {
-				part1 = &*Particles_in_cluster.back();
-				Particles_in_cluster.pop_back();
-			}
-			for (auto& part2 : part1 -> VerletList) {
-				auto iter = std::find(copy_Particles.begin(), copy_Particles.end(), part2);
- 				if (iter != copy_Particles.end()){
-					if (calculate_epot(*part1, *part2) < 0.0) {
-						Particles_in_cluster.splice(Particles_in_cluster.end(), copy_Particles, iter);
-						/*Particles_in_cluster.push_back(part2);
-						copy_Particles.remove(part2);*/
-						cluster_sizes.back()++;
-					}
-				}
+	//clear all Lists;
+	for (auto& sheet : CellList) {
+		for (auto& row : sheet) {
+			for (auto& list : row) {
+				list.clear();
 			}
 		}
 	}
-	cluster_sizes.sort();
-	return cluster_sizes;
-}
-
-std::list<unsigned> Box::calculate_patches() {
-	std::list<unsigned> patches { };
 	for (auto& mol : Molecules) {
-		std::list<unsigned> copy_particles { };
-		std::list<unsigned> copy_arms { };
-		for (unsigned i = 1; i < mol.NumberOfMonomers; i++) copy_particles.push_back(i);
-		for (unsigned i = 0; i < mol.Arms; i++) copy_arms.push_back(i);
+		for (auto& mono : mol.Monomers) {
+			mono.clear_VerletList();
+		}
+	}
 
-		std::list<unsigned> arms_in_patch { };
-		unsigned f1 {};
-		while (!copy_arms.empty()){
-			/*std::cout << "arms in patch: ";
-			for (auto& arm : arms_in_patch) std::cout << arm << ' ';
-			std::cout << '\n';
-			std::cout << "arms left: ";
-			for (auto& arm : copy_arms) std::cout << arm << ' ';
-			std::cout << '\n';*/
-			if (arms_in_patch.empty()) {
-				f1 = copy_arms.front();
-				copy_arms.pop_front();
-				patches.push_back(1);
+	//sort into CellLists
+	for (auto& mol: Molecules) {
+		for (auto& mono : mol.Monomers) {
+			for (int i = 0; i < 3; ++i) {
+				CellNumber[i] = (int)(mono.Position(i)/CellSideLength[i]);
 			}
-			else {
-				f1 = arms_in_patch.front();
-				arms_in_patch.pop_front();
-			}
-			//arms_in_patch.push_back(f1);
-			//std::cout << "current arm: " << f1 << std::endl;
-			for (unsigned i = 1; i <= (mol.AType+mol.BType); i++) {
-				unsigned part1 { f1*(mol.AType+mol.BType) + i };
-				//std::cout << "current part1: " << part1 << std::endl;
-				copy_particles.remove(part1);
-				std::list<unsigned>::iterator part_it = copy_particles.begin();
-				while (part_it != copy_particles.end()){
-					unsigned part2 {*part_it};
-					if (part2 < part1 || part2 > (mol.AType+mol.BType)*(f1+1)) {
-						if (calculate_epot(mol.Monomers[part1], mol.Monomers[part2]) < 0.0) {
-							unsigned f2 {unsigned((part2-1)/(mol.AType+mol.BType))};
-							//unsigned adv {(mol.AType+ mol.BType) - (part2-1)%(mol.AType+mol.BType)};
-							int reg {(part2-1)%(mol.AType+mol.BType)};
-							//std::cout << "current part2: " << part2 << " current f2: " << f2 << std::endl;
-							arms_in_patch.push_back(f2);
-							copy_arms.remove(f2);
-							patches.back()++;
-							std::list<unsigned>::iterator erase_begin {part_it};
-							std::advance(erase_begin, -reg);
-							std::list<unsigned>::iterator erase_end {erase_begin};
-							std::advance(erase_end, mol.AType+mol.BType);
-							part_it = copy_particles.erase(erase_begin, erase_end);
-							//std::cout << "erase from " << *erase_begin << " to " << *erase_end << std::endl;
+			mono.VerletPosition = mono.Position;
+			CellList[CellNumber[0]][CellNumber[1]][CellNumber[2]].push_front(&mono);
+		}
+	}
 
-							//std::cout << "iterator now at: " << *part_it << std::endl;
-							/*if (part2+adv >= mol.NumberOfMonomers)part_it = copy_particles.end();
-							else std::advance( part_it, adv );
-							std::cout << "iterator now at: " << *part_it << std::endl;
-							for (unsigned j = 1; j <= (mol.AType + mol.BType); j++) {
-								std::cout << "erasing particle: " <<  f2*(mol.AType+mol.BType) + j << std::endl;
-								copy_particles.remove(f2*(mol.AType+mol.BType) + j);
+	//make VerletLists
+	int p { }, q { }, r { };
+	for (auto& mol : Molecules) {
+		for (auto& mono : mol.Monomers) {
+			for (int i = 0; i < 3; ++i) {
+				CellNumber[i] = (int)(mono.Position(i)/CellSideLength[i]);
+			}
+			for (int j = CellNumber[0]-1; j < CellNumber[0]+2; ++j) {
+				for (int k = CellNumber[1]-1; k < CellNumber[1]+2; ++k) {
+					for (int l = CellNumber[2]-1; l < CellNumber[2]+2; ++l) {
+
+						p = my_modulus(j, CellSize[0]);
+						q = my_modulus(k, CellSize[1]);
+						r = my_modulus(l, CellSize[2]);
+
+						for (auto& other : CellList[p][q][r]) {
+							if (other == &mono) continue;
+							distance = relative_position(mono, *other);
+							radius2 = distance.dot(distance);
+							if (radius2 <= VerletRadius2) {
+								mono.VerletList.push_front(other);
 							}
-							if (part2+adv >= mol.NumberOfMonomers)part_it = copy_particles.end();*/
 						}
-						else part_it++;
 					}
-					else part_it++;
 				}
 			}
 		}
 	}
-	patches.sort();
-	return patches;
 }
 
-double Box::calculate_epot(MDParticle& part1, MDParticle& part2) {
-	double epot { };
-	Vector3d distance = relative_position(part1, part2);
-	double radius2 = distance.dot(distance);
-	if (part1.AmphiType == 1 && part2.AmphiType == 1) epot += TypeBB_Potential(radius2, Lambda);
-	else epot += TypeAA_Potential(radius2);
-	for (auto& neighbor : part1.Neighbors) {
-		if (neighbor == &part2) {
-			if (part1.Anchor || part2.Anchor) epot += Fene_Anchor_Potential(radius2);
-			else epot += Fene_Potential(radius2);
+void Box::check_VerletLists() {
+	Vector3d displacement {Vector3d::Zero()};
+	for (auto& mol : Molecules) {
+		for (auto& mono : mol.Monomers) {
+			displacement = mono.Position - mono.VerletPosition;
+			for (unsigned i = 0; i < 3; ++i) {
+				displacement(i) -= round(displacement(i)/BoxSize[i]) * BoxSize[i];
+			}
+			if (displacement.norm() > (VerletRadius - Cutoff)*0.5) {
+				update_VerletLists();
+				return;
+			}
 		}
 	}
-	return epot;
-}
-
-std::ostream& Box::print_Ekin(std::ostream& os) {
-	double KineticEnergy { };
-	for (auto& mol : Molecules) {
-		KineticEnergy += mol.calculate_Ekin();
-	}
-	KineticEnergy /= NumberOfMonomers;
-	os << KineticEnergy << " ";
-	return os;
-}
-
-std::ostream& Box::print_Temperature(std::ostream& os) {
-	double Temperature { };
-	for (auto& mol : Molecules) {
-		Temperature += mol.calculate_Ekin()/mol.NumberOfMonomers;
-	}
-	Temperature *= 2./3.;
-	os << Temperature << " ";
-	return os;
-}
-
-std::ostream& Box::print_radius_of_gyration(std::ostream& os) {
-	os << calculate_radius_of_gyration() << " ";
-	return os;
+	return;
 }
 
 void Box::calculate_forces(bool calc_epot) {
@@ -381,80 +246,210 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 	}
 }
 
-void Box::update_VerletLists() {
-	std::array<int,3> CellNumber { };
-	double radius2 { };
+double Box::calculate_ekin() {
+	double KineticEnergy { };
+	for (auto& mol : Molecules) {
+		KineticEnergy += mol.calculate_Ekin();
+	}
+	return KineticEnergy;
+}
+
+double Box::calculate_epot(MDParticle& part1, MDParticle& part2) {
+	double epot { };
+	Vector3d distance = relative_position(part1, part2);
+	double radius2 = distance.dot(distance);
+	if (part1.AmphiType == 1 && part2.AmphiType == 1) epot += TypeBB_Potential(radius2, Lambda);
+	else epot += TypeAA_Potential(radius2);
+	for (auto& neighbor : part1.Neighbors) {
+		if (neighbor == &part2) {
+			if (part1.Anchor || part2.Anchor) epot += Fene_Anchor_Potential(radius2);
+			else epot += Fene_Potential(radius2);
+		}
+	}
+	return epot;
+}
+
+double Box::calculate_radius_of_gyration() {
+	double r_gyr { };
 	Vector3d distance { };
-	//clear all Lists;
-	for (auto& sheet : CellList) {
-		for (auto& row : sheet) {
-			for (auto& list : row) {
-				list.clear();
+	for (auto& mol : Molecules) {
+		double r_gyr_mol { };
+		for (unsigned i = 0; i < mol.Monomers.size(); ++i) {
+			for (unsigned j = i+1; j < mol.Monomers.size(); ++j) {
+				Vector3d distance {relative_position(mol[i], mol[j])};
+				r_gyr_mol += distance.dot(distance);
 			}
 		}
+		r_gyr_mol /= (mol.Monomers.size()*mol.Monomers.size());
+		r_gyr_mol = sqrt(r_gyr_mol);
+		r_gyr += r_gyr_mol;
 	}
-	for (auto& mol : Molecules) {
-		for (auto& mono : mol.Monomers) {
-			mono.clear_VerletList();
-		}
-	}
+	r_gyr /= Molecules.size();
+	return r_gyr;
+}
 
-	//sort into CellLists
+Matrix3d Box::calculate_gyration_tensor() {
+	Matrix3d gyr_tensor {Matrix3d::Zero()};
 	for (auto& mol: Molecules) {
-		for (auto& mono : mol.Monomers) {
-			for (int i = 0; i < 3; ++i) {
-				CellNumber[i] = (int)(mono.Position(i)/CellSideLength[i]);
-			}
-			mono.VerletPosition = mono.Position;
-			CellList[CellNumber[0]][CellNumber[1]][CellNumber[2]].push_front(&mono);
+		Matrix3d gyr_tensor_mol {Matrix3d::Zero()};
+		Vector3d shift_anchor_to_center {Vector3d::Zero()};
+		Vector3d center_of_mass {Vector3d::Zero()};
+		for (int i = 0; i < 3; i++) {
+			shift_anchor_to_center(i) = BoxSize[i]*0.5 - mol.Monomers[0].Position(i);
 		}
-	}
-
-	//make VerletLists
-	int p { }, q { }, r { };
-	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
-			for (int i = 0; i < 3; ++i) {
-				CellNumber[i] = (int)(mono.Position(i)/CellSideLength[i]);
+			center_of_mass += (mono.Position + shift_anchor_to_center);
+		}
+		center_of_mass /= mol.NumberOfMonomers;
+		for (auto& mono : mol.Monomers) {
+			Vector3d shifted_position = mono.Position +shift_anchor_to_center - center_of_mass;
+			for (int alpha = 0; alpha < 3; alpha++) {
+				for (int beta = 0; beta < 3; beta++) {
+					gyr_tensor_mol(alpha, beta) += shifted_position(alpha)*shifted_position(beta);
+				}
 			}
-			for (int j = CellNumber[0]-1; j < CellNumber[0]+2; ++j) {
-				for (int k = CellNumber[1]-1; k < CellNumber[1]+2; ++k) {
-					for (int l = CellNumber[2]-1; l < CellNumber[2]+2; ++l) {
+		}
+		gyr_tensor_mol /= mol.NumberOfMonomers;
+		gyr_tensor += gyr_tensor_mol;
+	}
+	gyr_tensor /= Molecules.size();
+	return gyr_tensor;
+}
 
-						p = my_modulus(j, CellSize[0]);
-						q = my_modulus(k, CellSize[1]);
-						r = my_modulus(l, CellSize[2]);
+std::list<unsigned> Box::calculate_clusters() {
+	std::list<unsigned> cluster_sizes { };
+	for (auto& mol : Molecules) {
+		std::list<MDParticle*> copy_Particles { };
+		for(auto& mono : mol.Monomers) {
+			copy_Particles.push_back(&mono);
+		}
+		std::list<MDParticle*> Particles_in_cluster { };
+		while (!copy_Particles.empty()) {
+			MDParticle* part1 { };
+			if (Particles_in_cluster.empty()) {
+				part1 = &*copy_Particles.back();
+				copy_Particles.pop_back();
 
-						for (auto& other : CellList[p][q][r]) {
-							if (other == &mono) continue;
-							distance = relative_position(mono, *other);
-							radius2 = distance.dot(distance);
-							if (radius2 <= VerletRadius2) {
-								mono.VerletList.push_front(other);
-							}
-						}
+				cluster_sizes.push_back(1);
+			}
+			else {
+				part1 = &*Particles_in_cluster.back();
+				Particles_in_cluster.pop_back();
+			}
+			for (auto& part2 : part1 -> VerletList) {
+				auto iter = std::find(copy_Particles.begin(), copy_Particles.end(), part2);
+ 				if (iter != copy_Particles.end()){
+					if (calculate_epot(*part1, *part2) < 0.0) {
+						Particles_in_cluster.splice(Particles_in_cluster.end(), copy_Particles, iter);
+						cluster_sizes.back()++;
 					}
 				}
 			}
 		}
 	}
+	cluster_sizes.sort();
+	return cluster_sizes;
 }
 
-void Box::check_VerletLists() {
-	Vector3d displacement {Vector3d::Zero()};
+std::list<unsigned> Box::calculate_patches() {
+	std::list<unsigned> patches { };
 	for (auto& mol : Molecules) {
-		for (auto& mono : mol.Monomers) {
-			displacement = mono.Position - mono.VerletPosition;
-			for (unsigned i = 0; i < 3; ++i) {
-				displacement(i) -= round(displacement(i)/BoxSize[i]) * BoxSize[i];
+		std::list<unsigned> copy_particles { };
+		std::list<unsigned> copy_arms { };
+		for (unsigned i = 1; i < mol.NumberOfMonomers; i++) copy_particles.push_back(i);
+		for (unsigned i = 0; i < mol.Arms; i++) copy_arms.push_back(i);
+
+		std::list<unsigned> arms_in_patch { };
+		unsigned f1 {};
+		while (!copy_arms.empty()){
+			if (arms_in_patch.empty()) {
+				f1 = copy_arms.front();
+				copy_arms.pop_front();
+				patches.push_back(1);
 			}
-			if (displacement.norm() > (VerletRadius - Cutoff)*0.5) {
-				update_VerletLists();
-				return;
+			else {
+				f1 = arms_in_patch.front();
+				arms_in_patch.pop_front();
+			}
+			for (unsigned i = 1; i <= (mol.AType+mol.BType); i++) {
+				unsigned part1 { f1*(mol.AType+mol.BType) + i };
+				copy_particles.remove(part1);
+				std::list<unsigned>::iterator part_it = copy_particles.begin();
+				while (part_it != copy_particles.end()){
+					unsigned part2 {*part_it};
+					if (part2 < part1 || part2 > (mol.AType+mol.BType)*(f1+1)) {
+						if (calculate_epot(mol.Monomers[part1], mol.Monomers[part2]) < 0.0) {
+							unsigned f2 {unsigned((part2-1)/(mol.AType+mol.BType))};
+							int reg {(part2-1)%(mol.AType+mol.BType)};
+							arms_in_patch.push_back(f2);
+							copy_arms.remove(f2);
+							patches.back()++;
+							std::list<unsigned>::iterator erase_begin {part_it};
+							std::advance(erase_begin, -reg);
+							std::list<unsigned>::iterator erase_end {erase_begin};
+							std::advance(erase_end, mol.AType+mol.BType);
+							part_it = copy_particles.erase(erase_begin, erase_end);
+
+						}
+						else part_it++;
+					}
+					else part_it++;
+				}
 			}
 		}
 	}
-	return;
+	patches.sort();
+	return patches;
+}
+
+unsigned Box::numberOfMonomers() {
+	unsigned N { };
+	for(auto& mol: Molecules) {
+		N += mol.Monomers.size();
+	}
+	return N;
+}
+
+std::ostream& Box::print_molecules(std::ostream& os) const {
+	for (auto& mol : Molecules) {
+		os << mol << std::endl;
+	}
+	return os;
+}
+
+std::ostream& Box::print_Epot(std::ostream& os) const {
+	double PotentialEnergy { };
+	for (auto& mol : Molecules) {
+		PotentialEnergy += mol.Epot;
+	}
+	PotentialEnergy /= NumberOfMonomers;
+	os << PotentialEnergy<< " ";
+	return os;
+}
+
+std::ostream& Box::print_Ekin(std::ostream& os) {
+	double KineticEnergy { };
+	for (auto& mol : Molecules) {
+		KineticEnergy += mol.calculate_Ekin();
+	}
+	KineticEnergy /= NumberOfMonomers;
+	os << KineticEnergy << " ";
+	return os;
+}
+
+std::ostream& Box::print_Temperature(std::ostream& os) {
+	double Temperature { };
+	for (auto& mol : Molecules) {
+		Temperature += mol.calculate_Ekin()/mol.NumberOfMonomers;
+	}
+	Temperature *= 2./3.;
+	os << Temperature << " ";
+	return os;
+}
+
+std::ostream& Box::print_radius_of_gyration(std::ostream& os) {
+	os << calculate_radius_of_gyration() << " ";
+	return os;
 }
 
 

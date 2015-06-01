@@ -148,13 +148,27 @@ int main(int argc, char* argv[]) {
 			for (auto& element : clusters) std::cout << element << ' ';
 			std::cout << '\n';*/
 			std::list<unsigned> patches = box.calculate_patches();
-			for (auto& element : patches) std::cout << element << ' ';
+			int number_of_patches {0};
+			double av_patch_size {0.0};
+			for (auto& element : patches) {
+				if (element > 1) {
+					number_of_patches++;
+					av_patch_size += element;
+				}
+				std::cout << element << ' ';
+			}
+			if (number_of_patches > 0) av_patch_size /= number_of_patches;
+			Matrix3d gyr_tensor = box.calculate_gyration_tensor();
 			std::cout << '\n';
 			statistic_file << n << " ";
 			box.print_Epot(statistic_file);
 			box.print_Ekin(statistic_file);
 			box.print_Temperature(statistic_file);
 			box.print_radius_of_gyration(statistic_file);
+			statistic_file << number_of_patches << " " << av_patch_size;
+			for (int i = 0; i < gyr_tensor.size(); i++) {
+				statistic_file << *(gyr_tensor.data()+i) << " ";
+			}
 			statistic_file << "\n";
 			std::cout << '\n';
 		}
