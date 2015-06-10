@@ -417,6 +417,19 @@ std::ostream& Box::print_molecules(std::ostream& os) const {
 	return os;
 }
 
+void Box::print_PDB(FILE* pdb, int step) const {
+	int mol_count {0};
+	fprintf(pdb, "MODEL     %d \n", step);
+	for (auto& mol : Molecules) {
+		mol_count++;
+		for (unsigned i = 0; i < mol.NumberOfMonomers; i++) {
+			fprintf(pdb, "ATOM %6d  C   GLY    %2d     %7.3f %7.3f %7.3f \n", i, mol_count, mol.Monomers[i].Position(0), mol.Monomers[i].Position(1), mol.Monomers[i].Position(2));
+		}
+		fprintf(pdb, "TER \n");
+	}
+	fprintf(pdb, "ENDMDL \n");
+}
+
 std::ostream& Box::print_Epot(std::ostream& os) const {
 	double PotentialEnergy { };
 	for (auto& mol : Molecules) {

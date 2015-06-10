@@ -8,7 +8,7 @@
 #include "MPC.h"
 
 MPC::MPC(Box& box, double aTemperature, double aShear) :
-SimBox { box },
+Hydrodynamics { box },
 Temperature { aTemperature },
 Shear { aShear } {
 	NumberOfCells = SimBox.BoxSize[0]*SimBox.BoxSize[1]*SimBox.BoxSize[2] - 1;
@@ -29,7 +29,7 @@ Shear { aShear } {
 	}
 }
 
-void MPC::initializeMPC() {
+void MPC::initialize() {
 	Vector3d CMV(0., 0., 0.);
 	//double ekin { };
 	for (auto& part : Fluid) {
@@ -51,7 +51,7 @@ void MPC::initializeMPC() {
 }
 
 //MPC routine:
-void MPC::MPCstep(const double& dt) {
+void MPC::step(const double& dt) {
 	delrx += Shear*BoxSize[1]*dt;
 	delrx -= BoxSize[0]*floor(delrx/BoxSize[0]);
 	streaming(dt);

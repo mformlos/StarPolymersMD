@@ -26,7 +26,10 @@ target_link_libraries(Andersen Box Rand Thermostat)
 add_library(Nose_Hoover Nose_Hoover.cpp)
 target_link_libraries(Nose_Hoover Box Thermostat)
 
+add_library(Hydrodynamics Hydrodynamics.cpp) 
+target_link_libraries(Hydrodynamics Box)
+
 add_library(MPC MPC.cpp)
-target_link_libraries(MPC Particle Rand Box)
+target_link_libraries(MPC Particle Rand Box Hydrodynamics)
 
 add_library(Function_Output Function_Output.cpp)

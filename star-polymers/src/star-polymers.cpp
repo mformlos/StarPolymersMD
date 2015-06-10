@@ -12,12 +12,15 @@
 #include <ctime>
 #include <cmath>
 #include <algorithm>
+#include <stdio.h>
 #include "Box.h"
 #include "Thermostat_None.h"
 #include "Lowe_Andersen.h"
 #include "Nose_Hoover.h"
 #include "Andersen.h"
+#include "Hydrodynamics_None.h"
 #include "MPC.h"
+
 
 bool is_number(const std::string &str)
 {
@@ -37,6 +40,7 @@ int main(int argc, char* argv[]) {
 	bool MPC_on {false};
 	stringstream ss_para { };
 	Thermostat *thermostat{};
+	Hydrodynamics *hydrodynamics{};
 
 
 	//defaults für: TypeA, TypeB, Arms, Lambda, Temperature, BoxSize(x, y, z), stepsize, step_aufwärm, step_total, step_output
@@ -78,12 +82,16 @@ int main(int argc, char* argv[]) {
 			MPC_on = true;
 			thermostat = new Thermostat_None{ box, StepSize };
 			Shear = set_param(0., argv, argc, i_MPC + 1);
+			hydrodynamics = new MPC{box, Temperature, Shear};
 
 		}
 	}
-	else thermostat = new Andersen{box, StepSize, Temperature, 1999};
+	else {
+		thermostat = new Andersen{box, StepSize, Temperature, 1999};
+		hydrodynamics = new Hydrodynamics_None{box};
+	}
 
-	MPC MPCroutine{box, Temperature, Shear};
+	//MPC MPCroutine{box, Temperature, Shear};
 
 
 	std::cout << "Type A: " << TypeA << " Type B: " << TypeB << " Arms: " << Arms << " Lambda: " << Lambda << std::endl;
@@ -113,12 +121,13 @@ int main(int argc, char* argv[]) {
 
 
 	ofstream statistic_file { };
-	ofstream config_file { };
-	string statistic_file_name = "statistics"+ss_para.str()+".dat";
-	string config_file_name = "config"+ss_para.str()+".dat";
-	statistic_file.open(statistic_file_name, ios::out | ios::trunc);
-	//config_file.open("config3.dat", ios::out | ios::trunc);
+	//ofstream config_file { };
+	//FILE* config_file { };
 
+	string statistic_file_name = "../results/statistics"+ss_para.str()+".dat";
+	string config_file_name = "../results/config"+ss_para.str()+".dat";
+	statistic_file.open(statistic_file_name, ios::out | ios::trunc);
+	//config_file = fopen(config_file_name.c_str(), "w");
 	if (argc > 1 && strcmp(argv[1], "Chain") == 0) {
 		box.add_chain(TypeA, TypeB, 10.);
 		std::cout << "building a chain" << std::endl;
@@ -131,7 +140,7 @@ int main(int argc, char* argv[]) {
 	//box.print_molecules(std::cout);
 
 
-	if (MPC_on) MPCroutine.initializeMPC();
+	if (MPC_on) hydrodynamics -> initialize();
 	clock_t begin = clock();
 
 	for (int n = 0; n < Steps_Total; ++n) {
@@ -139,14 +148,11 @@ int main(int argc, char* argv[]) {
 		thermostat -> propagate(false);
 		if (n > Steps_Equil && !(n%Steps_Output)) {
 			thermostat -> propagate(true);
-			std::cout << n << " ";
-			box.print_Epot(std::cout);
+			//std::cout << n << " ";
+			/*box.print_Epot(std::cout);
 			box.print_Ekin(std::cout);
-			if (MPC_on) std::cout << MPCroutine.calculateCurrentTemperature() << " ";
-			else box.print_Temperature(std::cout);
-			/*std::list<unsigned> clusters = box.calculate_clusters();
-			for (auto& element : clusters) std::cout << element << ' ';
-			std::cout << '\n';*/
+			if (MPC_on) std::cout << hydrodynamics -> calculateCurrentTemperature() << " ";
+			else box.print_Temperature(std::cout);*/
 			std::list<unsigned> patches = box.calculate_patches();
 			int number_of_patches {0};
 			double av_patch_size {0.0};
@@ -155,11 +161,12 @@ int main(int argc, char* argv[]) {
 					number_of_patches++;
 					av_patch_size += element;
 				}
-				std::cout << element << ' ';
+				//std::cout << element << ' ';
 			}
 			if (number_of_patches > 0) av_patch_size /= number_of_patches;
 			Matrix3d gyr_tensor = box.calculate_gyration_tensor();
-			std::cout << '\n';
+			//std::cout << '\n';
+			//box.print_PDB(config_file, n);
 			statistic_file << n << " ";
 			box.print_Epot(statistic_file);
 			box.print_Ekin(statistic_file);
@@ -170,15 +177,15 @@ int main(int argc, char* argv[]) {
 				statistic_file << *(gyr_tensor.data()+i) << " ";
 			}
 			statistic_file << "\n";
-			std::cout << '\n';
+			//std::cout << '\n';
 		}
 		if (MPC_on && !(n%100)) {
-			MPCroutine.MPCstep(0.1);
+			hydrodynamics -> step(0.1);
 		}
 	}
 
 	clock_t end = clock();
 	//box.print_molecules(std::cout);
-	std::cout << "time: " << double(end-begin)/CLOCKS_PER_SEC << std::endl;
-	//delete thermostat;
+	//std::cout << "time: " << double(end-begin)/CLOCKS_PER_SEC << std::endl;
+
 }

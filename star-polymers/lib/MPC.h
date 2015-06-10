@@ -17,10 +17,10 @@
 #include "Rand.h"
 #include "Box.h"
 #include "Analysis.h"
+#include "Hydrodynamics.h"
 
-class MPC {
+class MPC : public Hydrodynamics{
 protected:
-	Box& SimBox;
 	double Temperature;
 	double Shear;
 	unsigned NumberOfCells;
@@ -36,10 +36,10 @@ public:
 	std::vector<MPCParticle> Fluid;
 	MPC(Box&, double, double aShear = 0.);
 
-	void initializeMPC();
+	void initialize();
 
 	//MPC routine:
-	void MPCstep(const double& dt);
+	void step(const double& dt);
 	void streaming(const double& dt);
 	void sort();
 	void sort(std::vector<std::vector<MPCParticle*>>&);
