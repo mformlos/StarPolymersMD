@@ -11,3 +11,16 @@ add_subdirectory (lib)
 
 include_directories ("${PROJECT_SOURCE_DIR}/src")
 add_subdirectory (src)
+
+include_directories ("${PROJECT_SOURCE_DIR}/lib/Analysis")
+add_subdirectory (lib/Analysis)
+
+include_directories ("${PROJECT_SOURCE_DIR}/lib/Hydrodynamics")
+add_subdirectory (lib/Hydrodynamics)
+
+include_directories ("${PROJECT_SOURCE_DIR}/lib/Thermostats")
+add_subdirectory (lib/Thermostats)
+
+include_directories ("${PROJECT_SOURCE_DIR}/lib/Molecules")
+add_subdirectory (lib/Molecules)
+

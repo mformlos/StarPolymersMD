@@ -1,3 +1,14 @@
+include_directories ("${PROJECT_SOURCE_DIR}/lib/Analysis")
+
+
+include_directories ("${PROJECT_SOURCE_DIR}/lib/Hydrodynamics")
+
+include_directories ("${PROJECT_SOURCE_DIR}/lib/Thermostats")
+include_directories ("${PROJECT_SOURCE_DIR}/lib/Molecules")
+
+
+
+
 add_executable(star-polymers star-polymers.cpp)
 target_link_libraries (star-polymers MatVec Particle Molecule Box Thermostat Hydrodynamics Thermostat_None Andersen MPC stdc++)
 
