@@ -70,12 +70,6 @@ public:
 	double calculateCurrentTemperature();
 	unsigned filledCells();
 
-	/*template<class UnitaryFunc>
-	UnitaryFunc unitary(UnitaryFunc&& func) const;
-
-	template<class UnaryFunc, class BinaryFunc>
-	void operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const;*/
-
 	template<class UnitaryFunc>
 	UnitaryFunc unitary(UnitaryFunc& func) const {
 		return for_each(Fluid.cbegin(), Fluid.cend(), func);
@@ -96,8 +90,6 @@ public:
 	template<class UnaryFunc>
 	void operator() (UnaryFunc& ufunc) const {
 		auto first = Fluid.cbegin(), last = Fluid.cend();
-
-
 		for(; first != last; ++first) {
 			ufunc( *first );
 		}
