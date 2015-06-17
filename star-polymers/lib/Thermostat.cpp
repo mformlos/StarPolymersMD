@@ -1,7 +1,7 @@
 #include "Thermostat.h"
 
 Thermostat::Thermostat(Box& box, double dt) :
-		SimBox { box },
+		SimBox ( box ),
 		DeltaT { dt } { }
 
 double Thermostat::dtime() const {

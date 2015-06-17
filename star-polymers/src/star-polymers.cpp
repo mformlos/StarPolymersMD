@@ -124,8 +124,8 @@ int main(int argc, char* argv[]) {
 	//ofstream config_file { };
 	//FILE* config_file { };
 
-	string statistic_file_name = "../results/statistics"+ss_para.str()+".dat";
-	string config_file_name = "../results/config"+ss_para.str()+".dat";
+	string statistic_file_name = "./results/statistics"+ss_para.str()+".dat";
+	string config_file_name = "./results/config"+ss_para.str()+".dat";
 	statistic_file.open(statistic_file_name, ios::out | ios::trunc);
 	//config_file = fopen(config_file_name.c_str(), "w");
 	if (argc > 1 && strcmp(argv[1], "Chain") == 0) {
@@ -186,6 +186,6 @@ int main(int argc, char* argv[]) {
 
 	clock_t end = clock();
 	//box.print_molecules(std::cout);
-	//std::cout << "time: " << double(end-begin)/CLOCKS_PER_SEC << std::endl;
+	std::cout << "time: " << double(end-begin)/CLOCKS_PER_SEC << std::endl;
 
 }

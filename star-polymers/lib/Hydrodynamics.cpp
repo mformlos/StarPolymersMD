@@ -6,6 +6,6 @@
  */
 #include "Hydrodynamics.h"
 
-Hydrodynamics::Hydrodynamics(Box& box) : SimBox {box} {}
+Hydrodynamics::Hydrodynamics(Box& box) : SimBox (box) {}
 
 
