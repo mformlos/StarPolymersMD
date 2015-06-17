@@ -37,13 +37,13 @@ int main(int argc, char* argv[]) {
 
 	int BoxX { }, BoxY { }, BoxZ { }, TypeA { }, TypeB { }, Arms { }, Steps_Equil { }, Steps_Total { }, Steps_Output { };
 	double Temperature { }, Lambda { }, Shear { }, StepSize { };
-
+	bool AngularMomentumConservation { };
 	stringstream ss_para { };
 
 
 
 	//defaults für: TypeA, TypeB, Arms, Lambda, Temperature, BoxSize(x, y, z), stepsize, step_aufwärm, step_total, step_output
-	double a_para[]{3, 0, 3, 1.0, 0.5, 10, 10, 50, 0.001, 1E2, 1E4, 1E2, 0.0};
+	double a_para[]{3, 0, 3, 1.0, 0.5, 10, 10, 50, 0.001, 1E2, 1E4, 1E2, 0.0, 0};
 	int a_para_size = sizeof(a_para) / sizeof(*a_para);
 	int i_para { }, start_i_para { };
 	if (argc > 1) {
@@ -71,6 +71,7 @@ int main(int argc, char* argv[]) {
 	Steps_Total = (int)a_para[10];
 	Steps_Output = (int)a_para[11];
 	Shear = a_para[12];
+	AngularMomentumConservation = (bool)a_para[13];
 
 	Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
 
@@ -133,7 +134,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	Thermostat_None integrator{box, StepSize};
-	MPC mpc{box, Temperature, Shear};
+	MPC mpc{box, Temperature, Shear, AngularMomentumConservation};
 	mpc.initialize();
 	for (n = 0; n < Steps_Total;n++) {
 

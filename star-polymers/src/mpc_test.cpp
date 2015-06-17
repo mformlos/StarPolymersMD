@@ -40,11 +40,12 @@ int main(int argc, char* argv[]) {
 
 	int BoxX { }, BoxY { }, BoxZ { }, Steps_Equil { }, Steps_Total { }, Steps_Output { };
 	double Temperature { }, Shear { }, StepSize { };
+	bool AngularMomentumConservation { };
 	stringstream ss_para { };
 
 
 	//defaults für: Temperature, BoxSize(x, y, z), Shear rate, stepsize, step_aufwärm, step_total, step_output
-	double a_para[]{0.5, 5, 5, 5, 0.5, 0.1, 1E3, 1E4, 100};
+	double a_para[]{0.5, 5, 5, 5, 0.5, 0.1, 1E3, 1E4, 100, 0};
 	int a_para_size = sizeof(a_para) / sizeof(*a_para);
 	int i_para{1};
 	for (i_para = 1; i_para < min(a_para_size + 1, argc); ++i_para) {
@@ -63,16 +64,18 @@ int main(int argc, char* argv[]) {
 	Steps_Equil = (int)a_para[6];
 	Steps_Total = (int)a_para[7];
 	Steps_Output = (int)a_para[8];
+	AngularMomentumConservation = (bool)a_para[9];
 
 	Box box(BoxX, BoxY, BoxZ, Temperature, 1.0);
 
 
 
-	MPC MPCroutine {box, Temperature, Shear};
+	MPC MPCroutine {box, Temperature, Shear, AngularMomentumConservation};
 
 	ss_para << "_N" << BoxX*BoxY*BoxZ*10;
 	ss_para << "_Shear" << Shear;
 	ss_para << "_h" << StepSize;
+	if (AngularMomentumConservation) ss_para << "_AMC";
 
 	ofstream fluid_file { };
 
@@ -101,7 +104,8 @@ int main(int argc, char* argv[]) {
 				std::cout << part.Position.transpose() << " ; " << part.Velocity.transpose() << std::endl;
 			}*/
 			//MPCroutine(velocity_average, no_function);
-			MPCroutine.unitary(velocity_average);
+			MPCroutine(velocity_average);
+			//MPCroutine.unitary(velocity_average);
 		}
 
 	}

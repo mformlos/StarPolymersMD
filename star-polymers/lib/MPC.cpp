@@ -7,10 +7,11 @@
 
 #include "MPC.h"
 
-MPC::MPC(Box& box, double aTemperature, double aShear) :
+MPC::MPC(Box& box, double aTemperature, double aShear, bool angular_mom) :
 Hydrodynamics { box },
 Temperature { aTemperature },
-Shear { aShear } {
+Shear { aShear },
+angular_momentum { angular_mom }{
 	NumberOfCells = SimBox.BoxSize[0]*SimBox.BoxSize[1]*SimBox.BoxSize[2] - 1;
 	NumberOfMPCParticles = 10*(NumberOfCells+1);
 	BoxSize[0] = SimBox.BoxSize[0];
@@ -169,9 +170,17 @@ void MPC::collide(unsigned Index, const Vector3d& CMV) {
 	RotationMatrix(2,0) = RotationAxis(0)*RotationAxis(2)*(1 - c) - RotationAxis(1)*s;
 	RotationMatrix(2,1) = RotationAxis(1)*RotationAxis(2)*(1 - c) + RotationAxis(0)*s;
 	RotationMatrix(2,2) = RotationAxis(2)*RotationAxis(2) + (1 - RotationAxis(2)*RotationAxis(2))*c;
+	Vector3d CMP(0., 0., 0.);
+	Vector3d Angular(0., 0., 0.);
+	bool amc { angular_momentum && MPCCellList[Index].size() > 2 };
+	if (amc) {
+		calculateCMP(Index, CMP);
+		calculateAngular(Index, Angular, CMV, CMP, RotationMatrix);
+	}
 
 	for (auto& part : MPCCellList[Index] ) {
 		part -> Velocity = CMV + RotationMatrix*(part -> Velocity - CMV);
+		if (amc) part -> Velocity += Angular.cross(part -> Position - CMP);
 	}
 }
 
@@ -271,22 +280,37 @@ inline void MPC::calculateCMV(unsigned Index, Vector3d& CMV ){
 inline void MPC::calculateCMP(unsigned Index, Vector3d& CMP) {
 	CMP(0) = CMP(1) = CMP(2) = 0.;
 	double totalMass { };
-	for (auto& part : Fluid) {
-		if (part.CellIndex == Index) {
-			CMP += part.Position*part.Mass;
-			totalMass += 1.;
-		}
-	}
-	for (auto& mol : SimBox.Molecules) {
-		for (auto& mono : mol.Monomers) {
-			if (mono.CellIndex == Index) {
-				CMP += mono.Position*mono.Mass;
-				totalMass += mono.Mass;
-			}
-		}
+	for (auto& part : MPCCellList[Index]) {
+		CMP += part -> Position * part -> Mass;
+		totalMass += part -> Mass;
 	}
 	CMP /= totalMass;
 }
+
+inline void MPC::calculateAngular(unsigned Index, Vector3d& Angular, const Vector3d& CMV, const Vector3d& CMP, const Matrix3d& Rotation) {
+	Vector3d Cvec(0., 0., 0.);
+	Matrix3d InertiaTensor = Matrix3d::Zero();
+	for (auto& part : MPCCellList[Index]) {
+		Cvec += (part -> Position - CMP).cross(Rotation*(part -> Velocity - CMV) - part -> Velocity);
+		InertiaTensor(0,0) += pow(part -> Position(1) - CMP(1), 2) + pow(part -> Position(2) - CMP(2), 2);
+		InertiaTensor(1,1) += pow(part -> Position(0)-CMP(0), 2) + pow(part -> Position(2)-CMP(2), 2);
+		InertiaTensor(2,2) += pow(part -> Position(0)-CMP(0), 2) + pow(part -> Position(1)-CMP(1), 2);
+		InertiaTensor(0,1) -= (part -> Position(0) - CMP(0))*(part -> Position(1)-CMP(1));
+		InertiaTensor(0,2) -= (part -> Position(0) - CMP(0))*(part -> Position(2)-CMP(2));
+		InertiaTensor(1,2) -= (part -> Position(1) - CMP(1))*(part -> Position(2)-CMP(2));
+	}
+	InertiaTensor(1,0) = InertiaTensor(0,1);
+	InertiaTensor(2,0) = InertiaTensor(0,2);
+	InertiaTensor(2,1) -= InertiaTensor(1,2);
+	Angular = InertiaTensor.llt().solve(-Cvec);
+}
+
+inline void MPC::calculateAngularMomentum(unsigned Index, Vector3d& AngularMomentum, const Vector3d& CMP) {
+	for (auto& part : MPCCellList[Index]) {
+		AngularMomentum += (part -> Position - CMP).cross(part -> Velocity);
+	}
+}
+
 
 double MPC::calculateEkinInCell(unsigned Index) {
 	double ekin { };

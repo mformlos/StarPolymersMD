@@ -11,6 +11,7 @@
 #include <iostream>
 #include <array>
 #include <vector>
+#include <cmath>
 #include "Functions.h"
 #include "Particle.h"
 #include "Molecule.h"
@@ -29,12 +30,13 @@ protected:
 	double s;
 	double delrx;
 	bool shear_on;
+	bool angular_momentum;
 	std::array<int,3> BoxSize;
 	std::vector<std::vector<MPCParticle*>> MPCCellList;
 	std::vector<unsigned> MPCCellListFluidParticles;
 public:
 	std::vector<MPCParticle> Fluid;
-	MPC(Box&, double, double aShear = 0.);
+	MPC(Box&, double, double aShear = 0., bool angular_mom = false);
 
 	void initialize();
 
@@ -61,6 +63,8 @@ public:
 	inline void calculateCMV(unsigned Index, Vector3d&);
 	inline void calculateCMV(std::vector<MPCParticle*>& List, Vector3d& CMV );
 	inline void calculateCMP(unsigned Index, Vector3d&);
+	inline void calculateAngular(unsigned Index, Vector3d& Angular, const Vector3d& CMV, const Vector3d& CMP, const Matrix3d& Rotation);
+	inline void calculateAngularMomentum(unsigned Index, Vector3d&, const Vector3d& CMP);
 	double calculateEkinInCell(unsigned Index);
 	double calculateEkinTotal();
 	double calculateCurrentTemperature();
@@ -86,6 +90,16 @@ public:
 			ufunc( *first );
 			for( second = first + 1; second != last; ++second )
 				bfunc( *first, *second );
+		}
+	}
+
+	template<class UnaryFunc>
+	void operator() (UnaryFunc& ufunc) const {
+		auto first = Fluid.cbegin(), last = Fluid.cend();
+
+
+		for(; first != last; ++first) {
+			ufunc( *first );
 		}
 	}
 
