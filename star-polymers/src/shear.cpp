@@ -35,7 +35,8 @@ double set_param(double def, char *array[], int length, int pos) {
 
 int main(int argc, char* argv[]) {
 
-	int BoxX { }, BoxY { }, BoxZ { }, TypeA { }, TypeB { }, Arms { }, Steps_Equil { }, Steps_Total { }, Steps_Output { };
+	int BoxX { }, BoxY { }, BoxZ { }, TypeA { }, TypeB { }, Arms { };
+	long int Steps_Equil { }, Steps_Total { }, Steps_Output { };
 	double Temperature { }, Lambda { }, Shear { }, StepSize { };
 	bool AngularMomentumConservation { };
 	stringstream ss_para { };
@@ -43,7 +44,7 @@ int main(int argc, char* argv[]) {
 
 
 	//defaults für: TypeA, TypeB, Arms, Lambda, Temperature, BoxSize(x, y, z), stepsize, step_aufwärm, step_total, step_output
-	double a_para[]{3, 0, 3, 1.0, 0.5, 10, 10, 50, 0.001, 1E2, 1E4, 1E2, 0.0, 0};
+	long double a_para[]{3, 0, 3, 1.0, 0.5, 10, 10, 50, 0.001, 1E2, 1E4, 1E2, 0.0, 0};
 	int a_para_size = sizeof(a_para) / sizeof(*a_para);
 	int i_para { }, start_i_para { };
 	if (argc > 1) {
@@ -52,8 +53,8 @@ int main(int argc, char* argv[]) {
 	}
 	for (i_para = start_i_para; i_para < min(a_para_size + 2, argc); ++i_para) {
 		if (is_number(argv[i_para])) {
-			if ( i_para == 4 && strcmp(argv[1], "Chain") == 0) a_para[i_para- start_i_para +1] =stod(argv[i_para]);
-			else a_para[i_para - start_i_para] = stod(argv[i_para]);
+			if ( i_para == 4 && strcmp(argv[1], "Chain") == 0) a_para[i_para- start_i_para +1] =stold(argv[i_para]);
+			else a_para[i_para - start_i_para] = stold(argv[i_para]);
 		}
 		else break;
 	}
@@ -67,9 +68,9 @@ int main(int argc, char* argv[]) {
 	BoxY = a_para[6];
 	BoxZ = a_para[7];
 	StepSize = a_para[8];
-	Steps_Equil = (int)a_para[9];
-	Steps_Total = (int)a_para[10];
-	Steps_Output = (int)a_para[11];
+	Steps_Equil = (long int)a_para[9];
+	Steps_Total = (long int)a_para[10];
+	Steps_Output = (long int)a_para[11];
 	Shear = a_para[12];
 	AngularMomentumConservation = (bool)a_para[13];
 
@@ -126,7 +127,7 @@ int main(int argc, char* argv[]) {
 
 
 	clock_t begin = clock();
-	int n {  };
+	long int n {  };
 	for (n = 0; n < Steps_Equil; ++n) {
 
 		andersen.propagate(false);
