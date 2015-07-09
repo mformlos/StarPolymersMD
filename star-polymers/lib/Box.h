@@ -75,7 +75,7 @@ public:
 	unsigned numberOfMonomers();
 
 	std::ostream& print_molecules(std::ostream& os) const;
-	void print_PDB(FILE*, int step) const;
+	void print_PDB(FILE*, int step);
 	std::ostream& print_Epot(std::ostream& os) const;
 	std::ostream& print_Ekin(std::ostream& os);
 	std::ostream& print_Temperature(std::ostream& os);

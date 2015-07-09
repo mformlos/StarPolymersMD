@@ -298,11 +298,12 @@ Matrix3d Box::calculate_gyration_tensor() {
 			shift_anchor_to_center(i) = BoxSize[i]*0.5 - mol.Monomers[0].Position(i);
 		}
 		for (auto& mono : mol.Monomers) {
-			center_of_mass += (mono.Position + shift_anchor_to_center);
+			center_of_mass += wrap(mono.Position + shift_anchor_to_center);
 		}
 		center_of_mass /= mol.NumberOfMonomers;
 		for (auto& mono : mol.Monomers) {
-			Vector3d shifted_position = mono.Position +shift_anchor_to_center - center_of_mass;
+			Vector3d shifted_position = wrap(mono.Position +shift_anchor_to_center);
+			shifted_position = wrap(shifted_position - center_of_mass);
 			for (int alpha = 0; alpha < 3; alpha++) {
 				for (int beta = 0; beta < 3; beta++) {
 					gyr_tensor_mol(alpha, beta) += shifted_position(alpha)*shifted_position(beta);
@@ -417,17 +418,46 @@ std::ostream& Box::print_molecules(std::ostream& os) const {
 	return os;
 }
 
-void Box::print_PDB(FILE* pdb, int step) const {
+void Box::print_PDB(FILE* pdb, int step) {
 	int mol_count {0};
 	fprintf(pdb, "MODEL     %d \n", step);
+	Vector3d shift_anchor_to_center {0.,0.,0.};
+	for (int i = 0; i < 3; i++){
+		shift_anchor_to_center(i)= BoxSize[i]*0.5 - Molecules[0].Monomers[0].Position(i);
+	}
 	for (auto& mol : Molecules) {
 		mol_count++;
 		for (unsigned i = 0; i < mol.NumberOfMonomers; i++) {
-			fprintf(pdb, "ATOM %6d  C   GLY    %2d     %7.3f %7.3f %7.3f \n", i, mol_count, mol.Monomers[i].Position(0), mol.Monomers[i].Position(1), mol.Monomers[i].Position(2));
+			Vector3d pos_print = mol.Monomers[i].Position + shift_anchor_to_center;
+			wrap(pos_print);
+			fprintf(pdb, "ATOM %6d  C   GLY    %2d     %7.3f %7.3f %7.3f \n", i, mol_count, pos_print(0), pos_print(1), pos_print(2));
 		}
 		fprintf(pdb, "TER \n");
+		unsigned count{1};
+		unsigned arm {0};
+		while (arm <= mol.Arms) {
+			fprintf(pdb, "CONECT %4i ", 0);
+
+			while(count%5) {
+				fprintf(pdb, "%4i ", arm*(mol.AType+mol.BType)+1);
+				arm++;
+				count++;
+				if (arm >= mol.Arms) break;
+			}
+			count = 1;
+			fprintf(pdb, "\n");
+		}
+		for (unsigned i = 0; i < mol.Arms; i++) {
+			fprintf(pdb, "CONECT %4u %4u %4u \n", i*(mol.AType+mol.BType) + 1, 0 , i*(mol.AType+mol.BType) + 2);
+			for(unsigned j = 1; j < (mol.AType+mol.BType); j++) {
+				unsigned number{i*(mol.AType+mol.BType) + j};
+				fprintf(pdb, "CONECT %4u %4u %4u \n", number, number - 1, number+1);
+			}
+			fprintf(pdb, "CONECT %4u %4u \n", (i+1)*(mol.AType+mol.BType), (i+1)*(mol.AType+mol.BType) -1);
+		}
 	}
 	fprintf(pdb, "ENDMDL \n");
+
 }
 
 std::ostream& Box::print_Epot(std::ostream& os) const {

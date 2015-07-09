@@ -1,6 +1,13 @@
+/*
+ * continue_star_polymers.cpp
+ *
+ *  Created on: Jul 9, 2015
+ *      Author: maud
+ */
+
 //============================================================================
 // Name        : star-polymers.cpp
-// Author      : 
+// Author      :
 // Version     :
 // Copyright   : Your copyright notice
 // Description : Hello World in C, Ansi-style
@@ -22,7 +29,6 @@
 #include "MPC.h"
 
 
-
 bool is_number(const std::string &str)
 {
 	return str.find_first_not_of(".eE-0123456789") == std::string::npos;
@@ -34,104 +40,113 @@ double set_param(double def, char *array[], int length, int pos) {
 	return def;
 }
 
+string find_parameter(string para_string, string para_name) {
+	string para { };
+	std::string::size_type i = para_string.find(para_name);
+	if (i == std::string::npos) return para;
+	para = para_string.substr(i + para_name.length());
+	i = para.find("_");
+	if (i == std::string::npos) i = para.find(".");
+	para.erase(i);
+	if (para.compare("") == 0) para = "0";
+	return para;
+}
+
 int main(int argc, char* argv[]) {
 
 	int BoxX { }, BoxY { }, BoxZ { }, TypeA { }, TypeB { }, Arms { };
-	long int Steps_Equil { }, Steps_Total { }, Steps_Output { };
+	long int Steps_Start { }, Steps_Total { }, Steps_Output { };
 	double Temperature { }, Lambda { }, Shear { }, StepSize { };
 	bool MPC_on {false};
-	stringstream ss_para { };
+	string s_para { };
+	stringstream ss_para { }, ss_para_new { };
 	Thermostat *thermostat{};
 	Hydrodynamics *hydrodynamics{};
 
+	s_para = std::string(argv[1]);
 
-	//defaults für: TypeA, TypeB, Arms, Lambda, Temperature, BoxSize(x, y, z), stepsize, step_aufwärm, step_total, step_output
-	long double a_para[]{3, 0, 3, 1.0, 0.5, 10, 10, 50, 0.001, 1E2, 1E10, 1E2};
-	int a_para_size = sizeof(a_para) / sizeof(*a_para);
-	int i_para { }, start_i_para { };
-	if (argc > 1) {
-		if (is_number(argv[1])) start_i_para = 1;
-		else start_i_para = 2;
-	}
-	for (i_para = start_i_para; i_para < min(a_para_size + 2, argc); ++i_para) {
-		if (is_number(argv[i_para])) {
-			if ( i_para == 4 && strcmp(argv[1], "Chain") == 0) a_para[i_para- start_i_para +1] =stold(argv[i_para]);
-			else a_para[i_para - start_i_para] = stold(argv[i_para]);
-		}
-		else break;
-	}
-	TypeA = (int)a_para[0];
-	TypeB = (int)a_para[1];
-	if (argc > 1 && strcmp(argv[1], "Chain") == 0) Arms = 0;
-	else Arms = (int)a_para[2];
-	Lambda = a_para[3];
-	Temperature = a_para[4];
-	BoxX = a_para[5];
-	BoxY = a_para[6];
-	BoxZ = a_para[7];
-	StepSize = a_para[8];
-	Steps_Equil = (long int)a_para[9];
-	Steps_Total = (long int)a_para[10];
-	Steps_Output = (long int)a_para[11];
+
+	std::string find_this = "end_config";
+	std::string::size_type i = s_para.find(find_this);
+	std::cout << i << std::endl;
+	s_para.erase(i, find_this.length());
+
+	find_this = ".pdb";
+	i = s_para.find(find_this);
+	if (i != std::string::npos) s_para.erase(i, find_this.length());
+	ss_para << s_para;
+
+	std::cout << s_para << std::endl;
+	std::cout << find_parameter(s_para, "Shear") << std::endl;
+	BoxX = stoi(find_parameter(s_para,"Lx"));
+	BoxY = stoi(find_parameter(s_para,"Ly"));
+	BoxZ = stoi(find_parameter(s_para,"Lz"));
+	TypeA = stoi(find_parameter(s_para,"A"));
+	TypeB = stoi(find_parameter(s_para,"B"));
+	Arms = stoi(find_parameter(s_para,"Arms"));
+	Steps_Start = stol(find_parameter(s_para,"run"));
+	Temperature = stod(find_parameter(s_para,"T"));
+	Shear = stod(find_parameter(s_para, "Shear"));
+	Lambda = stod(find_parameter(s_para,"Lambda"));
+	Steps_Total = Steps_Start + stol(argv[2]);
+	Steps_Output = stol(argv[3]);
 
 	Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
 
-	while (i_para < argc - 1 && is_number(argv[i_para])) ++i_para;
-	int i_MPC { i_para };
-	i_para++;
-	if (argc > 1 && i_MPC < argc) {
-		if (strcmp(argv[i_MPC], "MPC") == 0) {
-			MPC_on = true;
-			thermostat = new Thermostat_None{ box, StepSize };
-			Shear = set_param(0., argv, argc, i_MPC + 1);
-			hydrodynamics = new MPC{box, Temperature, Shear};
+	if (find_parameter(s_para, "MPC").compare("ON") == 0) {
+		MPC_on = true;
+		thermostat = new Thermostat_None{ box, StepSize };
+		hydrodynamics = new MPC{box, Temperature, Shear};
 
-		}
 	}
 	else {
 		thermostat = new Andersen{box, StepSize, Temperature, 1999};
 		hydrodynamics = new Hydrodynamics_None{box};
 	}
 
-	//MPC MPCroutine{box, Temperature, Shear};
-
-
 	std::cout << "Type A: " << TypeA << " Type B: " << TypeB << " Arms: " << Arms << " Lambda: " << Lambda << std::endl;
 	std::cout << "Temperature: " << Temperature <<  std::endl;
 	std::cout << "Box Size: " << BoxX << " " << BoxY << " " << BoxZ << std::endl;
 	std::cout << "Step Size: " << StepSize << std::endl;
-	std::cout << "Total Steps: " << Steps_Total << " Equilibration: " << Steps_Equil << " Output every: " << Steps_Output << std::endl;
+	std::cout << "Start at: " << Steps_Start << " Stop at: " << Steps_Total << " Output every: " << Steps_Output << std::endl;
 	if (MPC_on) {
 		std::cout << "MPC is turned ON with shear rate: " << Shear << std::endl;
 	}
 	else std::cout << "MPC is turned OFF" << std::endl;
 
 
-	ss_para.precision(0);
-	if (argc > 1 && strcmp(argv[1], "Chain") == 0) ss_para << "_Chain";
-	else ss_para << "_Star";
-	ss_para << "_A" << TypeA;
-	ss_para << "_B" << TypeB;
-	if (!(argc > 1 && strcmp(argv[1], "Chain") == 0)) ss_para << "_Arms" << Arms;
-	ss_para << "_Lx" << BoxX;
-	ss_para << "_Ly" << BoxY;
-	ss_para << "_Lz" << BoxZ;
-	ss_para.precision(3);
-	ss_para << "_Lambda" << Lambda;
-	ss_para << "_T" << Temperature;
-	ss_para << "_run" << scientific << Steps_Total;
-	if (MPC_on) ss_para << "_MPCON_Shear" << Shear;
-	else ss_para << "_MPCOFF";
 
+	ss_para_new.str(std::string());
+	ss_para_new.precision(0);
+	ss_para_new << "_Star";
+	ss_para_new << "_A" << TypeA;
+	ss_para_new << "_B" << TypeB;
+	ss_para_new << "_Arms" << Arms;
+	ss_para_new << "_Lx" << BoxX;
+	ss_para_new << "_Ly" << BoxY;
+	ss_para_new << "_Lz" << BoxZ;
+	ss_para_new.precision(3);
+	ss_para_new << "_Lambda" << Lambda;
+	ss_para_new << "_T" << Temperature;
+	ss_para_new << "_run" << scientific << Steps_Total;
+	if (MPC_on) ss_para_new << "_MPCON_Shear" << Shear;
+	else ss_para_new << "_MPCOFF";
 
 	ofstream statistic_file { };
-	//ofstream config_file { };
 	FILE* config_file { };
+	const char* oldname = ("./results/statistics"+ss_para.str()+".dat").c_str();
+	const char* newname = ("./results/statistics"+ss_para_new.str()+".dat").c_str();
+	rename(oldname, newname);
 
-	string statistic_file_name = "./results/statistics"+ss_para.str()+".dat";
+	oldname = ("./results/config"+ss_para.str()+".dat").c_str();
+	newname = ("./results/config"+ss_para_new.str()+".dat").c_str();
+	rename(oldname, newname);
+	string statistic_file_name = "./results/statistics"+ss_para_new.str()+".dat";
 	string config_file_name = "./results/config"+ss_para.str()+".pdb";
-	statistic_file.open(statistic_file_name, ios::out | ios::trunc);
-	config_file = fopen(config_file_name.c_str(), "w");
+	statistic_file.open(statistic_file_name, ios::out | ios::app);
+	config_file = fopen(config_file_name.c_str(), "a");
+
+
 	if (argc > 1 && strcmp(argv[1], "Chain") == 0) {
 		box.add_chain(TypeA, TypeB, 10.);
 		std::cout << "building a chain" << std::endl;
@@ -147,10 +162,10 @@ int main(int argc, char* argv[]) {
 	if (MPC_on) hydrodynamics -> initialize();
 	clock_t begin = clock();
 
-	for (long int n = 0; n <= Steps_Total; ++n) {
+	for (long int n = Steps_Start; n <= Steps_Total; ++n) {
 
 
-		if (n > Steps_Equil && !(n%Steps_Output)) {
+		if (!(n%Steps_Output)) {
 			thermostat -> propagate(true);
 			std::cout << n << " ";
 			box.print_Epot(std::cout);
@@ -190,7 +205,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	FILE* end_config_file { };
-	string end_config_file_name = "./results/end_config"+ss_para.str()+".pdb";
+	string end_config_file_name = "./results/end_config"+ss_para_new.str()+".pdb";
 	end_config_file = fopen(end_config_file_name.c_str(), "w");
 	box.print_PDB(end_config_file, Steps_Total);
 
@@ -200,3 +215,6 @@ int main(int argc, char* argv[]) {
 	std::cout << "time: " << double(end-begin)/CLOCKS_PER_SEC << std::endl;
 
 }
+
+
+
