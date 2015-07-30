@@ -49,6 +49,7 @@ public:
 
 	void add_chain(unsigned A, unsigned B, double Mass, double Bond = 1.01);
 	void add_star(unsigned A, unsigned B, unsigned Arms, double Mass, double Bond = 1.01, double AnchorBond = 2.0);
+	void add_star(string filename, unsigned A, unsigned B, unsigned Arms, double Mass);
 
 	Vector3d& wrap (Vector3d& pos);
 	Vector3d wrap (Vector3d&& pos);
@@ -76,6 +77,7 @@ public:
 
 	std::ostream& print_molecules(std::ostream& os) const;
 	void print_PDB(FILE*, int step);
+	void print_PDB_with_velocity(FILE*, int step);
 	std::ostream& print_Epot(std::ostream& os) const;
 	std::ostream& print_Ekin(std::ostream& os);
 	std::ostream& print_Temperature(std::ostream& os);

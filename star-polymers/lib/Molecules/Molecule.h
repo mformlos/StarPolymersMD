@@ -13,6 +13,7 @@
 #include "Particle.h"
 #include "Rand.h"
 #include <../eigen/Eigen/Dense>
+#include <fstream>
 
 
 
@@ -37,6 +38,7 @@ public:
 
 	void initialize_straight_chain(unsigned A, unsigned B, double Temperature, double bond = 1.01);
 	void initialize_open_star(unsigned A, unsigned B, unsigned Arms, double Temperature, double Bond = 1.01, double AnchorBond = 2.0);
+	void star_from_file(string filename, unsigned A, unsigned B, unsigned Arms);
 	double calculate_Ekin();
 
 	std::ostream& print(std::ostream& os) const;

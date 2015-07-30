@@ -35,6 +35,13 @@ void Box::add_star(unsigned A, unsigned B, unsigned Arms, double Mass, double Bo
 	NumberOfMonomers += (A+B)*Arms + 1;
 }
 
+void Box::add_star(string filename, unsigned A, unsigned B, unsigned Arms, double Mass) {
+	Molecules.push_back(Molecule{(A+B)*Arms+1, Mass});
+	Molecules.back().star_from_file(filename, A, B, Arms);
+	wrap(Molecules.back());
+	NumberOfMonomers += (A+B)*Arms + 1;
+}
+
 inline Vector3d& Box::wrap(Vector3d& pos) {
 	for (unsigned i = 0; i < 3; i++) {
 		pos(i) -= floor(pos(i)/BoxSize[i]) * BoxSize[i];
@@ -459,6 +466,49 @@ void Box::print_PDB(FILE* pdb, int step) {
 	fprintf(pdb, "ENDMDL \n");
 
 }
+
+void Box::print_PDB_with_velocity(FILE* pdb, int step) {
+	int mol_count {0};
+	fprintf(pdb, "MODEL     %d \n", step);
+	Vector3d shift_anchor_to_center {0.,0.,0.};
+	for (int i = 0; i < 3; i++){
+		shift_anchor_to_center(i)= BoxSize[i]*0.5 - Molecules[0].Monomers[0].Position(i);
+	}
+	for (auto& mol : Molecules) {
+		mol_count++;
+		for (unsigned i = 0; i < mol.NumberOfMonomers; i++) {
+			Vector3d pos_print = mol.Monomers[i].Position + shift_anchor_to_center;
+			wrap(pos_print);
+			fprintf(pdb, "ATOM %6d  C   GLY    %2d     %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f \n", i, mol_count, pos_print(0), pos_print(1), pos_print(2), mol.Monomers[i].Velocity(0), mol.Monomers[i].Velocity(1), mol.Monomers[i].Velocity(2));
+		}
+		fprintf(pdb, "TER \n");
+		unsigned count{1};
+		unsigned arm {0};
+		while (arm <= mol.Arms) {
+			fprintf(pdb, "CONECT %4i ", 0);
+
+			while(count%5) {
+				fprintf(pdb, "%4i ", arm*(mol.AType+mol.BType)+1);
+				arm++;
+				count++;
+				if (arm >= mol.Arms) break;
+			}
+			count = 1;
+			fprintf(pdb, "\n");
+		}
+		for (unsigned i = 0; i < mol.Arms; i++) {
+			fprintf(pdb, "CONECT %4u %4u %4u \n", i*(mol.AType+mol.BType) + 1, 0 , i*(mol.AType+mol.BType) + 2);
+			for(unsigned j = 1; j < (mol.AType+mol.BType); j++) {
+				unsigned number{i*(mol.AType+mol.BType) + j};
+				fprintf(pdb, "CONECT %4u %4u %4u \n", number, number - 1, number+1);
+			}
+			fprintf(pdb, "CONECT %4u %4u \n", (i+1)*(mol.AType+mol.BType), (i+1)*(mol.AType+mol.BType) -1);
+		}
+	}
+	fprintf(pdb, "ENDMDL \n");
+
+}
+
 
 std::ostream& Box::print_Epot(std::ostream& os) const {
 	double PotentialEnergy { };

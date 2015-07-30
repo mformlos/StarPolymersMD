@@ -6,6 +6,8 @@ Thermostat_None::Thermostat_None(Box& box, double dt):
 		Thermostat(box, dt) {
 		update_temp();
 		dtime(dt);
+		SimBox.update_VerletLists();
+		SimBox.calculate_forces_verlet();
 	}
 
 void Thermostat_None::update_temp() { }
@@ -22,8 +24,11 @@ void Thermostat_None::propagate(bool calc_epot) {
 			mono.Position += mono.Velocity*DeltaT;
 		}
 	}
+
 	SimBox.wrap();
-	SimBox.calculate_forces(calc_epot);
+ 	SimBox.check_VerletLists();
+	SimBox.calculate_forces_verlet(calc_epot);
+
 	for (auto& mol : SimBox.Molecules) {
 		for (auto& mono : mol.Monomers) {
 			mono.Velocity += (mono.Force/mono.Mass)*DeltaTHalf;

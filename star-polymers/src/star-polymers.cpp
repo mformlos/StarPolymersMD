@@ -137,7 +137,7 @@ int main(int argc, char* argv[]) {
 		std::cout << "building a chain" << std::endl;
 	}
 	else	 {
-		box.	add_star(TypeA, TypeB, Arms, 10.);
+		box.add_star(TypeA, TypeB, Arms, 10.);
 		std::cout << "building a star" << std::endl;
 	}
 
@@ -192,7 +192,7 @@ int main(int argc, char* argv[]) {
 	FILE* end_config_file { };
 	string end_config_file_name = "./results/end_config"+ss_para.str()+".pdb";
 	end_config_file = fopen(end_config_file_name.c_str(), "w");
-	box.print_PDB(end_config_file, Steps_Total);
+	box.print_PDB_with_velocity(end_config_file, Steps_Total);
 
 
 	clock_t end = clock();

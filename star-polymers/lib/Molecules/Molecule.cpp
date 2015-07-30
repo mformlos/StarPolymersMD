@@ -121,6 +121,41 @@ void Molecule::initialize_open_star(unsigned A, unsigned B, unsigned arms, doubl
 	}
 }
 
+void Molecule::star_from_file(string filename, unsigned A, unsigned B, unsigned arms) {
+	ifstream input {filename};
+	AType = A;
+	BType = B;
+	Arms = arms;
+	Monomers[0].Anchor = 1;
+	string line { };
+	std::getline(input, line);
+	std::cout << line << endl;
+	for (auto& mono : Monomers) {
+		std::getline(input, line);
+
+		mono.Position(0) = stod(line.substr(31, 7));
+		mono.Position(1) = stod(line.substr(39, 7));
+		mono.Position(2) = stod(line.substr(47, 7));
+		mono.Velocity(0) = stod(line.substr(55, 7));
+		mono.Velocity(1) = stod(line.substr(63, 7));
+		mono.Velocity(2) = stod(line.substr(71, 7));
+
+	}
+	unsigned monomers_per_arm {AType+BType};
+	for (unsigned i = 0; i < Arms; i++) {
+		for (unsigned k = 1; k <= monomers_per_arm; k++) {
+			unsigned index { i*monomers_per_arm+k };
+			if (k > A) Monomers[index].AmphiType = 1;
+			if (k==1) {
+				Monomers[0].set_neighbor(Monomers[index]);
+				Monomers[index].set_neighbor(Monomers[index+1]);
+			}
+			else {
+				if (k != monomers_per_arm) Monomers[index].set_neighbor(Monomers[index+1]);
+			}
+		}
+	}
+}
 
 std::ostream& Molecule::print(std::ostream& os) const {
 	for (unsigned i = 0; i < NumberOfMonomers; i++) {

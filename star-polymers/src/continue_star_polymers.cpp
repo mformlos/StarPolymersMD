@@ -41,14 +41,14 @@ double set_param(double def, char *array[], int length, int pos) {
 }
 
 string find_parameter(string para_string, string para_name) {
-	string para { };
+	string para {"0.0"};
 	std::string::size_type i = para_string.find(para_name);
 	if (i == std::string::npos) return para;
 	para = para_string.substr(i + para_name.length());
 	i = para.find("_");
 	if (i == std::string::npos) i = para.find(".");
-	para.erase(i);
-	if (para.compare("") == 0) para = "0";
+	if (i != std::string::npos) para.erase(i);
+
 	return para;
 }
 
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
 	std::string find_this = "end_config";
 	std::string::size_type i = s_para.find(find_this);
 	std::cout << i << std::endl;
-	s_para.erase(i, find_this.length());
+	if (i != std::string::npos)	s_para.erase(i, find_this.length());
 
 	find_this = ".pdb";
 	i = s_para.find(find_this);
@@ -88,21 +88,12 @@ int main(int argc, char* argv[]) {
 	Temperature = stod(find_parameter(s_para,"T"));
 	Shear = stod(find_parameter(s_para, "Shear"));
 	Lambda = stod(find_parameter(s_para,"Lambda"));
-	Steps_Total = Steps_Start + stol(argv[2]);
-	Steps_Output = stol(argv[3]);
+	StepSize = stod(argv[2]);
+	Steps_Total = Steps_Start + stold(argv[3]);
+	Steps_Output = stold(argv[4]);
 
-	Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
 
-	if (find_parameter(s_para, "MPC").compare("ON") == 0) {
-		MPC_on = true;
-		thermostat = new Thermostat_None{ box, StepSize };
-		hydrodynamics = new MPC{box, Temperature, Shear};
 
-	}
-	else {
-		thermostat = new Andersen{box, StepSize, Temperature, 1999};
-		hydrodynamics = new Hydrodynamics_None{box};
-	}
 
 	std::cout << "Type A: " << TypeA << " Type B: " << TypeB << " Arms: " << Arms << " Lambda: " << Lambda << std::endl;
 	std::cout << "Temperature: " << Temperature <<  std::endl;
@@ -134,17 +125,20 @@ int main(int argc, char* argv[]) {
 
 	ofstream statistic_file { };
 	FILE* config_file { };
-	const char* oldname = ("./results/statistics"+ss_para.str()+".dat").c_str();
-	const char* newname = ("./results/statistics"+ss_para_new.str()+".dat").c_str();
-	rename(oldname, newname);
-
-	oldname = ("./results/config"+ss_para.str()+".dat").c_str();
-	newname = ("./results/config"+ss_para_new.str()+".dat").c_str();
-	rename(oldname, newname);
-	string statistic_file_name = "./results/statistics"+ss_para_new.str()+".dat";
-	string config_file_name = "./results/config"+ss_para.str()+".pdb";
+	string oldname = "./results/statistics"+ss_para.str()+".dat";
+	string newname = "./results/statistics"+ss_para_new.str()+".dat";
+	std::cout << oldname << std::endl;
+	std::cout << newname << std::endl;
+	rename(oldname.c_str(), newname.c_str());
+	string statistic_file_name = newname;
+	oldname = "./results/config"+ss_para.str()+".pdb";
+	newname = "./results/config"+ss_para_new.str()+".pdb";
+	rename(oldname.c_str(), newname.c_str());
+	string config_file_name = newname;
 	statistic_file.open(statistic_file_name, ios::out | ios::app);
 	config_file = fopen(config_file_name.c_str(), "a");
+
+	Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
 
 
 	if (argc > 1 && strcmp(argv[1], "Chain") == 0) {
@@ -152,17 +146,32 @@ int main(int argc, char* argv[]) {
 		std::cout << "building a chain" << std::endl;
 	}
 	else	 {
-		box.	add_star(TypeA, TypeB, Arms, 10.);
+		box.add_star(std::string(argv[1]), TypeA, TypeB, Arms, 10.);
 		std::cout << "building a star" << std::endl;
 	}
 
-	//box.print_molecules(std::cout);
+
+
+	if (find_parameter(s_para, "MPC").compare("ON") == 0) {
+		MPC_on = true;
+		thermostat = new Thermostat_None{ box, StepSize };
+		hydrodynamics = new MPC{box, Temperature, Shear};
+
+	}
+	else {
+		thermostat = new Andersen{box, StepSize, Temperature, 1999};
+		hydrodynamics = new Hydrodynamics_None{box};
+	}
+
 
 
 	if (MPC_on) hydrodynamics -> initialize();
 	clock_t begin = clock();
 
-	for (long int n = Steps_Start; n <= Steps_Total; ++n) {
+	std::cout << thermostat -> info() << std::endl;
+	//box.print_molecules(std::cout);
+
+	for (long int n = Steps_Start + 1; n <= Steps_Total; ++n) {
 
 
 		if (!(n%Steps_Output)) {
