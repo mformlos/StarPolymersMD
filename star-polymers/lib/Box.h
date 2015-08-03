@@ -53,9 +53,13 @@ public:
 
 	Vector3d& wrap (Vector3d& pos);
 	Vector3d wrap (Vector3d&& pos);
+	Vector3d wrap_to_zero(Vector3d pos);
 	void wrap(Particle& part);
 	void wrap(Molecule& mol);
 	void wrap();
+
+
+	void resize(double Lx, double Ly, double Lz);
 
 	Vector3d relative_position(Particle& one, Particle& two);
 

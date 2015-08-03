@@ -141,8 +141,6 @@ int main(int argc, char* argv[]) {
 		std::cout << "building a star" << std::endl;
 	}
 
-	//box.print_molecules(std::cout);
-
 
 	if (MPC_on) hydrodynamics -> initialize();
 	clock_t begin = clock();

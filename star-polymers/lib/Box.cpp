@@ -30,14 +30,18 @@ void Box::add_chain(unsigned A, unsigned B, double mass, double bondLength) {
 
 void Box::add_star(unsigned A, unsigned B, unsigned Arms, double Mass, double Bond, double AnchorBond) {
 	Molecules.push_back(Molecule{(A+B)*Arms+1, Mass});
-	Molecules.back().initialize_open_star(A, B, Arms, Temperature, Bond, AnchorBond);
+	Vector3d BoxCenter {Vector3d::Zero()};
+	BoxCenter << BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5;
+	Molecules.back().initialize_open_star(BoxCenter, A, B, Arms, Temperature, Bond, AnchorBond);
 	wrap(Molecules.back());
 	NumberOfMonomers += (A+B)*Arms + 1;
 }
 
 void Box::add_star(string filename, unsigned A, unsigned B, unsigned Arms, double Mass) {
 	Molecules.push_back(Molecule{(A+B)*Arms+1, Mass});
-	Molecules.back().star_from_file(filename, A, B, Arms);
+	Vector3d BoxCenter {Vector3d::Zero()};
+	BoxCenter << BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5;
+	Molecules.back().star_from_file(BoxCenter, filename, A, B, Arms);
 	wrap(Molecules.back());
 	NumberOfMonomers += (A+B)*Arms + 1;
 }
@@ -49,12 +53,22 @@ inline Vector3d& Box::wrap(Vector3d& pos) {
 	return pos;
 }
 
+
 inline Vector3d Box::wrap(Vector3d&& pos) {
 	for (unsigned i = 0; i < 3; ++i) {
 		pos(i) -= floor(pos(i)/BoxSize[i]) * BoxSize[i];
 	}
 	return pos;
 }
+
+inline Vector3d Box::wrap_to_zero(Vector3d pos) {
+	for (unsigned i = 0; i < 3; i++) {
+		if (pos(i) > BoxSize[i]*0.5) pos(i) -= BoxSize[i];
+		else if (pos(i) < -BoxSize[i]*0.5) pos(i) += BoxSize[i];
+	}
+	return pos;
+}
+
 
 inline void Box::wrap(Particle& part) {
 	part.Position = wrap(part.Position);
@@ -67,6 +81,24 @@ inline void Box::wrap(Molecule& mol) {
 void Box::wrap() {
 	for (auto& mol : Molecules) wrap(mol);
 }
+
+void Box::resize(double Lx, double Ly, double Lz) {
+	BoxSize[0] = Lx;
+	BoxSize[1] = Ly;
+	BoxSize[2] = Lz;
+	wrap();
+	Vector3d BoxCenter {Vector3d::Zero()};
+	BoxCenter << BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5;
+	Vector3d Center{Vector3d::Zero()};
+	Center = BoxCenter - Molecules.front().Monomers.front().Position;
+	for (auto& mol : Molecules) {
+		for (auto& mono : mol.Monomers) {
+			mono.Position += Center;
+			wrap(mono.Position);
+		}
+	}
+}
+
 
 Vector3d Box::relative_position(Particle& one, Particle& two) {
 	Vector3d result {two.Position - one.Position};
@@ -430,13 +462,15 @@ void Box::print_PDB(FILE* pdb, int step) {
 	fprintf(pdb, "MODEL     %d \n", step);
 	Vector3d shift_anchor_to_center {0.,0.,0.};
 	for (int i = 0; i < 3; i++){
-		shift_anchor_to_center(i)= BoxSize[i]*0.5 - Molecules[0].Monomers[0].Position(i);
+		//shift_anchor_to_center(i)= BoxSize[i]*0.5 - Molecules[0].Monomers[0].Position(i);
+		shift_anchor_to_center(i) = -Molecules[0].Monomers[0].Position(i);
 	}
 	for (auto& mol : Molecules) {
 		mol_count++;
 		for (unsigned i = 0; i < mol.NumberOfMonomers; i++) {
 			Vector3d pos_print = mol.Monomers[i].Position + shift_anchor_to_center;
-			wrap(pos_print);
+			pos_print = wrap_to_zero(pos_print);
+			//wrap(pos_print);
 			fprintf(pdb, "ATOM %6d  C   GLY    %2d     %7.3f %7.3f %7.3f \n", i, mol_count, pos_print(0), pos_print(1), pos_print(2));
 		}
 		fprintf(pdb, "TER \n");
@@ -472,13 +506,16 @@ void Box::print_PDB_with_velocity(FILE* pdb, int step) {
 	fprintf(pdb, "MODEL     %d \n", step);
 	Vector3d shift_anchor_to_center {0.,0.,0.};
 	for (int i = 0; i < 3; i++){
-		shift_anchor_to_center(i)= BoxSize[i]*0.5 - Molecules[0].Monomers[0].Position(i);
+		//shift_anchor_to_center(i)= BoxSize[i]*0.5 - Molecules[0].Monomers[0].Position(i);
+		shift_anchor_to_center(i) = -Molecules[0].Monomers[0].Position(i);
+
 	}
 	for (auto& mol : Molecules) {
 		mol_count++;
 		for (unsigned i = 0; i < mol.NumberOfMonomers; i++) {
 			Vector3d pos_print = mol.Monomers[i].Position + shift_anchor_to_center;
-			wrap(pos_print);
+			//wrap(pos_print);
+			pos_print = wrap_to_zero(pos_print);
 			fprintf(pdb, "ATOM %6d  C   GLY    %2d     %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f \n", i, mol_count, pos_print(0), pos_print(1), pos_print(2), mol.Monomers[i].Velocity(0), mol.Monomers[i].Velocity(1), mol.Monomers[i].Velocity(2));
 		}
 		fprintf(pdb, "TER \n");

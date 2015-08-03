@@ -69,7 +69,11 @@ int main(int argc, char* argv[]) {
 	std::string find_this = "end_config";
 	std::string::size_type i = s_para.find(find_this);
 	std::cout << i << std::endl;
-	if (i != std::string::npos)	s_para.erase(i, find_this.length());
+	if (i != std::string::npos){
+		s_para.erase(i, find_this.length());
+		s_para.erase(0, i);
+	}
+
 
 	find_this = ".pdb";
 	i = s_para.find(find_this);
@@ -88,10 +92,33 @@ int main(int argc, char* argv[]) {
 	Temperature = stod(find_parameter(s_para,"T"));
 	Shear = stod(find_parameter(s_para, "Shear"));
 	Lambda = stod(find_parameter(s_para,"Lambda"));
+
 	StepSize = stod(argv[2]);
 	Steps_Total = Steps_Start + stold(argv[3]);
 	Steps_Output = stold(argv[4]);
+	if (find_parameter(s_para, "MPC").compare("ON") == 0) {
+		MPC_on = true;
+	}
 
+	std::cout << "blubb" << std::endl;
+	int arg { };
+	while (arg < argc) {
+		if (strcmp(argv[arg], "MPC") == 0) {
+			MPC_on = true;
+			std::cout << arg << std::endl;
+			if (arg +1 < argc) Shear = stod(argv[arg+1]);
+			arg++;
+			break;
+		}
+		arg++;
+	}
+
+
+	if (argc >= 8) {
+		BoxX = stod(argv[5]);
+		BoxY = stod(argv[6]);
+		BoxZ = stod(argv[7]);
+	}
 
 
 
@@ -152,8 +179,7 @@ int main(int argc, char* argv[]) {
 
 
 
-	if (find_parameter(s_para, "MPC").compare("ON") == 0) {
-		MPC_on = true;
+	if (MPC_on) {
 		thermostat = new Thermostat_None{ box, StepSize };
 		hydrodynamics = new MPC{box, Temperature, Shear};
 
@@ -169,7 +195,7 @@ int main(int argc, char* argv[]) {
 	clock_t begin = clock();
 
 	std::cout << thermostat -> info() << std::endl;
-	//box.print_molecules(std::cout);
+	box.print_molecules(std::cout);
 
 	for (long int n = Steps_Start + 1; n <= Steps_Total; ++n) {
 
