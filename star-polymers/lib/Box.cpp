@@ -471,16 +471,16 @@ void Box::print_PDB(FILE* pdb, int step) {
 			Vector3d pos_print = mol.Monomers[i].Position + shift_anchor_to_center;
 			pos_print = wrap_to_zero(pos_print);
 			//wrap(pos_print);
-			fprintf(pdb, "ATOM %6d  C   GLY    %2d     %7.3f %7.3f %7.3f \n", i, mol_count, pos_print(0), pos_print(1), pos_print(2));
+			fprintf(pdb, "ATOM %6d  C   GLY    %2d     %7.3f %7.3f %7.3f \n", i+1, mol_count, pos_print(0), pos_print(1), pos_print(2));
 		}
 		fprintf(pdb, "TER \n");
 		unsigned count{1};
 		unsigned arm {0};
-		while (arm <= mol.Arms) {
-			fprintf(pdb, "CONECT %4i ", 0);
+		while (arm < mol.Arms) {
+			fprintf(pdb, "CONECT %4i ", 1);
 
 			while(count%5) {
-				fprintf(pdb, "%4i ", arm*(mol.AType+mol.BType)+1);
+				fprintf(pdb, "%4i ", arm*(mol.AType+mol.BType)+2);
 				arm++;
 				count++;
 				if (arm >= mol.Arms) break;
@@ -489,12 +489,12 @@ void Box::print_PDB(FILE* pdb, int step) {
 			fprintf(pdb, "\n");
 		}
 		for (unsigned i = 0; i < mol.Arms; i++) {
-			fprintf(pdb, "CONECT %4u %4u %4u \n", i*(mol.AType+mol.BType) + 1, 0 , i*(mol.AType+mol.BType) + 2);
+			fprintf(pdb, "CONECT %4u %4u %4u \n", i*(mol.AType+mol.BType) + 2, 1 , i*(mol.AType+mol.BType) + 3);
 			for(unsigned j = 1; j < (mol.AType+mol.BType); j++) {
 				unsigned number{i*(mol.AType+mol.BType) + j};
-				fprintf(pdb, "CONECT %4u %4u %4u \n", number, number - 1, number+1);
+				fprintf(pdb, "CONECT %4u %4u %4u \n", number +1 , number, number+2);
 			}
-			fprintf(pdb, "CONECT %4u %4u \n", (i+1)*(mol.AType+mol.BType), (i+1)*(mol.AType+mol.BType) -1);
+			fprintf(pdb, "CONECT %4u %4u \n", (i+1)*(mol.AType+mol.BType) +1 , (i+1)*(mol.AType+mol.BType));
 		}
 	}
 	fprintf(pdb, "ENDMDL \n");
@@ -521,11 +521,11 @@ void Box::print_PDB_with_velocity(FILE* pdb, int step) {
 		fprintf(pdb, "TER \n");
 		unsigned count{1};
 		unsigned arm {0};
-		while (arm <= mol.Arms) {
-			fprintf(pdb, "CONECT %4i ", 0);
+		while (arm < mol.Arms) {
+			fprintf(pdb, "CONECT %4i ", 1);
 
 			while(count%5) {
-				fprintf(pdb, "%4i ", arm*(mol.AType+mol.BType)+1);
+				fprintf(pdb, "%4i ", arm*(mol.AType+mol.BType)+2);
 				arm++;
 				count++;
 				if (arm >= mol.Arms) break;
@@ -534,12 +534,12 @@ void Box::print_PDB_with_velocity(FILE* pdb, int step) {
 			fprintf(pdb, "\n");
 		}
 		for (unsigned i = 0; i < mol.Arms; i++) {
-			fprintf(pdb, "CONECT %4u %4u %4u \n", i*(mol.AType+mol.BType) + 1, 0 , i*(mol.AType+mol.BType) + 2);
+			fprintf(pdb, "CONECT %4u %4u %4u \n", i*(mol.AType+mol.BType) + 2, 1 , i*(mol.AType+mol.BType) + 3);
 			for(unsigned j = 1; j < (mol.AType+mol.BType); j++) {
 				unsigned number{i*(mol.AType+mol.BType) + j};
-				fprintf(pdb, "CONECT %4u %4u %4u \n", number, number - 1, number+1);
+				fprintf(pdb, "CONECT %4u %4u %4u \n", number +1 , number, number+2);
 			}
-			fprintf(pdb, "CONECT %4u %4u \n", (i+1)*(mol.AType+mol.BType), (i+1)*(mol.AType+mol.BType) -1);
+			fprintf(pdb, "CONECT %4u %4u \n", (i+1)*(mol.AType+mol.BType) +1 , (i+1)*(mol.AType+mol.BType));
 		}
 	}
 	fprintf(pdb, "ENDMDL \n");
