@@ -73,7 +73,11 @@ int main(int argc, char* argv[]) {
 		s_para.erase(i, find_this.length());
 		s_para.erase(0, i);
 	}
-
+	find_this = "./results/";
+	i = s_para.find(find_this);
+	if (i != std::string::npos){
+		s_para.erase(i, find_this.length());
+	}
 
 	find_this = ".pdb";
 	i = s_para.find(find_this);
