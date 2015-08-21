@@ -52,6 +52,9 @@ string find_parameter(string para_string, string para_name) {
 	return para;
 }
 
+inline bool file_exists (const std::string& name) {
+    return ( access( name.c_str(), F_OK ) != -1 );
+}
 int main(int argc, char* argv[]) {
 
 	int BoxX { }, BoxY { }, BoxZ { }, TypeA { }, TypeB { }, Arms { };
@@ -64,6 +67,10 @@ int main(int argc, char* argv[]) {
 	Hydrodynamics *hydrodynamics{};
 
 	s_para = std::string(argv[1]);
+	if (!file_exists(s_para)) {
+		std::cout << "input file does not exist";
+		return 1;
+	}
 
 
 	std::string find_this = "end_config";
