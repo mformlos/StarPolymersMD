@@ -1,10 +1,3 @@
-/*
- * continue_star_polymers.cpp
- *
- *  Created on: Jul 9, 2015
- *      Author: maud
- */
-
 //============================================================================
 // Name        : star-polymers.cpp
 // Author      :
