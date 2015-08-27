@@ -74,7 +74,7 @@ while True:
             elif (type(jobParamList[ind]) == params.ParamSetContinue): 
                 currExec = "./star-polymers/build/src/star-polymers %s %s %s %s %s %s %s %s %s"%(jobParamList[ind].File, jobParamList[ind].step_size, jobParamList[ind].step_total, jobParamList[ind].step_output, jobParamList[ind].Lx, jobParamList[ind].Ly, jobParamList[ind].Lz, jobParamList[ind].MPC, jobParamList[ind].Shear)
             print (currExec)
-            procList[ind]= subprocess.Popen(currExec, stdout =open("output.txt","w"), shell= True, preexec_fn=os.setsid)
+            procList[ind]= subprocess.Popen(currExec, stdout =open("output_%i"%ind+".txt","w"), shell= True, preexec_fn=os.setsid)
 	    jobcount+= 1
             runningList[ind]= True
             jobsTodoList[ind]-=1
