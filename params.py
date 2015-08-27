@@ -26,10 +26,10 @@ ParamSet=namedtuple("ParamSet","TypeA, TypeB, Arms, Lambda, Temperature, Lx, Ly,
 Type = namedtuple("Type", ["TypeA", "TypeB"])
 MPC = namedtuple("MPC", ["Status", "Shear"])
 
-paramSets=[ParamSetMixed([Type(3,3), Type(5,5)],[3,7],[1.0, 1.1],1.0, 50, 50, 50, 0.01, 1E3, 2E3, 1E2,MPC=[MPC("No", [0.0]), MPC("MPC", [0.0,0.5])])]
+paramSets=[ParamSetMixed([Type(3,3), Type(5,5)],[3,7],[1.0, 1.1],1.0, 50, 50, 50, 0.01, 1E4, 2E7, 1E4,MPC=[MPC("No", [0.0]), MPC("MPC", [0.0,0.5])])]
 
-nJobPerTask=2
-coresPerRun=4
+nJobPerTask=1
+coresPerRun=16
 tasksPerRun=coresPerRun*nJobPerTask
 
 

@@ -7,6 +7,14 @@ import os
 import shutil
 import sys
 
+def signal_handler(signum, frame): 
+    print("exiting with sigint")
+    for ind in range(0,nTask):
+       os.killpg(procList[ind].pid, signal.SIGINT)
+    sys.exit(0)
+
+signal.signal(12, signal_handler) 
+
 __author__ = 'maud'
 
 """Das Skript hat eine Serie von Simulationen z.B. am Cluster auszufuehren:

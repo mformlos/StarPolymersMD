@@ -18,7 +18,7 @@ for jobParametersPart in params.jobParametersParts:
     with open(currRunScript, "w") as outF:
         lineInd = 0
         for currLine in lines:
-            if lineInd== 11:
+            if lineInd== 13:
                 outF.write("jobInd="+  str(currJobInd)+"\n")
             else:
                 outF.write(currLine)
