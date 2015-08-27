@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 __author__ = 'maud'
 import numpy as np
+import glob
+import os
+import sys
 from collections import namedtuple
 #from src.jobParamLib import JobParam
 
@@ -25,11 +28,13 @@ ParamSetMixed=namedtuple("ParamSet","Type, Arms, Lambda, Temperature, Lx, Ly, Lz
 ParamSet=namedtuple("ParamSet","TypeA, TypeB, Arms, Lambda, Temperature, Lx, Ly, Lz, step_size, step_warm, step_total, step_output, MPC, Shear")
 Type = namedtuple("Type", ["TypeA", "TypeB"])
 MPC = namedtuple("MPC", ["Status", "Shear"])
+ParamSetContinue = namedtuple("ParamSetContinue", "File, step_size, step_total, step_output, Lx, Ly, Lz, MPC, Shear")
 
-paramSets=[ParamSetMixed([Type(3,3), Type(5,5)],[3,7],[1.0, 1.1],1.0, 50, 50, 50, 0.01, 1E4, 2E7, 1E4,MPC=[MPC("No", [0.0]), MPC("MPC", [0.0,0.5])])]
+#paramSets=[ParamSetMixed([Type(3,3), Type(5,5)],[3],[1.1],1.0, 50, 50, 50, 0.01, 1E3, 1E4, 1E3,MPC=[MPC("No", [0.0]), MPC("MPC", [0.0,0.5])])]
+paramSets=[ParamSetMixed([Type(3,3), Type(5,5)],[3],[1.0, 1.1],1.0, 50, 50, 50, 0.01, 1E3, 1E7, 1E3,MPC=[MPC("No", [0.0])])]
 
 nJobPerTask=1
-coresPerRun=16
+coresPerRun=4
 tasksPerRun=coresPerRun*nJobPerTask
 
 
@@ -70,8 +75,27 @@ for paramSet in paramSets:
 		        TypeA = Types.TypeA
 		        TypeB = Types.TypeB
                         jobParam= ParamSet(TypeA, TypeB, Arms, Lambda, Temperature, Lx, Ly, Lz, step_size, step_warm, step_total, step_output, Hydrodynamic.Status, Shear)
-                        jobParametersTotal.append(jobParam)
-                        currJobParametersPart.append(jobParam)
+                        mpc_string = ""
+                        if (jobParam.MPC == "MPC"): 
+                            mpc_string = "MPCON_Shear%.2f.pdb" %jobParam.Shear
+                        else: 
+                            mpc_string = "MPCOFF.pdb"
+                        file_name = "./results/end_config_Star_A%i_B%i_Arms%i_Lx%i_Ly%i_Lz%i_Lambda%.2f_T%.2f_run*_" %(jobParam.TypeA, jobParam.TypeB, jobParam.Arms, jobParam.Lx, jobParam.Ly, jobParam.Lz, jobParam.Lambda, jobParam.Temperature)
+                        file_name += mpc_string 
+			files = glob.glob(file_name)
+                        files.sort()
+         	
+                        if (len(files) >= 1):
+                            continueJobParam = ParamSetContinue(files[0], jobParam.step_size, jobParam.step_total, jobParam.step_output, jobParam.Lx, jobParam.Ly, jobParam.Lz, jobParam.MPC, jobParam.Shear)
+                            run = files[0].split('run')
+                            run = run[1].split('_')
+                            run = run[0]
+                            if (float(jobParam.step_total) > float(run)): 
+                                jobParametersTotal.append(continueJobParam)
+                                currJobParametersPart.append(continueJobParam)
+                        else: 
+                            jobParametersTotal.append(jobParam)
+                            currJobParametersPart.append(jobParam)
 	 	 
                         if len(currJobParametersPart)==tasksPerRun:
                             jobParametersParts.append(currJobParametersPart)
@@ -79,3 +103,7 @@ for paramSet in paramSets:
 print(len(jobParametersTotal))
 if (not len(currJobParametersPart)== 0):
     jobParametersParts.append(currJobParametersPart)
+
+
+
+

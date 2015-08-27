@@ -6,14 +6,19 @@ import params
 import os
 import shutil
 import sys
+import signal
+
 
 def signal_handler(signum, frame): 
     print("exiting with sigint")
     for ind in range(0,nTask):
        os.killpg(procList[ind].pid, signal.SIGINT)
+    subprocess.Popen("python submit.py", shell= True, preexec_fn=os.setsid).wait()
     sys.exit(0)
 
-signal.signal(12, signal_handler) 
+signal.signal(signal.SIGUSR1, signal_handler) 
+signal.signal(2, signal_handler)
+signal.signal(4, signal_handler)
 
 __author__ = 'maud'
 
@@ -30,6 +35,8 @@ runningList= []
 procList= []
 outputFileList=[]
 jobsTodoList= []
+
+print os.getpid()
 
 nTask = 0
 jobcount = 0
@@ -62,11 +69,12 @@ while True:
     for ind in myRange:
         if not runningList[ind] and jobsTodoList[ind]>0 and nFreeCores>=1:
             noNewWork= False
-
-            currExec = "./star-polymers/build/src/star-polymers %s %s %s %s %s %s %s %s %s %s %s %s %s %s" %(jobParamList[ind].TypeA, jobParamList[ind].TypeB, jobParamList[ind].Arms, jobParamList[ind].Lambda, jobParamList[ind].Temperature, jobParamList[ind].Lx, jobParamList[ind].Ly, jobParamList[ind].Lz, jobParamList[ind].step_size, jobParamList[ind].step_warm, jobParamList[ind].step_total, jobParamList[ind].step_output, jobParamList[ind].MPC, jobParamList[ind].Shear)
-
+            if (type(jobParamList[ind]) == params.ParamSet): 
+                currExec = "./star-polymers/build/src/star-polymers %s %s %s %s %s %s %s %s %s %s %s %s %s %s" %(jobParamList[ind].TypeA, jobParamList[ind].TypeB, jobParamList[ind].Arms, jobParamList[ind].Lambda, jobParamList[ind].Temperature, jobParamList[ind].Lx, jobParamList[ind].Ly, jobParamList[ind].Lz, jobParamList[ind].step_size, jobParamList[ind].step_warm, jobParamList[ind].step_total, jobParamList[ind].step_output, jobParamList[ind].MPC, jobParamList[ind].Shear)
+            elif (type(jobParamList[ind]) == params.ParamSetContinue): 
+                currExec = "./star-polymers/build/src/star-polymers %s %s %s %s %s %s %s %s %s"%(jobParamList[ind].File, jobParamList[ind].step_size, jobParamList[ind].step_total, jobParamList[ind].step_output, jobParamList[ind].Lx, jobParamList[ind].Ly, jobParamList[ind].Lz, jobParamList[ind].MPC, jobParamList[ind].Shear)
             print (currExec)
-            procList[ind]= subprocess.Popen(currExec, stdout =open("output.txt","w"), shell= True)
+            procList[ind]= subprocess.Popen(currExec, stdout =open("output.txt","w"), shell= True, preexec_fn=os.setsid)
 	    jobcount+= 1
             runningList[ind]= True
             jobsTodoList[ind]-=1

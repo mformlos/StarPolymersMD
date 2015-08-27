@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
 		Lambda = stod(find_parameter(s_para,"Lambda"));
 
 		StepSize = a_para[0];
-		Steps_Total = Steps_Start + a_para[1];
+		Steps_Total = a_para[1];
 		Steps_Output = a_para[2];
 		if (i_para > 5) {
 			BoxX = a_para[3];
@@ -225,11 +225,14 @@ int main(int argc, char* argv[]) {
 	ss_para << "_Lx" << BoxX;
 	ss_para << "_Ly" << BoxY;
 	ss_para << "_Lz" << BoxZ;
-	ss_para.precision(3);
-	ss_para << "_Lambda" << Lambda;
-	ss_para << "_T" << Temperature;
+	ss_para.precision(2);
+	ss_para << fixed << "_Lambda" << Lambda;
+	ss_para << fixed << "_T" << Temperature;
 	ss_para << "_run" << scientific << Steps_Total;
-	if (MPC_on) ss_para << "_MPCON_Shear" << Shear;
+	if (MPC_on) {
+		ss_para.precision(2);
+		ss_para << fixed << "_MPCON_Shear" << Shear;
+	}
 	else ss_para << "_MPCOFF";
 
 	ofstream statistic_file { };
@@ -249,6 +252,7 @@ int main(int argc, char* argv[]) {
 	FILE* end_config_file { };
 	string end_config_file_name = "./results/end_config"+ss_para.str()+".pdb";
 	
+	if(continue_run) remove(argv[1]);
 	
 
 	if (MPC_on) hydrodynamics -> initialize();

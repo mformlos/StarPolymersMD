@@ -21,12 +21,12 @@ echo $NSLOTS
 function exit_handler() {
     date 
     echo "exit caught by shell script"
-    kill -12 $child 2>/dev/null
+    kill -SIGUSR1 $child 2>/dev/null
     echo "child killed"
     exit 255
 }
 
-trap exit_handler SIGUSR2 12
+trap exit_handler SIGUSR1 
 
 cd runIn
 
