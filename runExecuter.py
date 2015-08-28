@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 
 import subprocess
 import time
@@ -11,14 +11,18 @@ import signal
 
 def signal_handler(signum, frame): 
     print("exiting with sigint")
-    for ind in range(0,nTask):
-       os.killpg(procList[ind].pid, signal.SIGINT)
-    subprocess.Popen("python submit.py", shell= True, preexec_fn=os.setsid).wait()
+    for i in range(len(jobParamList)):
+       print("killing child %i"%i)
+       os.killpg(procList[i].pid, signal.SIGINT)
+       #time.sleep(5)
+    time.sleep(30)
+    os.system("python submit.py")
+    #subprocess.Popen("python submit.py", stdout=open("subout.txt","w"), shell=True, preexec_fn=os.setsid)
+    time.sleep(60)
     sys.exit(0)
 
 signal.signal(signal.SIGUSR1, signal_handler) 
-signal.signal(2, signal_handler)
-signal.signal(4, signal_handler)
+
 
 __author__ = 'maud'
 
@@ -30,7 +34,7 @@ und startet neue jobs, wenn notwendig."""
 jobInd= int(sys.argv[1])
 print "Doing job with jobInd= "+ str(jobInd)
 jobParamList= params.jobParametersParts[jobInd]
-
+print "number of jobs: %i" %len(jobParamList)
 runningList= []
 procList= []
 outputFileList=[]
@@ -74,7 +78,8 @@ while True:
             elif (type(jobParamList[ind]) == params.ParamSetContinue): 
                 currExec = "./star-polymers/build/src/star-polymers %s %s %s %s %s %s %s %s %s"%(jobParamList[ind].File, jobParamList[ind].step_size, jobParamList[ind].step_total, jobParamList[ind].step_output, jobParamList[ind].Lx, jobParamList[ind].Ly, jobParamList[ind].Lz, jobParamList[ind].MPC, jobParamList[ind].Shear)
             print (currExec)
-            procList[ind]= subprocess.Popen(currExec, stdout =open("output_%i"%ind+".txt","w"), shell= True, preexec_fn=os.setsid)
+            print ind
+            procList[ind]= subprocess.Popen(currExec, shell=True, stdout =open("output_%i"%ind+".txt","w"), preexec_fn=os.setsid)
 	    jobcount+= 1
             runningList[ind]= True
             jobsTodoList[ind]-=1

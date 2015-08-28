@@ -4,8 +4,8 @@
 #$ -P p70679
 #$ -pe mpich 16
 #$ -V 
-#$ -l h_rt=00:05:00
-#$ -l s_rt=00:01:00
+#$ -l h_rt=00:10:00
+#$ -l s_rt=00:02:00
 #$ -M maud.formanek@univie.ac.at
 #$ -m beas
 #$ -v PATH
@@ -26,9 +26,8 @@ function exit_handler() {
     exit 255
 }
 
-trap exit_handler SIGUSR1 
+trap : SIGUSR1 
 
-cd runIn
 
 python runExecuter.py $jobInd &
 

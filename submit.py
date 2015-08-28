@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+
 
 __author__ = 'adminuser'
 import subprocess
@@ -27,8 +27,8 @@ for jobParametersPart in params.jobParametersParts:
 
     currExec= "qsub.py -q "+queue+" "+currRunScript
     print (currExec)
-    #subprocess.Popen(currExec, shell= True).wait()
-    subprocess.Popen("python runExecuter.py " + str(currJobInd), shell=True).wait()
+    subprocess.Popen(currExec, shell= True).wait()
+    #subprocess.Popen("python runExecuter.py " + str(currJobInd), shell=True).wait()
     currJobInd+=1
 
 sys.exit(0)
