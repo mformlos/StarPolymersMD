@@ -27,6 +27,7 @@ int signal_caught { };
 void signal_handler( int signum )
 {
     signal_caught = signum;
+    std::cout << "signal " << signum << " caught" << std::endl;
     // cleanup and close up stuff here
     // terminate program
 }
@@ -157,8 +158,10 @@ int main(int argc, char* argv[]) {
 		Lambda = stod(find_parameter(s_para,"Lambda"));
 
 		StepSize = a_para[0];
-		Steps_Total = a_para[1];
-		Steps_Output = a_para[2];
+		Steps_Total = (long int)a_para[1];
+		Steps_Output = (long int)a_para[2];
+		Steps_Equil = 0;
+
 		if (i_para > 5) {
 			BoxX = a_para[3];
 			if (i_para > 6) {
@@ -314,9 +317,9 @@ int main(int argc, char* argv[]) {
 				end_config_file = fopen(newname.c_str(), "w");
 				box.print_PDB_with_velocity(end_config_file, n);
 				statistic_file.close();
+				std::cout << "data saved" << std::endl;
 				fclose(config_file);
 				fclose(end_config_file);
-				std::cout << "Interrupt signal (" << signal_caught << ") received.\n";
 				exit(signal_caught);
 			}
 		}
