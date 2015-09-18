@@ -27,6 +27,7 @@ int signal_caught { };
 void signal_handler( int signum )
 {
     signal_caught = signum;
+    std::cout << "signal " << signum << " caught" << std::endl;
     // cleanup and close up stuff here
     // terminate program
 }
@@ -157,8 +158,10 @@ int main(int argc, char* argv[]) {
 		Lambda = stod(find_parameter(s_para,"Lambda"));
 
 		StepSize = a_para[0];
-		Steps_Total = a_para[1];
-		Steps_Output = a_para[2];
+		Steps_Total = (long int)a_para[1];
+		Steps_Output = (long int)a_para[2];
+		Steps_Equil = 0;
+
 		if (i_para > 5) {
 			BoxX = a_para[3];
 			if (i_para > 6) {
@@ -262,7 +265,29 @@ int main(int argc, char* argv[]) {
 	if (continue_run) n = Steps_Start + 1;
 	else n = 0; 
 	for ( ; n <= Steps_Total; ++n) {
-
+		if (signal_caught) {
+			string Step_total = find_parameter(ss_para.str(),"run");
+			std::cout << Step_total << std::endl;
+			stringstream new_total { };
+			new_total.precision(0);
+			new_total << scientific << n;
+			oldname = newname;
+			newname.replace(newname.find(Step_total), Step_total.length(),new_total.str());
+			rename(oldname.c_str(), newname.c_str());
+			oldname = "./results/statistics"+ss_para.str()+".dat";
+			newname = oldname;
+			newname.replace(newname.find(Step_total), Step_total.length(),new_total.str());
+			rename(oldname.c_str(), newname.c_str());
+			newname = "./results/end_config"+ss_para.str()+".pdb";
+			newname.replace(newname.find(Step_total), Step_total.length(),new_total.str());
+			end_config_file = fopen(newname.c_str(), "w");
+			box.print_PDB_with_velocity(end_config_file, n);
+			statistic_file.close();
+			std::cout << "data saved" << std::endl;
+			fclose(config_file);
+			fclose(end_config_file);
+			exit(signal_caught);
+		}
 
 		if (n > Steps_Equil && !(n%Steps_Output)) {
 			thermostat -> propagate(true);
@@ -296,29 +321,7 @@ int main(int argc, char* argv[]) {
 			}
 			statistic_file << "\n";
 			//std::cout << '\n';
-			if (signal_caught) {
-				string Step_total = find_parameter(ss_para.str(),"run");
-				std::cout << Step_total << std::endl;
-				stringstream new_total { };
-				new_total.precision(0);
-				new_total << scientific << n;
-				oldname = newname;
-				newname.replace(newname.find(Step_total), Step_total.length(),new_total.str());
-				rename(oldname.c_str(), newname.c_str());
-				oldname = "./results/statistics"+ss_para.str()+".dat";
-				newname = oldname;
-				newname.replace(newname.find(Step_total), Step_total.length(),new_total.str());
-				rename(oldname.c_str(), newname.c_str());
-                newname = "./results/end_config"+ss_para.str()+".pdb";
-				newname.replace(newname.find(Step_total), Step_total.length(),new_total.str());
-				end_config_file = fopen(newname.c_str(), "w");
-				box.print_PDB_with_velocity(end_config_file, n);
-				statistic_file.close();
-				fclose(config_file);
-				fclose(end_config_file);
-				std::cout << "Interrupt signal (" << signal_caught << ") received.\n";
-				exit(signal_caught);
-			}
+
 		}
 		else thermostat -> propagate(false);
 		if (MPC_on && !(n%100)) {
