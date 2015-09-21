@@ -4,8 +4,8 @@
 #$ -P p70679
 #$ -pe mpich 16
 #$ -V 
-#$ -l h_rt=00:10:00
-#$ -l s_rt=00:02:00
+#$ -l h_rt=10:00:00
+#$ -l s_rt=8:00:00
 #$ -M maud.formanek@univie.ac.at
 #$ -m beas
 #$ -v PATH

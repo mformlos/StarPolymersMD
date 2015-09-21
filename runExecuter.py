@@ -80,10 +80,14 @@ while True:
             print (currExec)
             print ind
             procList[ind]= subprocess.Popen(currExec, shell=True, stdout =open("output_%i"%ind+".txt","w"), preexec_fn=os.setsid)
+            #procList[ind]=subprocess.Popen(currExec, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	    #out[ind], err[ind] = procList[ind].communicate()
 	    jobcount+= 1
             runningList[ind]= True
             jobsTodoList[ind]-=1
             nFreeCores-=1
+    for p in procList: 
+        p.wait()      
     if(noRun and noNewWork):
         print "breaking"
         break
