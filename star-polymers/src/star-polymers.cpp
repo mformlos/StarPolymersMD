@@ -108,7 +108,7 @@ int main(int argc, char* argv[]) {
 		}
 		else break;
 	}
-    if (!continue_run) {
+        if (!continue_run) {
 		TypeA = (int)a_para[0];
 		TypeB = (int)a_para[1];
 		if (argc > 1 && strcmp(argv[1], "Chain") == 0) Arms = 0;
@@ -184,39 +184,6 @@ int main(int argc, char* argv[]) {
 			i_para++;
 		}
 	}
-	Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
-	
-	if (argc > 1 && strcmp(argv[1], "Chain") == 0) {
-		box.add_chain(TypeA, TypeB, 10.);
-		std::cout << "building a chain" << std::endl;
-	}
-	else {
-		if (continue_run) box.add_star(std::string(argv[1]), TypeA, TypeB, Arms, 10.);
-		else box.add_star(TypeA, TypeB, Arms, 10.);
-		std::cout << "building a star" << std::endl;
-	}
-	
-	if (MPC_on) {
-		thermostat = new Thermostat_None{ box, StepSize };
-		hydrodynamics = new MPC{box, Temperature, Shear};
-	}
-	else {
-		thermostat = new Andersen{box, StepSize, Temperature, 1999};
-		hydrodynamics = new Hydrodynamics_None{box};
-	}
-
-	
-
-
-	std::cout << "Type A: " << TypeA << " Type B: " << TypeB << " Arms: " << Arms << " Lambda: " << Lambda << std::endl;
-	std::cout << "Temperature: " << Temperature <<  std::endl;
-	std::cout << "Box Size: " << BoxX << " " << BoxY << " " << BoxZ << std::endl;
-	std::cout << "Step Size: " << StepSize << std::endl;
-	std::cout << "Start at: " << Steps_Start << " Stop at: " << Steps_Total << " Output every: " << Steps_Output << std::endl;
-	if (MPC_on) {
-		std::cout << "MPC is turned ON with shear rate: " << Shear << std::endl;
-	}
-	else std::cout << "MPC is turned OFF" << std::endl;
 
 
 	ss_para.precision(0);
@@ -242,8 +209,6 @@ int main(int argc, char* argv[]) {
 	FILE* config_file { };
 	string oldname = "./results/statistics"+ss_para_old.str()+".dat";
 	string newname = "./results/statistics"+ss_para.str()+".dat";
-	std::cout << oldname << std::endl;
-	std::cout << newname << std::endl;
 	if(continue_run) rename(oldname.c_str(), newname.c_str());
 	string statistic_file_name = newname;
 	oldname = "./results/config"+ss_para_old.str()+".pdb";
@@ -254,9 +219,42 @@ int main(int argc, char* argv[]) {
 	config_file = fopen(config_file_name.c_str(), "a");
 	FILE* end_config_file { };
 	string end_config_file_name = "./results/end_config"+ss_para.str()+".pdb";
+     
+        ofstream output_file { }; 
+        string output_file_name = "./results/output"+ss_para.str()+".dat";
+        output_file.open(output_file_name, ios::out | ios::trunc); 	
 	
-	if(continue_run) remove(argv[1]);
-	
+        output_file << "Type A: " << TypeA << " Type B: " << TypeB << " Arms: " << Arms << " Lambda: " << Lambda << std::endl;
+        output_file << "Temperature: " << Temperature <<  std::endl;
+        output_file << "Box Size: " << BoxX << " " << BoxY << " " << BoxZ << std::endl;
+        output_file << "Step Size: " << StepSize << std::endl;
+        output_file << "Start at: " << Steps_Start << " Stop at: " << Steps_Total << " Output every: " << Steps_Output << std::endl;
+        if (MPC_on) {
+                output_file << "MPC is turned ON with shear rate: " << Shear << std::endl;
+        }
+        else output_file << "MPC is turned OFF" << std::endl;
+        Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
+
+        if (argc > 1 && strcmp(argv[1], "Chain") == 0) {
+                box.add_chain(TypeA, TypeB, 10.);
+                output_file << "building a chain" << std::endl;
+        }
+        else {
+                if (continue_run) box.add_star(std::string(argv[1]), TypeA, TypeB, Arms, 10.);
+                else box.add_star(TypeA, TypeB, Arms, 10.);
+                output_file << "building a star" << std::endl;
+        }
+
+        if (MPC_on) {
+                thermostat = new Thermostat_None{ box, StepSize };
+                hydrodynamics = new MPC{box, Temperature, Shear};
+        }
+        else {
+                thermostat = new Andersen{box, StepSize, Temperature, 1999};
+                hydrodynamics = new Hydrodynamics_None{box};
+        }
+
+
 
 	if (MPC_on) hydrodynamics -> initialize();
 	clock_t begin = clock();
@@ -267,7 +265,6 @@ int main(int argc, char* argv[]) {
 	for ( ; n <= Steps_Total; ++n) {
 		if (signal_caught) {
 			string Step_total = find_parameter(ss_para.str(),"run");
-			std::cout << Step_total << std::endl;
 			stringstream new_total { };
 			new_total.precision(0);
 			new_total << scientific << n;
@@ -280,22 +277,27 @@ int main(int argc, char* argv[]) {
 			rename(oldname.c_str(), newname.c_str());
 			newname = "./results/end_config"+ss_para.str()+".pdb";
 			newname.replace(newname.find(Step_total), Step_total.length(),new_total.str());
-			end_config_file = fopen(newname.c_str(), "w");
+			end_config_file = fopen(newname.c_str(), "w"); 
 			box.print_PDB_with_velocity(end_config_file, n);
 			statistic_file.close();
-			std::cout << "data saved" << std::endl;
+			output_file << "signal " << signal_caught << "caught, data saved" << std::endl;
 			fclose(config_file);
 			fclose(end_config_file);
+                        oldname = "./results/output" + ss_para.str() + ".dat"; 
+                        newname = oldname;
+                        newname.replace(newname.find(Step_total), Step_total.length(),new_total.str()); 
+                        rename(oldname.c_str(), newname.c_str());
+                        if(continue_run) remove(argv[1]);
 			exit(signal_caught);
 		}
 
 		if (n > Steps_Equil && !(n%Steps_Output)) {
 			thermostat -> propagate(true);
-			std::cout << n << " ";
-			box.print_Epot(std::cout);
-			box.print_Ekin(std::cout);
-			if (MPC_on) std::cout << hydrodynamics -> calculateCurrentTemperature() << " ";
-			else box.print_Temperature(std::cout);
+			output_file << n << " ";
+			box.print_Epot(output_file);
+			box.print_Ekin(output_file);
+			if (MPC_on) output_file << hydrodynamics -> calculateCurrentTemperature() << " ";
+			else box.print_Temperature(output_file);
 			std::list<unsigned> patches = box.calculate_patches();
 			int number_of_patches {0};
 			double av_patch_size {0.0};
@@ -308,8 +310,8 @@ int main(int argc, char* argv[]) {
 			}
 			if (number_of_patches > 0) av_patch_size /= number_of_patches;
 			Matrix3d gyr_tensor = box.calculate_gyration_tensor();
-			std::cout << '\n';
-			box.print_PDB(config_file, n);
+			output_file << '\n';
+			//box.print_PDB(config_file, n);
 			statistic_file << n << " ";
 			box.print_Epot(statistic_file);
 			box.print_Ekin(statistic_file);
@@ -332,10 +334,11 @@ int main(int argc, char* argv[]) {
 
 	end_config_file = fopen(end_config_file_name.c_str(), "w");
 	box.print_PDB_with_velocity(end_config_file, Steps_Total);
+        if(continue_run) remove(argv[1]);
 
 
 	clock_t end = clock();
 	//box.print_molecules(std::cout);
-	std::cout << "time: " << double(end-begin)/CLOCKS_PER_SEC << std::endl;
+	output_file << "time: " << double(end-begin)/CLOCKS_PER_SEC << std::endl;
 
 }

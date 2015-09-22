@@ -79,19 +79,20 @@ while True:
                 currExec = "./star-polymers/build/src/star-polymers %s %s %s %s %s %s %s %s %s"%(jobParamList[ind].File, jobParamList[ind].step_size, jobParamList[ind].step_total, jobParamList[ind].step_output, jobParamList[ind].Lx, jobParamList[ind].Ly, jobParamList[ind].Lz, jobParamList[ind].MPC, jobParamList[ind].Shear)
             print (currExec)
             print ind
-            procList[ind]= subprocess.Popen(currExec, shell=True, stdout =open("output_%i"%ind+".txt","w"), preexec_fn=os.setsid)
+            procList[ind]= subprocess.Popen(currExec, shell=True, preexec_fn=os.setsid)
+            #procList[ind]= subprocess.Popen(currExec, shell=True, stdout =open("output_%i"%ind+".txt","w"), preexec_fn=os.setsid)
             #procList[ind]=subprocess.Popen(currExec, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	    #out[ind], err[ind] = procList[ind].communicate()
 	    jobcount+= 1
             runningList[ind]= True
             jobsTodoList[ind]-=1
             nFreeCores-=1
+    sys.stdout.flush()
     for p in procList: 
         p.wait()      
     if(noRun and noNewWork):
         print "breaking"
         break
     #The following command makes it possible to read the stdout during the execution of the script
-    sys.stdout.flush()
     time.sleep(2)
 
