@@ -342,7 +342,7 @@ Matrix3d Box::calculate_gyration_tensor() {
 		center_of_mass /= mol.NumberOfMonomers;
 		for (auto& mono : mol.Monomers) {
 			Vector3d shifted_position = wrap(mono.Position +shift_anchor_to_center);
-			shifted_position = wrap(shifted_position - center_of_mass);
+			shifted_position = shifted_position - center_of_mass;
 			for (int alpha = 0; alpha < 3; alpha++) {
 				for (int beta = 0; beta < 3; beta++) {
 					gyr_tensor_mol(alpha, beta) += shifted_position(alpha)*shifted_position(beta);
