@@ -62,6 +62,7 @@ public:
 	//getter methods:
 	inline void calculateCMV(unsigned Index, Vector3d&);
 	inline void calculateCMV(std::vector<MPCParticle*>& List, Vector3d& CMV );
+	inline void calculateFluidVelocity(unsigned Index, Vector3d&);
 	inline void calculateCMP(unsigned Index, Vector3d&);
 	inline void calculateAngular(unsigned Index, Vector3d& Angular, const Vector3d& CMV, const Vector3d& CMP, const Matrix3d& Rotation);
 	inline void calculateAngularMomentum(unsigned Index, Vector3d&, const Vector3d& CMP);
@@ -94,6 +95,9 @@ public:
 			ufunc( *first );
 		}
 	}
+
+	void print_fluid(FILE*, int, int, int);
+	void print_fluid_with_coordinates(FILE*, int, int, int);
 
 };
 

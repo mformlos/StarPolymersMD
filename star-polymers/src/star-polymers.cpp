@@ -50,9 +50,8 @@ string find_parameter(string para_string, string para_name) {
 	if (i == std::string::npos) return para;
 	para = para_string.substr(i + para_name.length());
 	i = para.find("_");
-	if (i == std::string::npos) i = para.find(".");
+    //if (i == std::string::npos) i = para.find(".");
 	if (i != std::string::npos) para.erase(i);
-
 	return para;
 }
 
@@ -65,8 +64,9 @@ int main(int argc, char* argv[]) {
 	signal(SIGINT, signal_handler);
 	int BoxX { }, BoxY { }, BoxZ { }, TypeA { }, TypeB { }, Arms { };
 	long int Steps_Equil { }, Steps_Total { }, Steps_Output { }, Steps_Start { }; 
+	long int Steps_pdb { }, Steps_fluid { };
 	double Temperature { }, Lambda { }, Shear { }, StepSize { };
-	bool MPC_on {false}, continue_run {false}; 
+	bool MPC_on {false}, continue_run {false}, pdb_print {false}, fluid_print {false};
 	string s_para { };
 	stringstream ss_para { }, ss_para_old { };
 	Thermostat *thermostat{};
@@ -122,14 +122,32 @@ int main(int argc, char* argv[]) {
 		Steps_Equil = (long int)a_para[9];
 		Steps_Total = (long int)a_para[10];
 		Steps_Output = (long int)a_para[11];
-		while (i_para < argc - 1 && is_number(argv[i_para])) ++i_para;
-		int i_MPC { i_para };
-		i_para++;
-		if (argc > 1 && i_MPC < argc) {
-			if (strcmp(argv[i_MPC], "MPC") == 0) {
-			MPC_on = true;
-			Shear = set_param(0., argv, argc, i_MPC + 1);
+		while (i_para < argc) {
+			while (i_para < argc - 1 && is_number(argv[i_para])) ++i_para;
+			if (argc > 1 && i_para < argc) {
+				if (strcmp(argv[i_para], "MPC") == 0) {
+					MPC_on = true;
+					Shear = set_param(0., argv, argc, i_para + 1);
+				}
+				else if (strcmp(argv[i_para], "pdb") == 0) {
+					pdb_print = true;
+					if (i_para + 1 < argc && is_number(argv[i_para + 1])){
+						i_para++;
+						Steps_pdb = (long int)stold(argv[i_para]);
+						std::cout << Steps_pdb <<std::endl;
+
+					}
+				}
+				else if (strcmp(argv[i_para], "fluid") == 0) {
+					fluid_print = true;
+					if (i_para + 1 < argc && is_number(argv[i_para + 1])){
+						i_para++;
+						Steps_fluid = (long int)stold(argv[i_para]);
+						std::cout << Steps_fluid <<std::endl;
+					}
+				}
 			}
+			i_para++;
 		}
 	}
 	else {
@@ -176,10 +194,26 @@ int main(int argc, char* argv[]) {
 		while (i_para < argc) {
 			if (strcmp(argv[i_para], "MPC") == 0) {
 				MPC_on = true;
-	
-				if (i_para +1 < argc) Shear = stod(argv[i_para+1]);
-				i_para++;
-				break;
+				if (i_para + 1 < argc && is_number(argv[i_para + 1])){
+					i_para++;
+					Shear = stod(argv[i_para]);
+				}
+			}
+			else if (strcmp(argv[i_para], "pdb") == 0) {
+				pdb_print = true;
+				if (i_para + 1 < argc && is_number(argv[i_para + 1])) {
+					i_para++;
+					Steps_pdb = (long int)stold(argv[i_para]);
+					std::cout << Steps_pdb << " ";
+				}
+			}
+			else if (strcmp(argv[i_para], "fluid") == 0) {
+				fluid_print = true;
+				if (i_para + 1 < argc && is_number(argv[i_para + 1])) {
+					i_para++;
+					Steps_fluid = (long int)stold(argv[i_para]);
+					std::cout << Steps_fluid <<std::endl;
+				}
 			}
 			i_para++;
 		}
@@ -207,52 +241,71 @@ int main(int argc, char* argv[]) {
 
 	ofstream statistic_file { };
 	FILE* config_file { };
+	FILE* fluid_file { };
 	string oldname = "./results/statistics"+ss_para_old.str()+".dat";
 	string newname = "./results/statistics"+ss_para.str()+".dat";
 	if(continue_run) rename(oldname.c_str(), newname.c_str());
 	string statistic_file_name = newname;
-	oldname = "./results/config"+ss_para_old.str()+".pdb";
-	newname = "./results/config"+ss_para.str()+".pdb";
-	if (continue_run) rename(oldname.c_str(), newname.c_str());
-	string config_file_name = newname;
 	statistic_file.open(statistic_file_name, ios::out | ios::app);
-	config_file = fopen(config_file_name.c_str(), "a");
+
+	if(pdb_print) {
+		oldname = "./results/config"+ss_para_old.str()+".pdb";
+		newname = "./results/config"+ss_para.str()+".pdb";
+		if (continue_run) rename(oldname.c_str(), newname.c_str());
+		string config_file_name = newname;
+		config_file = fopen(config_file_name.c_str(), "a");
+	}
+
+	if(fluid_print) {
+		oldname = "./results/fluid"+ss_para_old.str()+".dat";
+		newname = "./results/fluid"+ss_para.str()+".dat";
+		if (continue_run) rename(oldname.c_str(), newname.c_str());
+		string fluid_file_name = newname;
+		fluid_file = fopen(fluid_file_name.c_str(), "a");
+	}
+
+
+
 	FILE* end_config_file { };
 	string end_config_file_name = "./results/end_config"+ss_para.str()+".pdb";
      
-        ofstream output_file { }; 
-        string output_file_name = "./results/output"+ss_para.str()+".dat";
-        output_file.open(output_file_name, ios::out | ios::trunc); 	
+	ofstream output_file { };
+	string output_file_name = "./results/output"+ss_para.str()+".dat";
+	output_file.open(output_file_name, ios::out | ios::trunc);
+	output_file << "Type A: " << TypeA << " Type B: " << TypeB << " Arms: " << Arms << " Lambda: " << Lambda << std::endl;
+	output_file << "Temperature: " << Temperature <<  std::endl;
+	output_file << "Box Size: " << BoxX << " " << BoxY << " " << BoxZ << std::endl;
+	output_file << "Step Size: " << StepSize << std::endl;
+	output_file << "Start at: " << Steps_Start << " Stop at: " << Steps_Total << " Output every: " << Steps_Output << std::endl;
+	if (MPC_on) {
+		output_file << "MPC is turned ON with shear rate: " << Shear << std::endl;
+    }
+	else output_file << "MPC is turned OFF" << std::endl;
+	output_file << "pdb file generated: " << (pdb_print ? "yes" : "no") << std::endl;
+	output_file << "fluid file generated: " << (fluid_print ? "yes" : "no") << std::endl;
+
+
 	
-        output_file << "Type A: " << TypeA << " Type B: " << TypeB << " Arms: " << Arms << " Lambda: " << Lambda << std::endl;
-        output_file << "Temperature: " << Temperature <<  std::endl;
-        output_file << "Box Size: " << BoxX << " " << BoxY << " " << BoxZ << std::endl;
-        output_file << "Step Size: " << StepSize << std::endl;
-        output_file << "Start at: " << Steps_Start << " Stop at: " << Steps_Total << " Output every: " << Steps_Output << std::endl;
-        if (MPC_on) {
-                output_file << "MPC is turned ON with shear rate: " << Shear << std::endl;
-        }
-        else output_file << "MPC is turned OFF" << std::endl;
-        Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
+	Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
 
-        if (argc > 1 && strcmp(argv[1], "Chain") == 0) {
-                box.add_chain(TypeA, TypeB, 10.);
-                output_file << "building a chain" << std::endl;
-        }
-        else {
-                if (continue_run) box.add_star(std::string(argv[1]), TypeA, TypeB, Arms, 10.);
-                else box.add_star(TypeA, TypeB, Arms, 10.);
-                output_file << "building a star" << std::endl;
-        }
+	if (argc > 1 && strcmp(argv[1], "Chain") == 0) {
+		box.add_chain(TypeA, TypeB, 10.);
+		output_file << "building a chain" << std::endl;
+    }
+	else {
+		if (continue_run) box.add_star(std::string(argv[1]), TypeA, TypeB, Arms, 10.);
+		else box.add_star(TypeA, TypeB, Arms, 10.);
+		output_file << "building a star" << std::endl;
+	}
 
-        if (MPC_on) {
-                thermostat = new Thermostat_None{ box, StepSize };
-                hydrodynamics = new MPC{box, Temperature, Shear};
-        }
-        else {
-                thermostat = new Andersen{box, StepSize, Temperature, 1999};
-                hydrodynamics = new Hydrodynamics_None{box};
-        }
+	if (MPC_on) {
+		thermostat = new Thermostat_None{ box, StepSize };
+		hydrodynamics = new MPC{box, Temperature, Shear};
+    }
+	else {
+		thermostat = new Andersen{box, StepSize, Temperature, 1999};
+		hydrodynamics = new Hydrodynamics_None{box};
+    }
 
 
 
@@ -311,7 +364,9 @@ int main(int argc, char* argv[]) {
 			if (number_of_patches > 0) av_patch_size /= number_of_patches;
 			Matrix3d gyr_tensor = box.calculate_gyration_tensor();
 			output_file << '\n';
-			//box.print_PDB(config_file, n);
+			output_file.flush();
+			if (pdb_print && (Steps_pdb > 0 ? !(n%Steps_pdb) : true)) box.print_PDB(config_file, n);
+			if (fluid_print && (Steps_fluid > 0 ? !(n%Steps_fluid) : true)) hydrodynamics -> print_fluid_with_coordinates(fluid_file, n, (int)BoxZ/2 - 2, (int)BoxZ/2 + 2);
 			statistic_file << n << " ";
 			box.print_Epot(statistic_file);
 			box.print_Ekin(statistic_file);
@@ -322,6 +377,8 @@ int main(int argc, char* argv[]) {
 				statistic_file << *(gyr_tensor.data()+i) << " ";
 			}
 			statistic_file << "\n";
+			statistic_file.flush();
+
 			//std::cout << '\n';
 
 		}
@@ -334,7 +391,7 @@ int main(int argc, char* argv[]) {
 
 	end_config_file = fopen(end_config_file_name.c_str(), "w");
 	box.print_PDB_with_velocity(end_config_file, Steps_Total);
-        if(continue_run) remove(argv[1]);
+    if(continue_run) remove(argv[1]);
 
 
 	clock_t end = clock();

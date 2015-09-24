@@ -196,6 +196,16 @@ inline void MPC::calculateCMP(unsigned Index, Vector3d& CMP) {
 	CMP /= totalMass;
 }
 
+inline void MPC::calculateFluidVelocity(unsigned Index, Vector3d& FluidVelocity) {
+	FluidVelocity(0) = FluidVelocity(1) = FluidVelocity(2) = 0.;
+	unsigned i {};
+	for (i = 0; i < MPCCellListFluidParticles[Index]; i++) {
+		MPCParticle * part {MPCCellList[Index][i]};
+	    FluidVelocity += part -> Velocity;
+	}
+	FluidVelocity /= (double)i;
+}
+
 inline void MPC::calculateAngular(unsigned Index, Vector3d& Angular, const Vector3d& CMV, const Vector3d& CMP, const Matrix3d& Rotation) {
 	Vector3d Cvec(0., 0., 0.);
 	Matrix3d InertiaTensor = Matrix3d::Zero();
@@ -284,6 +294,39 @@ inline Vector3d MPC::wrap(Vector3d&& pos) {
 
 inline void MPC::wrap(Particle& part) {
 	part.Position = wrap(part.Position);
+}
+
+void MPC::print_fluid(FILE* fluid_file, int step, int z_start, int z_stop) {
+	fprintf(fluid_file, "TIME     %d \n", step);
+	for (int z = z_start; z < z_stop; z++) {
+		fprintf(fluid_file, "Z %d \n", z);
+		for (int x = 0; x < BoxSize[0]; x++) {
+			for (int y = 0; y < BoxSize[1]; x++) {
+				int Index = x + BoxSize[0]*y+BoxSize[0]*BoxSize[1]*z;
+				Vector3d CMV { };
+				calculateFluidVelocity(Index, CMV);
+				fprintf(fluid_file, "%f %f %f ", CMV(0), CMV(1), CMV(2));
+			}
+			fprintf(fluid_file, "\n");
+		}
+		fprintf(fluid_file, "\n");
+	}
+	fprintf(fluid_file, "\n");
+}
+
+void MPC::print_fluid_with_coordinates(FILE* fluid_file, int step, int z_start, int z_stop) {
+	fprintf(fluid_file, "TIME     %d \n", step);
+	for (int z = z_start; z < z_stop; z++) {
+		for (int x = 0; x < BoxSize[0]; x++) {
+			for (int y = 0; y < BoxSize[1]; y++) {
+				int Index = x + BoxSize[0]*y+BoxSize[0]*BoxSize[1]*z;
+				Vector3d CMV { };
+				calculateFluidVelocity(Index, CMV);
+				fprintf(fluid_file, "%f %f %f %f %f %f \n", x + 0.5, y + 0.5, z + 0.5, CMV(0), CMV(1), CMV(2));
+			}
+		}
+	}
+	fprintf(fluid_file, "\n");
 }
 
 

@@ -14,6 +14,9 @@ public:
 	virtual void initialize() {};
 	virtual void step(const double& dt) {};
 	virtual double calculateCurrentTemperature() {return 0.0;};
+	virtual void print_fluid(FILE*, int, int, int) {};
+	virtual void print_fluid_with_coordinates(FILE*, int, int, int) {};
+
 
 };
 
