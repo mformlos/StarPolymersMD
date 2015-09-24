@@ -31,7 +31,7 @@ MPC = namedtuple("MPC", ["Status", "Shear"])
 ParamSetContinue = namedtuple("ParamSetContinue", "File, step_size, step_total, step_output, Lx, Ly, Lz, MPC, Shear")
 
 #paramSets=[ParamSetMixed([Type(3,3), Type(5,5)],[3],[1.1],1.0, 50, 50, 50, 0.01, 1E3, 1E4, 1E3,MPC=[MPC("No", [0.0]), MPC("MPC", [0.0,0.5])])]
-paramSets=[ParamSetMixed([Type(20,20)],[6,9,12],[0.95,1.0,1.05,1.1],1.0, 200, 200, 200, 0.01, 1E4, 1E10, 1E4,MPC=[MPC("No", [0.0])])]
+paramSets=[ParamSetMixed([Type(20,20)],[6,9,12],[0.95,1.0,1.05,1.1],1.0, 200, 200, 200, 0.01, 1E5, 1E10, 1E5,MPC=[MPC("No", [0.0])])]
 
 nJobPerTask=1
 coresPerRun=16
