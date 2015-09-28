@@ -1,3 +1,5 @@
+#computes the averages of all currently available files in the results/ directory. If an input number is given, it will only start calculating averages after this timestep: 
+
 import glob
 import numpy as np
 import sys 
