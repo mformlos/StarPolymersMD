@@ -327,9 +327,11 @@ double Box::calculate_radius_of_gyration() {
 	return r_gyr;
 }
 
-Matrix3d Box::calculate_gyration_tensor() {
+std::tuple<double, Matrix3d> Box::calculate_gyration_tensor() {
 	Matrix3d gyr_tensor {Matrix3d::Zero()};
+	double r_gyr { };
 	for (auto& mol: Molecules) {
+		double r_gyr_mol { };
 		Matrix3d gyr_tensor_mol {Matrix3d::Zero()};
 		Vector3d shift_anchor_to_center {Vector3d::Zero()};
 		Vector3d center_of_mass {Vector3d::Zero()};
@@ -343,17 +345,22 @@ Matrix3d Box::calculate_gyration_tensor() {
 		for (auto& mono : mol.Monomers) {
 			Vector3d shifted_position = wrap(mono.Position +shift_anchor_to_center);
 			shifted_position = shifted_position - center_of_mass;
+			r_gyr_mol += shifted_position.dot(shifted_position);
 			for (int alpha = 0; alpha < 3; alpha++) {
 				for (int beta = 0; beta < 3; beta++) {
 					gyr_tensor_mol(alpha, beta) += shifted_position(alpha)*shifted_position(beta);
 				}
 			}
 		}
+		r_gyr_mol /= mol.NumberOfMonomers;
+		r_gyr_mol = sqrt(r_gyr_mol);
+		r_gyr += r_gyr_mol;
 		gyr_tensor_mol /= mol.NumberOfMonomers;
 		gyr_tensor += gyr_tensor_mol;
 	}
+	r_gyr /= Molecules.size();
 	gyr_tensor /= Molecules.size();
-	return gyr_tensor;
+	return std::make_tuple(r_gyr, gyr_tensor);
 }
 
 std::list<unsigned> Box::calculate_clusters() {

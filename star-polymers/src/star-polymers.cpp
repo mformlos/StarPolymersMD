@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <stdio.h>
 #include <csignal>
+#include <tuple>
 #include "Box.h"
 #include "Thermostat_None.h"
 #include "Lowe_Andersen.h"
@@ -334,13 +335,14 @@ int main(int argc, char* argv[]) {
 			box.print_PDB_with_velocity(end_config_file, n);
 			statistic_file.close();
 			output_file << "signal " << signal_caught << "caught, data saved" << std::endl;
-			fclose(config_file);
+			if (pdb_print) fclose(config_file);
+			if (fluid_print) fclose(fluid_file);
 			fclose(end_config_file);
-                        oldname = "./results/output" + ss_para.str() + ".dat"; 
-                        newname = oldname;
-                        newname.replace(newname.find(Step_total), Step_total.length(),new_total.str()); 
-                        rename(oldname.c_str(), newname.c_str());
-                        if(continue_run) remove(argv[1]);
+            oldname = "./results/output" + ss_para.str() + ".dat";
+            newname = oldname;
+            newname.replace(newname.find(Step_total), Step_total.length(),new_total.str());
+            rename(oldname.c_str(), newname.c_str());
+            if(continue_run) remove(argv[1]);
 			exit(signal_caught);
 		}
 
@@ -362,7 +364,7 @@ int main(int argc, char* argv[]) {
 				//std::cout << element << ' ';
 			}
 			if (number_of_patches > 0) av_patch_size /= number_of_patches;
-			Matrix3d gyr_tensor = box.calculate_gyration_tensor();
+			std::tuple<double,Matrix3d> gyration = box.calculate_gyration_tensor();
 			output_file << '\n';
 			output_file.flush();
 			if (pdb_print && (Steps_pdb > 0 ? !(n%Steps_pdb) : true)) {
@@ -377,8 +379,10 @@ int main(int argc, char* argv[]) {
 			box.print_Epot(statistic_file);
 			box.print_Ekin(statistic_file);
 			box.print_Temperature(statistic_file);
-			box.print_radius_of_gyration(statistic_file);
+            //box.print_radius_of_gyration(statistic_file);
+			statistic_file << std::get<0>(gyration) << " ";
 			statistic_file << number_of_patches << " " << av_patch_size << " ";
+			Matrix3d gyr_tensor {std::get<1>(gyration)};
 			for (int i = 0; i < gyr_tensor.size(); i++) {
 				statistic_file << *(gyr_tensor.data()+i) << " ";
 			}

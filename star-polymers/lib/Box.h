@@ -12,6 +12,7 @@
 #include <array>
 #include <vector>
 #include <list>
+#include <tuple>
 #include "Molecule.h"
 #include "MatVec.h"
 #include "Potentials.h"
@@ -72,7 +73,7 @@ public:
 	double calculate_ekin();
 	double calculate_epot(MDParticle&, MDParticle&);
 	double calculate_radius_of_gyration();
-	Matrix3d calculate_gyration_tensor();
+	std::tuple<double, Matrix3d> calculate_gyration_tensor();
 	std::list<unsigned> calculate_clusters();
 	std::list<unsigned> calculate_patches();
 
