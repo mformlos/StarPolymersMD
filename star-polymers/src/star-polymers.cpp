@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
 	long int Steps_Equil { }, Steps_Total { }, Steps_Output { }, Steps_Start { }; 
 	long int Steps_pdb { }, Steps_fluid { };
 	double Temperature { }, Lambda { }, Shear { }, StepSize { };
-	bool MPC_on {false}, continue_run {false}, pdb_print {false}, fluid_print {false};
+	bool MPC_on {false}, continue_run {false}, pdb_print {false}, fluid_print {false}, overwrite{true};
 	string s_para { };
 	stringstream ss_para { }, ss_para_old { };
 	Thermostat *thermostat{};
@@ -194,9 +194,17 @@ int main(int argc, char* argv[]) {
 		}
 		while (i_para < argc) {
 			if (strcmp(argv[i_para], "MPC") == 0) {
+				if (!MPC_on) {
+					Steps_Start = 0;
+					overwrite = false;
+				}
 				MPC_on = true;
 				if (i_para + 1 < argc && is_number(argv[i_para + 1])){
 					i_para++;
+					if (Shear != stod(argv[i_para])) {
+						Steps_Start = 0;
+						overwrite = false;
+					}
 					Shear = stod(argv[i_para]);
 				}
 			}
@@ -245,14 +253,14 @@ int main(int argc, char* argv[]) {
 	FILE* fluid_file { };
 	string oldname = "./results/statistics"+ss_para_old.str()+".dat";
 	string newname = "./results/statistics"+ss_para.str()+".dat";
-	if(continue_run) rename(oldname.c_str(), newname.c_str());
+	if(continue_run && overwrite) rename(oldname.c_str(), newname.c_str());
 	string statistic_file_name = newname;
 	statistic_file.open(statistic_file_name, ios::out | ios::app);
 
 	if(pdb_print) {
 		oldname = "./results/config"+ss_para_old.str()+".pdb";
 		newname = "./results/config"+ss_para.str()+".pdb";
-		if (continue_run) rename(oldname.c_str(), newname.c_str());
+		if (continue_run && overwrite) rename(oldname.c_str(), newname.c_str());
 		string config_file_name = newname;
 		config_file = fopen(config_file_name.c_str(), "a");
 	}
@@ -260,7 +268,7 @@ int main(int argc, char* argv[]) {
 	if(fluid_print) {
 		oldname = "./results/fluid"+ss_para_old.str()+".dat";
 		newname = "./results/fluid"+ss_para.str()+".dat";
-		if (continue_run) rename(oldname.c_str(), newname.c_str());
+		if (continue_run && overwrite) rename(oldname.c_str(), newname.c_str());
 		string fluid_file_name = newname;
 		fluid_file = fopen(fluid_file_name.c_str(), "a");
 	}
@@ -342,7 +350,7 @@ int main(int argc, char* argv[]) {
             newname = oldname;
             newname.replace(newname.find(Step_total), Step_total.length(),new_total.str());
             rename(oldname.c_str(), newname.c_str());
-            if(continue_run) remove(argv[1]);
+            if(continue_run && overwrite) remove(argv[1]);
 			exit(signal_caught);
 		}
 
@@ -400,7 +408,7 @@ int main(int argc, char* argv[]) {
 
 	end_config_file = fopen(end_config_file_name.c_str(), "w");
 	box.print_PDB_with_velocity(end_config_file, Steps_Total);
-    if(continue_run) remove(argv[1]);
+    if(continue_run && overwrite) remove(argv[1]);
 
 
 	clock_t end = clock();
