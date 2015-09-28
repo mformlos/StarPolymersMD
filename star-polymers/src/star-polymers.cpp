@@ -365,8 +365,14 @@ int main(int argc, char* argv[]) {
 			Matrix3d gyr_tensor = box.calculate_gyration_tensor();
 			output_file << '\n';
 			output_file.flush();
-			if (pdb_print && (Steps_pdb > 0 ? !(n%Steps_pdb) : true)) box.print_PDB(config_file, n);
-			if (fluid_print && (Steps_fluid > 0 ? !(n%Steps_fluid) : true)) hydrodynamics -> print_fluid_with_coordinates(fluid_file, n, (int)BoxZ/2 - 2, (int)BoxZ/2 + 2);
+			if (pdb_print && (Steps_pdb > 0 ? !(n%Steps_pdb) : true)) {
+                                box.print_PDB(config_file, n);
+                                fflush(config_file); 
+                        }
+			if (fluid_print && (Steps_fluid > 0 ? !(n%Steps_fluid) : true)) {
+                                hydrodynamics -> print_fluid_with_coordinates(fluid_file, n, (int)BoxZ/2 - 2, (int)BoxZ/2 + 2);
+                                fflush(fluid_file); 
+                        }
 			statistic_file << n << " ";
 			box.print_Epot(statistic_file);
 			box.print_Ekin(statistic_file);
@@ -377,8 +383,7 @@ int main(int argc, char* argv[]) {
 				statistic_file << *(gyr_tensor.data()+i) << " ";
 			}
 			statistic_file << "\n";
-			statistic_file.flush();
-
+			statistic_file.flush(); 
 			//std::cout << '\n';
 
 		}
