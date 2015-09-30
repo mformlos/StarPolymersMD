@@ -68,7 +68,7 @@ for paramSet in paramSets:
     step_total = paramSet.step_total
     step_output = paramSet.step_output
     pdb = paramSet.pdb
-    pdb_out = paramSet.pdb
+    pdb_out = paramSet.pdb_out
     fluid = paramSet.fluid
     fluid_out = paramSet.fluid_out
     for Types in paramSet.Type: 
