@@ -11,14 +11,15 @@ import signal
 
 def signal_handler(signum, frame): 
     print("exiting with sigint")
-    for i in range(len(jobParamList)):
+    for i in range(len(procList)):
        print("killing child %i"%i)
-       os.killpg(procList[i].pid, signal.SIGINT)
-       #time.sleep(5)
+       if procList[i].poll()==None: 
+           os.killpg(procList[i].pid, signal.SIGINT)
+           #time.sleep(5)
     time.sleep(30)
-    os.system("python submit.py")
+    #os.system("python submit.py")
     #subprocess.Popen("python submit.py", stdout=open("subout.txt","w"), shell=True, preexec_fn=os.setsid)
-    time.sleep(60)
+    #time.sleep(60)
     sys.exit(0)
 
 signal.signal(signal.SIGUSR1, signal_handler) 
@@ -74,9 +75,9 @@ while True:
         if not runningList[ind] and jobsTodoList[ind]>0 and nFreeCores>=1:
             noNewWork= False
             if (type(jobParamList[ind]) == params.ParamSet): 
-                currExec = "./star-polymers/build/src/star-polymers %s %s %s %s %s %s %s %s %s %s %s %s %s %s pdb 1E6" %(jobParamList[ind].TypeA, jobParamList[ind].TypeB, jobParamList[ind].Arms, jobParamList[ind].Lambda, jobParamList[ind].Temperature, jobParamList[ind].Lx, jobParamList[ind].Ly, jobParamList[ind].Lz, jobParamList[ind].step_size, jobParamList[ind].step_warm, jobParamList[ind].step_total, jobParamList[ind].step_output, jobParamList[ind].MPC, jobParamList[ind].Shear)
+                currExec = "./star-polymers/build/src/star-polymers %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s" %(jobParamList[ind].TypeA, jobParamList[ind].TypeB, jobParamList[ind].Arms, jobParamList[ind].Lambda, jobParamList[ind].Temperature, jobParamList[ind].Lx, jobParamList[ind].Ly, jobParamList[ind].Lz, jobParamList[ind].step_size, jobParamList[ind].step_warm, jobParamList[ind].step_total, jobParamList[ind].step_output, jobParamList[ind].MPC, jobParamList[ind].Shear, jobParamList[ind].pdb, jobParamList[ind].pdb_out, jobParamList[ind].fluid, jobParamList[ind].fluid_out)
             elif (type(jobParamList[ind]) == params.ParamSetContinue): 
-                currExec = "./star-polymers/build/src/star-polymers %s %s %s %s %s %s %s %s %s pdb 1E6"%(jobParamList[ind].File, jobParamList[ind].step_size, jobParamList[ind].step_total, jobParamList[ind].step_output, jobParamList[ind].Lx, jobParamList[ind].Ly, jobParamList[ind].Lz, jobParamList[ind].MPC, jobParamList[ind].Shear)
+                currExec = "./star-polymers/build/src/star-polymers %s %s %s %s %s %s %s %s %s %s %s %s %s"%(jobParamList[ind].File, jobParamList[ind].step_size, jobParamList[ind].step_total, jobParamList[ind].step_output, jobParamList[ind].Lx, jobParamList[ind].Ly, jobParamList[ind].Lz, jobParamList[ind].MPC, jobParamList[ind].Shear, jobParamList[ind].pdb, jobParamList[ind].pdb_out, jobParamList[ind].fluid, jobParamList[ind].fluid_out)
             print (currExec)
             print ind
             procList[ind]= subprocess.Popen(currExec, shell=True, preexec_fn=os.setsid)
@@ -88,8 +89,8 @@ while True:
             jobsTodoList[ind]-=1
             nFreeCores-=1
     sys.stdout.flush()
-    for p in procList: 
-        p.wait()      
+    #for p in procList: 
+    #    p.wait()      
     if(noRun and noNewWork):
         print "breaking"
         break

@@ -24,14 +24,15 @@ gPaths=[]
 for iTask in xrange(3):
     gPaths.append(gPath(iTask))
 
-ParamSetMixed=namedtuple("ParamSet","Type, Arms, Lambda, Temperature, Lx, Ly, Lz, step_size, step_warm, step_total, step_output, MPC")
-ParamSet=namedtuple("ParamSet","TypeA, TypeB, Arms, Lambda, Temperature, Lx, Ly, Lz, step_size, step_warm, step_total, step_output, MPC, Shear")
+ParamSetMixed=namedtuple("ParamSet","Type, Arms, Lambda, Temperature, Lx, Ly, Lz, step_size, step_warm, step_total, step_output, MPC, pdb, pdb_out, fluid, fluid_out")
+ParamSet=namedtuple("ParamSet","TypeA, TypeB, Arms, Lambda, Temperature, Lx, Ly, Lz, step_size, step_warm, step_total, step_output, MPC, Shear, pdb, pdb_out, fluid, fluid_out")
 Type = namedtuple("Type", ["TypeA", "TypeB"])
 MPC = namedtuple("MPC", ["Status", "Shear"])
-ParamSetContinue = namedtuple("ParamSetContinue", "File, step_size, step_total, step_output, Lx, Ly, Lz, MPC, Shear")
+ParamSetContinue = namedtuple("ParamSetContinue", "File, step_size, step_total, step_output, Lx, Ly, Lz, MPC, Shear, pdb, pdb_out, fluid, fluid_out")
 
 #paramSets=[ParamSetMixed([Type(3,3), Type(5,5)],[3],[1.1],1.0, 50, 50, 50, 0.01, 1E3, 1E4, 1E3,MPC=[MPC("No", [0.0]), MPC("MPC", [0.0,0.5])])]
-paramSets=[ParamSetMixed([Type(20,20)],[6,9,12],[0.95,1.0,1.05,1.1],1.0, 200, 200, 200, 0.01, 1E5, 1E10, 1E5,MPC=[MPC("No", [0.0])])]
+paramSets=[ParamSetMixed([Type(20,20)],[6,9,12],[0.95,1.0,1.05,1.1],1.0, 200, 200, 200, 0.01, 1E5, 1E9, 1E5,[MPC("No", [0.0])],"pdb", 1E6, "No",1E6)] 
+#paramSets=[ParamSetMixed([Type(20,20)],[6],[1.1],1.0, 100, 100, 100, 0.01, 1E3, 1E9, 1E3,[MPC("MPC", [0.5])],"pdb", 1E6, "No",1E6)] 
 
 nJobPerTask=1
 coresPerRun=16
@@ -66,7 +67,10 @@ for paramSet in paramSets:
     step_warm = paramSet.step_warm
     step_total = paramSet.step_total
     step_output = paramSet.step_output
-
+    pdb = paramSet.pdb
+    pdb_out = paramSet.pdb
+    fluid = paramSet.fluid
+    fluid_out = paramSet.fluid_out
     for Types in paramSet.Type: 
         for Arms in paramSet.Arms:
             for Lambda in paramSet.Lambda:
@@ -74,7 +78,7 @@ for paramSet in paramSets:
 	            for Shear in Hydrodynamic.Shear: 
 		        TypeA = Types.TypeA
 		        TypeB = Types.TypeB
-                        jobParam= ParamSet(TypeA, TypeB, Arms, Lambda, Temperature, Lx, Ly, Lz, step_size, step_warm, step_total, step_output, Hydrodynamic.Status, Shear)
+                        jobParam= ParamSet(TypeA, TypeB, Arms, Lambda, Temperature, Lx, Ly, Lz, step_size, step_warm, step_total, step_output, Hydrodynamic.Status, Shear, pdb, pdb_out, fluid, fluid_out)
                         mpc_string = ""
                         if (jobParam.MPC == "MPC"): 
                             mpc_string = "MPCON_Shear%.2f.pdb" %jobParam.Shear
@@ -84,13 +88,21 @@ for paramSet in paramSets:
                         file_name += mpc_string 
 			files = glob.glob(file_name)
                         files.sort()
+                        file_name = file_name.replace("Lx%i_Ly%i_Lz%i" %(jobParam.Lx, jobParam.Ly, jobParam.Lz), "Lx*_Ly*_Lz*")
+                        files += glob.glob(file_name)
+                        if jobParam.MPC == "MPC": 
+                            file_name = file_name.replace(mpc_string, "MPCON*.pdb")
+                            files += glob.glob(file_name) 
          	
                         if (len(files) >= 1):
-                            continueJobParam = ParamSetContinue(files[0], jobParam.step_size, jobParam.step_total, jobParam.step_output, jobParam.Lx, jobParam.Ly, jobParam.Lz, jobParam.MPC, jobParam.Shear)
+                            continueJobParam = ParamSetContinue(files[0], jobParam.step_size, jobParam.step_total, jobParam.step_output, jobParam.Lx, jobParam.Ly, jobParam.Lz, jobParam.MPC, jobParam.Shear, jobParam.pdb, jobParam.pdb_out, jobParam.fluid, jobParam.fluid_out)
                             run = files[0].split('run')
                             run = run[1].split('_')
                             run = run[0]
-                            if (float(jobParam.step_total) > float(run)): 
+                            overwrite = True
+                            if (jobParam.MPC == "MPC" and files[0].find("MPCON")==-1):
+                                overwrite = False
+                            if (float(jobParam.step_total) > float(run) or overwrite == False): 
                                 jobParametersTotal.append(continueJobParam)
                                 currJobParametersPart.append(continueJobParam)
                         else: 
