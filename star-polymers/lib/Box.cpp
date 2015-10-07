@@ -538,7 +538,8 @@ void Box::print_PDB(FILE* pdb, int step) {
 			Vector3d pos_print = mol.Monomers[i].Position + shift_anchor_to_center;
 			pos_print = wrap_to_zero(pos_print);
 			//wrap(pos_print);
-			fprintf(pdb, "ATOM %6d  C   GLY    %2d     %7.3f %7.3f %7.3f \n", i+1, mol_count, pos_print(0), pos_print(1), pos_print(2));
+			if (mol.Monomers[i].AmphiType) fprintf(pdb, "ATOM %6d  C   GLY    %2d     %7.3f %7.3f %7.3f \n", i+1, mol_count, pos_print(0), pos_print(1), pos_print(2));
+			else fprintf(pdb, "ATOM %6d  O   GLY    %2d     %7.3f %7.3f %7.3f \n", i+1, mol_count, pos_print(0), pos_print(1), pos_print(2));
 		}
 		fprintf(pdb, "TER \n");
 		unsigned count{1};
@@ -583,6 +584,7 @@ void Box::print_PDB_with_velocity(FILE* pdb, int step) {
 			Vector3d pos_print = mol.Monomers[i].Position + shift_anchor_to_center;
 			//wrap(pos_print);
 			pos_print = wrap_to_zero(pos_print);
+
 			fprintf(pdb, "ATOM %6d  C   GLY    %2d     %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f \n", i, mol_count, pos_print(0), pos_print(1), pos_print(2), mol.Monomers[i].Velocity(0), mol.Monomers[i].Velocity(1), mol.Monomers[i].Velocity(2));
 		}
 		fprintf(pdb, "TER \n");
