@@ -449,6 +449,66 @@ std::list<unsigned> Box::calculate_patches() {
 	return patches;
 }
 
+std::tuple<double, double> Box::calculate_patches_new() {
+	double patch_number { };
+	double patch_size { };
+	for (auto& mol : Molecules) {
+		int patch_number_mol { };
+		double patch_size_mol { };
+		std::vector<std::vector<bool>> arm_bond(mol.Arms, std::vector<bool>(mol.Arms));
+		for (unsigned i = 0; i < mol.Arms; i++) {    // for every arm
+			arm_bond.push_back(std::vector<bool>(mol.Arms));
+			for (unsigned j = mol.BType; j < mol.AType+mol.BType; j++) {   //for every attractive monomer in Arm i
+				unsigned j_n { i*(mol.AType+mol.BType)+j };
+				for (unsigned k = 0; k < mol.Arms && k != i; k++) {   // for every Arm != i
+					arm_bond[i][j] = false;
+					for (unsigned l = mol.BType; l < mol.AType+mol.BType; l++) {
+						unsigned l_n {k*(mol.AType+mol.BType)+l};
+						if (calculate_epot(mol.Monomers[j_n], mol.Monomers[l_n]) < 0.0) {
+							arm_bond[i][j] = true;
+							break;
+						}
+					}
+				}
+			}
+		}  // arm_bond matrix filled
+		std::vector<std::vector<unsigned>> clusters(mol.Arms, std::vector<unsigned>());
+		for (unsigned i = 0; i < mol.Arms; i++) clusters[i].push_back(i);
+		bool next_i {true};
+		for (unsigned i = 0; i < mol.Arms; i++) {
+			while (next_i) {
+				 unsigned arm_first = clusters[i].back();
+				 for (unsigned j = i+1; j < mol.Arms; j++) {
+					 for (auto& arm_second : clusters[j]) {
+						 //unsigned arm_second = clusters[j].back();
+						 if (arm_bond[arm_first][arm_second]) {
+							 clusters[i].push_back(arm_second);
+							 clusters[j].pop_back();
+						 }
+					 }
+				 }
+				 if (clusters[i].size()>1) next_i = true;
+				 else next_i = false;
+			}
+
+		}
+		for (auto& cluster : clusters) {
+			if (cluster.size()>1) {
+				patch_number_mol++;
+				for (auto& arm : cluster) {
+					patch_size_mol += 1.0;
+				}
+			}
+		}
+		if (patch_number_mol > 1) patch_size_mol /= patch_number_mol;
+		patch_number += patch_number_mol;
+		patch_size += patch_size_mol;
+	}
+	patch_number /= Molecules.size();
+	patch_size /= Molecules.size();
+	return std::make_tuple(patch_number, patch_size);
+}
+
 unsigned Box::numberOfMonomers() {
 	unsigned N { };
 	for(auto& mol: Molecules) {

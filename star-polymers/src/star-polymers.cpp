@@ -361,7 +361,7 @@ int main(int argc, char* argv[]) {
 			box.print_Ekin(output_file);
 			if (MPC_on) output_file << hydrodynamics -> calculateCurrentTemperature() << " ";
 			else box.print_Temperature(output_file);
-			std::list<unsigned> patches = box.calculate_patches();
+			/*std::list<unsigned> patches = box.calculate_patches();
 			int number_of_patches {0};
 			double av_patch_size {0.0};
 			for (auto& element : patches) {
@@ -371,7 +371,10 @@ int main(int argc, char* argv[]) {
 				}
 				//std::cout << element << ' ';
 			}
-			if (number_of_patches > 0) av_patch_size /= number_of_patches;
+			if (number_of_patches > 0) av_patch_size /= number_of_patches;*/
+			std::tuple<double,double> patches= box.calculate_patches_new();
+			output_file << std::get<0>(patches) << " " << std::get<1>(patches) << " ";
+
 			std::tuple<double,Matrix3d> gyration = box.calculate_gyration_tensor();
 			output_file << '\n';
 			output_file.flush();
@@ -389,7 +392,8 @@ int main(int argc, char* argv[]) {
 			box.print_Temperature(statistic_file);
             //box.print_radius_of_gyration(statistic_file);
 			statistic_file << std::get<0>(gyration) << " ";
-			statistic_file << number_of_patches << " " << av_patch_size << " ";
+			//statistic_file << number_of_patches << " " << av_patch_size << " ";
+			statistic_file << std::get<0>(patches) << " " << std::get<1>(patches) << " ";
 			Matrix3d gyr_tensor {std::get<1>(gyration)};
 			for (int i = 0; i < gyr_tensor.size(); i++) {
 				statistic_file << *(gyr_tensor.data()+i) << " ";

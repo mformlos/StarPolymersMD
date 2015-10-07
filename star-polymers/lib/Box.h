@@ -76,6 +76,7 @@ public:
 	std::tuple<double, Matrix3d> calculate_gyration_tensor();
 	std::list<unsigned> calculate_clusters();
 	std::list<unsigned> calculate_patches();
+	std::tuple<double, double> calculate_patches_new();
 
 
 	unsigned numberOfMonomers();
