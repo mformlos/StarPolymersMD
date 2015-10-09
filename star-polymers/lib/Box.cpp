@@ -455,41 +455,45 @@ std::tuple<double, double> Box::calculate_patches_new() {
 	for (auto& mol : Molecules) {
 		int patch_number_mol { };
 		double patch_size_mol { };
-		std::vector<std::vector<bool>> arm_bond(mol.Arms, std::vector<bool>(mol.Arms));
+		std::vector<std::vector<bool>> arm_bond(mol.Arms, std::vector<bool>(mol.Arms, false));
 		for (unsigned i = 0; i < mol.Arms; i++) {    // for every arm
-			arm_bond.push_back(std::vector<bool>(mol.Arms));
-			for (unsigned j = mol.BType; j < mol.AType+mol.BType; j++) {   //for every attractive monomer in Arm i
-				unsigned j_n { i*(mol.AType+mol.BType)+j };
-				for (unsigned k = 0; k < mol.Arms && k != i; k++) {   // for every Arm != i
-					arm_bond[i][j] = false;
-					for (unsigned l = mol.BType; l < mol.AType+mol.BType; l++) {
+			for (unsigned k = 0; k < mol.Arms; k++) {   // for every Arm j != i
+                if (arm_bond[i][k] || i==k) continue;
+				for (unsigned j = mol.AType + 1; j <= mol.AType+mol.BType; j++) {   //for every attractive monomer in Arm i
+					unsigned j_n { i*(mol.AType+mol.BType)+j };
+					for (unsigned l = mol.AType +1; l <= mol.AType+mol.BType; l++) { // ever attractive monomer in Arm j
 						unsigned l_n {k*(mol.AType+mol.BType)+l};
-						if (calculate_epot(mol.Monomers[j_n], mol.Monomers[l_n]) < 0.0) {
-							arm_bond[i][j] = true;
+						if (calculate_epot(mol.Monomers[j_n], mol.Monomers[l_n]) < 0.0) { //stop loop if one attractive potential is found
+							arm_bond[i][k] = true;
 							break;
 						}
 					}
 				}
 			}
-		}  // arm_bond matrix filled
+		}// arm_bond matrix filled
+
 		std::vector<std::vector<unsigned>> clusters(mol.Arms, std::vector<unsigned>());
-		for (unsigned i = 0; i < mol.Arms; i++) clusters[i].push_back(i);
-		bool next_i {true};
-		for (unsigned i = 0; i < mol.Arms; i++) {
-			while (next_i) {
-				 unsigned arm_first = clusters[i].back();
-				 for (unsigned j = i+1; j < mol.Arms; j++) {
-					 for (auto& arm_second : clusters[j]) {
-						 //unsigned arm_second = clusters[j].back();
+		for (unsigned i = 0; i < mol.Arms; i++) clusters[i].push_back(i); //each arm is one cluster
+
+
+		for (unsigned i = 0; i < mol.Arms; i++) { //loop trough cluster i
+			std::vector<unsigned>::iterator iter {};
+			if (clusters[i].empty()) continue;
+			iter = clusters[i].begin();
+			do {
+				unsigned arm_first = *iter; // first arm in cluster
+			    for (unsigned j = i+1; j < mol.Arms; j++) { //loop trough all clusters j > i
+					 for (auto& arm_second : clusters[j]) { //loop through all arms in cluster j
+
 						 if (arm_bond[arm_first][arm_second]) {
-							 clusters[i].push_back(arm_second);
-							 clusters[j].pop_back();
+							 iter = clusters[i].insert(clusters[i].end(), clusters[j].begin(), clusters[j].end()); //move all to cluster i
+							 clusters[j].clear(); //delete all in j
+							 iter--;
 						 }
 					 }
 				 }
-				 if (clusters[i].size()>1) next_i = true;
-				 else next_i = false;
-			}
+			     if (iter != clusters[i].end()) iter++;
+			}while(iter != clusters[i].end());
 
 		}
 		for (auto& cluster : clusters) {
