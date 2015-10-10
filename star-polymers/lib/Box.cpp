@@ -463,7 +463,7 @@ std::tuple<double, double> Box::calculate_patches_new() {
 					unsigned j_n { i*(mol.AType+mol.BType)+j };
 					for (unsigned l = mol.AType +1; l <= mol.AType+mol.BType; l++) { // ever attractive monomer in Arm j
 						unsigned l_n {k*(mol.AType+mol.BType)+l};
-						if (calculate_epot(mol.Monomers[j_n], mol.Monomers[l_n]) < 0.0) { //stop loop if one attractive potential is found
+						if (calculate_epot(mol.Monomers[j_n], mol.Monomers[l_n]) < 0.0) { //stop loop if one attractive energy is found
 							arm_bond[i][k] = true;
 							break;
 						}
@@ -473,25 +473,37 @@ std::tuple<double, double> Box::calculate_patches_new() {
 		}// arm_bond matrix filled
 
 		std::vector<std::vector<unsigned>> clusters(mol.Arms, std::vector<unsigned>());
+		//std::vector<std::list<unsigned>> clusters(mol.Arms, std::list<unsigned>());
 		for (unsigned i = 0; i < mol.Arms; i++) clusters[i].push_back(i); //each arm is one cluster
 
 
 		for (unsigned i = 0; i < mol.Arms; i++) { //loop trough cluster i
 			std::vector<unsigned>::iterator iter {};
+			//std::list<unsigned>::iterator iter{};
 			if (clusters[i].empty()) continue;
 			iter = clusters[i].begin();
+			int n {0};
 			do {
-				unsigned arm_first = *iter; // first arm in cluster
-			    for (unsigned j = i+1; j < mol.Arms; j++) { //loop trough all clusters j > i
+				unsigned arm_first{};
+				if (clusters[i].empty()) continue;
+				arm_first = *iter; // first arm in cluster
+			    //arm_first = clusters[i][n];
+				for (unsigned j = i+1; j < mol.Arms; j++) { //loop trough all clusters j > i
 					 for (auto& arm_second : clusters[j]) { //loop through all arms in cluster j
 
 						 if (arm_bond[arm_first][arm_second]) {
-							 iter = clusters[i].insert(clusters[i].end(), clusters[j].begin(), clusters[j].end()); //move all to cluster i
+							 //iter = clusters[i].insert(clusters[i].end(), clusters[j].begin(), clusters[j].end()); //move all to cluster i
+							 clusters[i].insert(clusters[i].end(), clusters[j].begin(), clusters[j].end()); //move all to cluster i
 							 clusters[j].clear(); //delete all in j
-							 iter--;
+							 //iter--;
+							 if (n > 0) iter = clusters[i].begin()+n;
+							 else iter = clusters[i].begin();
+							 //std::cout << "bond at :" << i << " " << j << " iter now at: " << *iter << std::endl;
 						 }
 					 }
+
 				 }
+				 n++;
 			     if (iter != clusters[i].end()) iter++;
 			}while(iter != clusters[i].end());
 
