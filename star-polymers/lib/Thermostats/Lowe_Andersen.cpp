@@ -31,9 +31,9 @@ void Lowe_Andersen::collide(Particle& one, Particle& two) {
 	double dist = unit_sep.norm();
 	if (dist < InteractionRadius) {
 		unit_sep /= dist;
-		double reduced_mass = (one.Mass == two.Mass) ? 0.5*one.Mass : one.Mass*two.Mass/(one.Mass + two.Mass);
+		double reduced_mass { (one.Mass == two.Mass) ? 0.5*one.Mass : one.Mass*two.Mass/(one.Mass + two.Mass) };
 		double sigma = sqrt(TargetTemperature/(reduced_mass));// TODO: why does this work?
-		double therm_v = sigma*Rand::real_normal();
+		double therm_v { sigma*Rand::real_normal()};
 		Vector3d velocity_diff = two.Velocity - one.Velocity;
 		Vector3d dv = unit_sep*(therm_v + velocity_diff.dot(unit_sep));
 		one.Velocity += dv*(reduced_mass/one.Mass);
@@ -50,12 +50,24 @@ void Lowe_Andersen::propagate(bool calc_epot) {
 		}
 	}
 	SimBox.wrap();
+	SimBox.check_VerletLists();
+    SimBox.calculate_forces_verlet(calc_epot);
 
-	for (unsigned i = 0; i < SimBox.Molecules.size(); i++) {
+    for (auto& mol: SimBox.Molecules) {
+    	for (auto& first : mol.Monomers) {
+    		for(auto& second: first.VerletList) {
+    			if (NuDt*0.5 < Rand::real_uniform()) continue;
+    			collide(first, *second);
+    		}
+    	}
+    }
+
+
+	/*for (unsigned i = 0; i < SimBox.Molecules.size(); i++) {
 		for (unsigned j = 0; j < SimBox.Molecules[i].Monomers.size(); j++) {
 			for (unsigned l = j+1; l < SimBox.Molecules[i].Monomers.size(); l++) {
 				if (NuDt < Rand::real_uniform()) continue;
-				std::cout << j << " " << l << std::endl;
+				//std::cout << j << " " << l << std::endl;
 				collide(SimBox.Molecules[i].Monomers[j], SimBox.Molecules[i].Monomers[l]);
 			}
 
@@ -65,9 +77,9 @@ void Lowe_Andersen::propagate(bool calc_epot) {
 				}
 			}
 		}
-	}
+	}*/
 
-	SimBox.calculate_forces(calc_epot);
+	//SimBox.calculate_forces(calc_epot);
 
 	for (auto& mol : SimBox.Molecules) {
 		for (auto& mono : mol.Monomers) {

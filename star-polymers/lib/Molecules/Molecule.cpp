@@ -31,8 +31,15 @@ const MDParticle& Molecule::operator [](int i) const {return Monomers[i];}
 
 double Molecule::calculate_Ekin() {
 	Ekin = 0.0;
+	Vector3d com_vel {0., 0., 0.,};
 	for (auto& m : Monomers) {
-		Ekin += m.Mass*(m.Velocity.dot(m.Velocity));
+		com_vel += m.Velocity;
+	}
+	com_vel /= NumberOfMonomers;
+	for (auto& m : Monomers) {
+		Vector3d rel_vel {m.Velocity - com_vel};
+		//Ekin += m.Mass*(m.Velocity.dot(m.Velocity));
+		Ekin += m.Mass*(rel_vel.dot(rel_vel));
 	}
 	Ekin /= 2.0;
 	return Ekin;

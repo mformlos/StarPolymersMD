@@ -313,6 +313,7 @@ int main(int argc, char* argv[]) {
     }
 	else {
 		thermostat = new Andersen{box, StepSize, Temperature, 1999};
+		//thermostat = new Lowe_Andersen{box, StepSize, Temperature, 20., 1.5};
 		hydrodynamics = new Hydrodynamics_None{box};
     }
 
@@ -356,6 +357,9 @@ int main(int argc, char* argv[]) {
 
 		if (n > Steps_Equil && !(n%Steps_Output)) {
 			thermostat -> propagate(true);
+			std::cout << n << " ";
+			box.print_Temperature(std::cout);
+			std::cout << std::endl;
 			output_file << n << " ";
 			box.print_Epot(output_file);
 			box.print_Ekin(output_file);
