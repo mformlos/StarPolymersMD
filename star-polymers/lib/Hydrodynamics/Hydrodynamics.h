@@ -18,6 +18,7 @@ public:
 	virtual void print_fluid_with_coordinates(FILE*, int, int, int) {};
 
 
+
 };
 
 #endif

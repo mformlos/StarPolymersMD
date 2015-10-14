@@ -18,7 +18,6 @@ public:
 	double calculateCurrentTemperature();
 	void print_fluid(FILE*, int, int, int);
 	void print_fluid_with_coordinates(FILE*, int, int, int);
-
 };
 
 Hydrodynamics_None::Hydrodynamics_None(Box& box) : Hydrodynamics(box) {}

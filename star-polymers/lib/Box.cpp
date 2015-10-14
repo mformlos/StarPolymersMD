@@ -345,18 +345,20 @@ std::tuple<double, Matrix3d> Box::calculate_gyration_tensor() {
 		for (auto& mono : mol.Monomers) {
 			Vector3d shifted_position = wrap(mono.Position +shift_anchor_to_center);
 			shifted_position = shifted_position - center_of_mass;
-			r_gyr_mol += shifted_position.dot(shifted_position);
+			//r_gyr_mol += shifted_position.dot(shifted_position);
 			for (int alpha = 0; alpha < 3; alpha++) {
 				for (int beta = 0; beta < 3; beta++) {
 					gyr_tensor_mol(alpha, beta) += shifted_position(alpha)*shifted_position(beta);
 				}
 			}
 		}
-		r_gyr_mol /= mol.NumberOfMonomers;
-		r_gyr_mol = sqrt(r_gyr_mol);
-		r_gyr += r_gyr_mol;
+		//r_gyr_mol /= mol.NumberOfMonomers;
 		gyr_tensor_mol /= mol.NumberOfMonomers;
 		gyr_tensor += gyr_tensor_mol;
+
+		r_gyr_mol = gyr_tensor_mol(0,0) + gyr_tensor_mol(1,1) + gyr_tensor_mol(2,2);
+		r_gyr_mol = sqrt(r_gyr_mol);
+		r_gyr += r_gyr_mol;
 	}
 	r_gyr /= Molecules.size();
 	gyr_tensor /= Molecules.size();
@@ -661,6 +663,20 @@ std::ostream& Box::print_Temperature(std::ostream& os) {
 	os << Temperature << " ";
 	return os;
 }
+
+std::ostream& Box::print_Ekin_and_Temperature(std::ostream& os) {
+	double Temperature { };
+	double Ekin { };
+	unsigned NumberOfMonomers { };
+	for (auto& mol : Molecules) {
+		Ekin += mol.calculate_Ekin();
+		NumberOfMonomers += mol.NumberOfMonomers;
+	}
+	Temperature = Ekin*2./(3.*NumberOfMonomers);
+	os << Ekin << " " << Temperature << " ";
+	return os;
+}
+
 
 std::ostream& Box::print_radius_of_gyration(std::ostream& os) {
 	os << calculate_radius_of_gyration() << " ";

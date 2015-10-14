@@ -87,6 +87,7 @@ public:
 	std::ostream& print_Epot(std::ostream& os) const;
 	std::ostream& print_Ekin(std::ostream& os);
 	std::ostream& print_Temperature(std::ostream& os);
+	std::ostream& print_Ekin_and_Temperature(std::ostream& os);
 	std::ostream& print_radius_of_gyration(std::ostream& os);
 
 	// outputs

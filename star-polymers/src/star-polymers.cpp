@@ -22,6 +22,7 @@
 #include "Andersen.h"
 #include "Hydrodynamics_None.h"
 #include "MPC.h"
+#include "Velocity_x.h"
 
 
 int signal_caught { };
@@ -71,11 +72,11 @@ int main(int argc, char* argv[]) {
 	string s_para { };
 	stringstream ss_para { }, ss_para_old { };
 	Thermostat *thermostat{};
-	Hydrodynamics *hydrodynamics{};
+	//Hydrodynamics *hydrodynamics{};
 
 
 	//defaults für: TypeA, TypeB, Arms, Lambda, Temperature, BoxSize(x, y, z), stepsize, step_aufwärm, step_total, step_output
-	long double a_para[]{3, 0, 3, 1.0, 0.5, 10, 10, 50, 0.001, 1E2, 1E10, 1E2};
+	long double a_para[]{3, 0, 3, 1.0, 0.5, 10, 10, 50, 0.01, 1E2, 1E10, 1E2};
 	int a_para_size = sizeof(a_para) / sizeof(*a_para);
 	int i_para { }, start_i_para { };
 
@@ -251,11 +252,13 @@ int main(int argc, char* argv[]) {
 	ofstream statistic_file { };
 	FILE* config_file { };
 	FILE* fluid_file { };
+	ofstream fluid_profile { };
 	string oldname = "./results/statistics"+ss_para_old.str()+".dat";
 	string newname = "./results/statistics"+ss_para.str()+".dat";
 	if(continue_run && overwrite) rename(oldname.c_str(), newname.c_str());
 	string statistic_file_name = newname;
 	statistic_file.open(statistic_file_name, ios::out | ios::app);
+	statistic_file << "Step   Epot     Ekin     Temp   n_p s_p  R_gyr   G_xx      G_xy      G_xz       G_yx       G_yy      G_yz      G_zx     Gzy     Gzz \n";
 
 	if(pdb_print) {
 		oldname = "./results/config"+ss_para_old.str()+".pdb";
@@ -271,6 +274,13 @@ int main(int argc, char* argv[]) {
 		if (continue_run && overwrite) rename(oldname.c_str(), newname.c_str());
 		string fluid_file_name = newname;
 		fluid_file = fopen(fluid_file_name.c_str(), "a");
+	}
+	if(MPC_on) {
+		oldname = "./results/fluid"+ss_para_old.str()+".dat";
+		newname = "./results/fluid"+ss_para.str()+".dat";
+		if (continue_run && overwrite) rename(oldname.c_str(), newname.c_str());
+		string fluid_profile_name = newname;
+		fluid_profile.open(fluid_profile_name, ios::out | ios::trunc);
 	}
 
 
@@ -296,6 +306,7 @@ int main(int argc, char* argv[]) {
 
 	
 	Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
+    VelocityX velocity_average_x{0.2};
 
 	if (argc > 1 && strcmp(argv[1], "Chain") == 0) {
 		box.add_chain(TypeA, TypeB, 10.);
@@ -307,19 +318,21 @@ int main(int argc, char* argv[]) {
 		output_file << "building a star" << std::endl;
 	}
 
+	MPC hydrodynamics{box, Temperature, Shear};
+
 	if (MPC_on) {
 		thermostat = new Thermostat_None{ box, StepSize };
-		hydrodynamics = new MPC{box, Temperature, Shear};
+		//hydrodynamics = new MPC{box, Temperature, Shear};
     }
 	else {
 		thermostat = new Andersen{box, StepSize, Temperature, 1999};
 		//thermostat = new Lowe_Andersen{box, StepSize, Temperature, 20., 1.5};
-		hydrodynamics = new Hydrodynamics_None{box};
+		//hydrodynamics = new Hydrodynamics_None{box};
     }
 
 
 
-	if (MPC_on) hydrodynamics -> initialize();
+	if (MPC_on) hydrodynamics.initialize(); //hydrodynamics -> initialize();
 	clock_t begin = clock();
 
 	long int n { }; 
@@ -357,14 +370,29 @@ int main(int argc, char* argv[]) {
 
 		if (n > Steps_Equil && !(n%Steps_Output)) {
 			thermostat -> propagate(true);
-			std::cout << n << " ";
+			std::tuple<double,double> patches= box.calculate_patches_new();
+			std::tuple<double,Matrix3d> gyration = box.calculate_gyration_tensor();
+			statistic_file << n << " ";
+			box.print_Epot(statistic_file);
+			box.print_Ekin_and_Temperature(statistic_file);
+			statistic_file << std::get<0>(patches) << " " << std::get<1>(patches) << " ";
+			statistic_file << std::get<0>(gyration) << " ";
+			Matrix3d gyr_tensor {std::get<1>(gyration)};
+			for (int i = 0; i < gyr_tensor.size(); i++) {
+				statistic_file << *(gyr_tensor.data()+i) << " ";
+			}
+			statistic_file << "\n";
+			statistic_file.flush();
+			if(MPC_on) hydrodynamics(velocity_average_x);
+
+			/*std::cout << n << " ";
 			box.print_Temperature(std::cout);
 			std::cout << std::endl;
 			output_file << n << " ";
 			box.print_Epot(output_file);
 			box.print_Ekin(output_file);
 			if (MPC_on) output_file << hydrodynamics -> calculateCurrentTemperature() << " ";
-			else box.print_Temperature(output_file);
+			else box.print_Temperature(output_file);*/
 			/*std::list<unsigned> patches = box.calculate_patches();
 			int number_of_patches {0};
 			double av_patch_size {0.0};
@@ -376,40 +404,27 @@ int main(int argc, char* argv[]) {
 				//std::cout << element << ' ';
 			}
 			if (number_of_patches > 0) av_patch_size /= number_of_patches;*/
-			std::tuple<double,double> patches= box.calculate_patches_new();
-			output_file << std::get<0>(patches) << " " << std::get<1>(patches) << " ";
 
-			std::tuple<double,Matrix3d> gyration = box.calculate_gyration_tensor();
-			output_file << '\n';
-			output_file.flush();
+			//output_file << std::get<0>(patches) << " " << std::get<1>(patches) << " ";
+
+			//output_file << '\n';
+			//output_file.flush();
 			if (pdb_print && (Steps_pdb > 0 ? !(n%Steps_pdb) : true)) {
-                                box.print_PDB(config_file, n);
-                                fflush(config_file); 
-                        }
-			if (fluid_print && (Steps_fluid > 0 ? !(n%Steps_fluid) : true)) {
-                                hydrodynamics -> print_fluid_with_coordinates(fluid_file, n, (int)BoxZ/2 - 2, (int)BoxZ/2 + 2);
-                                fflush(fluid_file); 
-                        }
-			statistic_file << n << " ";
-			box.print_Epot(statistic_file);
-			box.print_Ekin(statistic_file);
-			box.print_Temperature(statistic_file);
-            //box.print_radius_of_gyration(statistic_file);
-			statistic_file << std::get<0>(gyration) << " ";
-			//statistic_file << number_of_patches << " " << av_patch_size << " ";
-			statistic_file << std::get<0>(patches) << " " << std::get<1>(patches) << " ";
-			Matrix3d gyr_tensor {std::get<1>(gyration)};
-			for (int i = 0; i < gyr_tensor.size(); i++) {
-				statistic_file << *(gyr_tensor.data()+i) << " ";
+				box.print_PDB(config_file, n);
+				fflush(config_file);
 			}
-			statistic_file << "\n";
-			statistic_file.flush(); 
+			if (fluid_print && (Steps_fluid > 0 ? !(n%Steps_fluid) : true)) {
+				hydrodynamics.print_fluid_with_coordinates(fluid_file, n, (int)BoxZ/2 - 2, (int)BoxZ/2 + 2);
+				//hydrodynamics -> print_fluid_with_coordinates(fluid_file, n, (int)BoxZ/2 - 2, (int)BoxZ/2 + 2);
+				fflush(fluid_file);
+			}
+
 			//std::cout << '\n';
 
 		}
 		else thermostat -> propagate(false);
 		if (MPC_on && !(n%100)) {
-			hydrodynamics -> step(0.1);
+			hydrodynamics.step(1.0); //hydrodynamics -> step(1.0);
 		}
 	}
 
