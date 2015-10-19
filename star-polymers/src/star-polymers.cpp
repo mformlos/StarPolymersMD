@@ -276,8 +276,8 @@ int main(int argc, char* argv[]) {
 		fluid_file = fopen(fluid_file_name.c_str(), "a");
 	}
 	if(MPC_on) {
-		oldname = "./results/fluid"+ss_para_old.str()+".dat";
-		newname = "./results/fluid"+ss_para.str()+".dat";
+		oldname = "./results/fluid_profile"+ss_para_old.str()+".dat";
+		newname = "./results/fluid_profile"+ss_para.str()+".dat";
 		if (continue_run && overwrite) rename(oldname.c_str(), newname.c_str());
 		string fluid_profile_name = newname;
 		fluid_profile.open(fluid_profile_name, ios::out | ios::trunc);
@@ -428,7 +428,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-
+    velocity_average_x.print_result(fluid_profile);
 	end_config_file = fopen(end_config_file_name.c_str(), "w");
 	box.print_PDB_with_velocity(end_config_file, Steps_Total);
     if(continue_run && overwrite) remove(argv[1]);
