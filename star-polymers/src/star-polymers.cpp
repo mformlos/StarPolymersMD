@@ -34,6 +34,10 @@ void signal_handler( int signum )
     // terminate program
 }
 
+bool file_is_empty(std::ifstream& pFile)
+{
+    return pFile.peek() == std::ifstream::traits_type::eof();
+}
 
 bool is_number(const std::string &str)
 {
@@ -257,8 +261,13 @@ int main(int argc, char* argv[]) {
 	string newname = "./results/statistics"+ss_para.str()+".dat";
 	if(continue_run && overwrite) rename(oldname.c_str(), newname.c_str());
 	string statistic_file_name = newname;
+	ifstream statistic_file_check {};
+	statistic_file_check.open(statistic_file_name, ios::in);
+    bool add_stat_descriptor {false};
+	if (file_is_empty(statistic_file_check)) add_stat_descriptor = true;
+	statistic_file_check.close();
 	statistic_file.open(statistic_file_name, ios::out | ios::app);
-	statistic_file << "Step   Epot     Ekin     Temp   n_p s_p  R_gyr   G_xx      G_xy      G_xz       G_yx       G_yy      G_yz      G_zx     Gzy     Gzz \n";
+	if (add_stat_descriptor) statistic_file << "Step   Epot     Ekin     Temp   n_p s_p  R_gyr   G_xx      G_xy      G_xz       G_yx       G_yy      G_yz      G_zx     Gzy     Gzz \n";
 
 	if(pdb_print) {
 		oldname = "./results/config"+ss_para_old.str()+".pdb";
