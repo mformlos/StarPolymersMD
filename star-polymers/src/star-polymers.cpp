@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
 	int BoxX { }, BoxY { }, BoxZ { }, TypeA { }, TypeB { }, Arms { };
 	long int Steps_Equil { }, Steps_Total { }, Steps_Output { }, Steps_Start { }; 
 	long int Steps_pdb { }, Steps_fluid { };
-	double Temperature { }, Lambda { }, Shear { }, StepSize { };
+	double Temperature { }, Lambda { }, Shear { }, StepSize { }, MPC_Step{ };
 	bool MPC_on {false}, continue_run {false}, pdb_print {false}, fluid_print {false}, overwrite{true};
 	string s_para { };
 	stringstream ss_para { }, ss_para_old { };
@@ -304,7 +304,7 @@ int main(int argc, char* argv[]) {
 	output_file << "fluid file generated: " << (fluid_print ? "yes" : "no") << std::endl;
 
 
-	
+	MPC_Step = 50.0*StepSize;
 	Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
     VelocityX velocity_average_x{0.2};
 
@@ -423,8 +423,8 @@ int main(int argc, char* argv[]) {
 
 		}
 		else thermostat -> propagate(false);
-		if (MPC_on && !(n%100)) {
-			hydrodynamics.step(1.0); //hydrodynamics -> step(1.0);
+		if (MPC_on && !(n%50)) {
+			hydrodynamics.step(MPC_Step); //hydrodynamics -> step(1.0);
 		}
 	}
 
