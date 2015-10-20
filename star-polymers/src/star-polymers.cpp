@@ -34,6 +34,26 @@ void signal_handler( int signum )
     // terminate program
 }
 
+void file_handling(ofstream& os, stringstream& ss_para, string type, string old_steps, string new_steps) {
+	string oldname { };
+	string newname { };
+	oldname = "./results/"+ type+ss_para.str()+".dat";
+	newname = oldname;
+	newname.replace(newname.find(old_steps), old_steps.length(),new_steps);
+	rename(oldname.c_str(), newname.c_str());
+	os.close();
+}
+void file_handling(FILE* file, stringstream& ss_para, string type, string old_steps, string new_steps) {
+	string oldname { };
+	string newname { };
+	oldname = "./results/"+ type+ss_para.str()+".dat";
+	newname = oldname;
+	newname.replace(newname.find(old_steps), old_steps.length(),new_steps);
+	rename(oldname.c_str(), newname.c_str());
+	fclose(file);
+}
+
+
 bool file_is_empty(std::ifstream& pFile)
 {
     return pFile.peek() == std::ifstream::traits_type::eof();
@@ -68,6 +88,7 @@ inline bool file_exists (const std::string& name) {
 int main(int argc, char* argv[]) {
 	signal_caught = 0;
 	signal(SIGINT, signal_handler);
+	signal(SIGSEGV, signal_handler);
 	int BoxX { }, BoxY { }, BoxZ { }, TypeA { }, TypeB { }, Arms { };
 	long int Steps_Equil { }, Steps_Total { }, Steps_Output { }, Steps_Start { }; 
 	long int Steps_pdb { }, Steps_fluid { };
@@ -313,7 +334,7 @@ int main(int argc, char* argv[]) {
 	output_file << "fluid file generated: " << (fluid_print ? "yes" : "no") << std::endl;
 
 
-	MPC_Step = 50.0*StepSize;
+	MPC_Step = 100.0*StepSize;
 	Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
     VelocityX velocity_average_x{0.2};
 
@@ -351,28 +372,25 @@ int main(int argc, char* argv[]) {
 		if (signal_caught) {
 			string Step_total = find_parameter(ss_para.str(),"run");
 			stringstream new_total { };
+			string new_total_str { };
 			new_total.precision(0);
 			new_total << scientific << n;
-			oldname = newname;
-			newname.replace(newname.find(Step_total), Step_total.length(),new_total.str());
-			rename(oldname.c_str(), newname.c_str());
-			oldname = "./results/statistics"+ss_para.str()+".dat";
-			newname = oldname;
-			newname.replace(newname.find(Step_total), Step_total.length(),new_total.str());
-			rename(oldname.c_str(), newname.c_str());
+			new_total_str = new_total.str();
+			file_handling(statistic_file, ss_para, "statistics", Step_total, new_total_str);
+			file_handling(output_file, ss_para, "output", Step_total, new_total_str);
+            if (MPC_on) file_handling(fluid_profile, ss_para, "fluid_profile", Step_total, new_total_str);
+            if (pdb_print) file_handling(config_file, ss_para, "config", Step_total, new_total_str);
+            if (fluid_print) file_handling(fluid_file, ss_para, "fluid", Step_total, new_total_str);
+
+
 			newname = "./results/end_config"+ss_para.str()+".pdb";
 			newname.replace(newname.find(Step_total), Step_total.length(),new_total.str());
 			end_config_file = fopen(newname.c_str(), "w"); 
 			box.print_PDB_with_velocity(end_config_file, n);
-			statistic_file.close();
-			output_file << "signal " << signal_caught << "caught, data saved" << std::endl;
-			if (pdb_print) fclose(config_file);
-			if (fluid_print) fclose(fluid_file);
 			fclose(end_config_file);
-            oldname = "./results/output" + ss_para.str() + ".dat";
-            newname = oldname;
-            newname.replace(newname.find(Step_total), Step_total.length(),new_total.str());
-            rename(oldname.c_str(), newname.c_str());
+
+			output_file << "signal " << signal_caught << "caught, data saved" << std::endl;
+
             if(continue_run && overwrite) remove(argv[1]);
 			exit(signal_caught);
 		}
@@ -432,7 +450,7 @@ int main(int argc, char* argv[]) {
 
 		}
 		else thermostat -> propagate(false);
-		if (MPC_on && !(n%50)) {
+		if (MPC_on && !(n%100)) {
 			hydrodynamics.step(MPC_Step); //hydrodynamics -> step(1.0);
 		}
 	}

@@ -206,7 +206,7 @@ void Box::calculate_forces(bool calc_epot) {
 				else { // AA Type
 					if (calc_epot) mol.Epot += TypeAA_Potential(radius2);
 					force_abs = TypeAA_Force(radius2);
-					if (force_abs > 1e5) std::cout << "AA! " << i <<  " " << j << " " << radius2 <<  std::cout;
+					if (force_abs > 1e5) std::cout << "AA! " << i <<  " " << j << " " << radius2 <<  std::endl;
 					force = distance*force_abs;
 					mol[i].Force -= force;
 					mol[j].Force += force;
