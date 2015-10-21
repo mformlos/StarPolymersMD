@@ -314,7 +314,6 @@ int main(int argc, char* argv[]) {
 	}
 
 
-
 	FILE* end_config_file { };
 	string end_config_file_name = "./results/end_config"+ss_para.str()+".pdb";
      
@@ -337,6 +336,10 @@ int main(int argc, char* argv[]) {
 	MPC_Step = 100.0*StepSize;
 	Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
     VelocityX velocity_average_x{0.2};
+    if (continue_run) {
+    	velocity_average_x.initialize("./results/fluid_profile"+ss_para_old.str()+".dat");
+    	std::cout << "initialized" << std::endl;
+    }
 
 	if (argc > 1 && strcmp(argv[1], "Chain") == 0) {
 		box.add_chain(TypeA, TypeB, 10.);

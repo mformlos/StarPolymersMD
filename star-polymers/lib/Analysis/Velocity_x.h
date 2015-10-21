@@ -32,6 +32,19 @@ public:
 		vel_x_average_count_iter { },
 		width {a_width} {}
 
+	void initialize(string filename) {
+		ifstream input {filename};
+		double pos{ }, vel { };
+		int count { };
+	    while(input >> pos >> vel >> count) {
+	    	double y {floor(pos/width)*width};
+	    	vel_x_average[y] += vel*count;
+	    	vel_x_average_count[y] += count;
+	    }
+    	vel_x_average_iter = vel_x_average.begin();
+		vel_x_average_count_iter = vel_x_average_count.begin();
+	}
+
 
 	void operator() (const Particle& part) {
 		double y {floor(part.Position(1)/ width) * width };
@@ -47,8 +60,8 @@ public:
 		do {
 			os.precision(8);
 			os << std::scientific;
-			os << vel_x_average_iter->first << '\t';
-			os << (vel_x_average_iter->second) / (vel_x_average_count_iter -> second) << '\n';
+			os << vel_x_average_iter->first << ' ';
+			os << (vel_x_average_iter->second) / (vel_x_average_count_iter -> second) <<  " " << vel_x_average_count_iter -> second << '\n';
 			os << std::flush;
 			auto vel_x_average_iter_buf = vel_x_average_iter;
 			if (++vel_x_average_iter_buf == vel_x_average.end()) out = false;
@@ -60,6 +73,9 @@ public:
 		vel_x_average_count_iter = vel_x_average_count.begin();
 		return os;
 	}
+
+
+
 };
 
 
