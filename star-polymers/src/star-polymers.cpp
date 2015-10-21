@@ -269,7 +269,7 @@ int main(int argc, char* argv[]) {
 	ss_para << fixed << "_T" << Temperature;
 	ss_para << "_run" << scientific << Steps_Total;
 	if (MPC_on) {
-		ss_para.precision(2);
+		ss_para.precision(4);
 		ss_para << fixed << "_MPCON_Shear" << Shear;
 	}
 	else ss_para << "_MPCOFF";
