@@ -74,6 +74,7 @@ public:
 	double calculate_epot(MDParticle&, MDParticle&);
 	double calculate_radius_of_gyration();
 	std::tuple<double, Matrix3d> calculate_gyration_tensor();
+	Vector3d calculate_rotation_frequency();
 	std::list<unsigned> calculate_clusters();
 	std::list<unsigned> calculate_patches();
 	std::tuple<double, double> calculate_patches_new();

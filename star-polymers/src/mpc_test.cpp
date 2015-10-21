@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 
 
 
-	MPC MPCroutine {box, Temperature, Shear, AngularMomentumConservation};
+	MPC MPCroutine {box, Temperature, 10, Shear, AngularMomentumConservation};
 
 	ss_para << "_N" << BoxX*BoxY*BoxZ*10;
 	ss_para << "_Shear" << Shear;

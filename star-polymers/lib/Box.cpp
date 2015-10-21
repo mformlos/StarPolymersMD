@@ -48,7 +48,12 @@ void Box::add_star(string filename, unsigned A, unsigned B, unsigned Arms, doubl
 
 inline Vector3d& Box::wrap(Vector3d& pos) {
 	for (unsigned i = 0; i < 3; i++) {
-		pos(i) -= floor(pos(i)/BoxSize[i]) * BoxSize[i];
+		double a {floor(pos(i)/BoxSize[i])};
+		if (a > 0.0) {
+			if (i == 1) std::cout << "particle out of box" << std::endl;
+			pos(i) -= a* BoxSize[i];
+
+		}
 	}
 	return pos;
 }
@@ -56,7 +61,11 @@ inline Vector3d& Box::wrap(Vector3d& pos) {
 
 inline Vector3d Box::wrap(Vector3d&& pos) {
 	for (unsigned i = 0; i < 3; ++i) {
-		pos(i) -= floor(pos(i)/BoxSize[i]) * BoxSize[i];
+		double a { floor(pos(i)/BoxSize[i])};
+		if (a > 0.0) {
+			if (i == 1) std::cout << "particle out of box" << std::endl;
+			pos(i) -= a* BoxSize[i];
+		}
 	}
 	return pos;
 }
@@ -363,6 +372,37 @@ std::tuple<double, Matrix3d> Box::calculate_gyration_tensor() {
 	r_gyr /= Molecules.size();
 	gyr_tensor /= Molecules.size();
 	return std::make_tuple(r_gyr, gyr_tensor);
+}
+
+Vector3d Box::calculate_rotation_frequency() {
+	Vector3d omega {Vector3d::Zero()};
+	for (auto& mol : Molecules) {
+		Vector3d omega_mol {Vector3d::Zero()};
+		Matrix3d inertia_tensor {Matrix3d::Zero()};
+		Vector3d angular_momentum {Vector3d::Zero()};
+		Vector3d shift_anchor_to_center {Vector3d::Zero()};
+		for (int i = 0; i < 3; i++) {
+			shift_anchor_to_center(i) = BoxSize[i]*0.5 - mol.Monomers[0].Position(i);
+		}
+		for (auto& mono : mol.Monomers) {
+			Vector3d shifted_position {wrap(mono.Position + shift_anchor_to_center)};
+			double rsqr = shifted_position.squaredNorm();
+			for (unsigned i = 0; i < 3; i++) {
+				for (unsigned j = i; j < 3; j++) {
+					inertia_tensor(i,j) -= shifted_position(i)*shifted_position(j);
+					if (i == j) inertia_tensor(i,j) += rsqr;
+				}
+			}
+			angular_momentum += shifted_position.cross(shifted_position);
+			inertia_tensor(1,0) = inertia_tensor(0,1);
+			inertia_tensor(2,1) = inertia_tensor(1,2);
+			inertia_tensor(2,0) = inertia_tensor(0,2);
+		}
+		omega_mol = inertia_tensor.ldlt().solve(angular_momentum);
+		omega += omega_mol;
+	}
+	omega /= Molecules.size();
+	return omega;
 }
 
 std::list<unsigned> Box::calculate_clusters() {
