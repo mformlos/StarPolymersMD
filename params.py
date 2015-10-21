@@ -33,7 +33,7 @@ ParamSetContinue = namedtuple("ParamSetContinue", "File, step_size, step_total, 
 
 #paramSets=[ParamSetMixed([Type(3,3)],[3],[1.1],0.5, 50, 50, 50, 0.01, 1E3, 1E4, 1E3, [MPC("MPC", [0.3])], "pdb", 1E6, "No",1E6)]
 #paramSets=[ParamSetMixed([Type(21,9)],[6,9,15],[0.8,1.05,1.15],0.5, 120, 120, 120, 0.01, 1E6, 5E8, 1E4,[MPC("No", [0.0])],"pdb", 1E5, "No",1E6)] 
-paramSets=[ParamSetMixed([Type(21,9)],[6,9],[1.05],0.5, 50, 50, 50, 0.01, 1E5, 5E8, 1E4,[MPC("MPC", [0.0, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5])],"pdb", 1E6, "No",1E6)] 
+paramSets=[ParamSetMixed([Type(21,9)],[6],[1.05],0.5, 50, 50, 50, 0.001, 1E5, 5E8, 1E3,[MPC("MPC", [0.0, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1])],"pdb", 1E6, "No",1E6)] 
 
 #paramSets=[ParamSetMixed([Type(2,6)],[3],[1.1],1.0, 50, 50, 60, 0.01, 1E3, 1E6, 1E3,[MPC("No", [0.0])],"pdb", 1E3, "No",1E3)] 
 
@@ -96,7 +96,7 @@ for paramSet in paramSets:
                         files.sort()
                         #file_name = file_name.replace("Lx%i_Ly%i_Lz%i" %(jobParam.Lx, jobParam.Ly, jobParam.Lz), "Lx*_Ly*_Lz*")
                         #files += glob.glob(file_name)
-                        if len(files) < 1 && jobParam.MPC == "MPC": 
+                        if len(files) < 1 and jobParam.MPC == "MPC": 
                             file_to_copy = "./results/end_config_Star_A%i_B%i_Arms%i_Lx*_Ly*_Lz*_Lambda0.50_T%.2f_run*_MPCOFF.pdb" %(jobParam.TypeA, jobParam.TypeB, jobParam.Arms, jobParam.Temperature) #file_name.replace(mpc_string, "MPCOFF*.pdb")
                             files_to_copy = glob.glob(file_to_copy)
                             file_to_generate = file_name.replace("*", "0") 
