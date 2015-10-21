@@ -36,7 +36,7 @@ protected:
 	std::vector<unsigned> MPCCellListFluidParticles;
 public:
 	std::vector<MPCParticle> Fluid;
-	MPC(Box&, double, double aShear = 0., bool angular_mom = false);
+	MPC(Box&, double, int N_c, double aShear = 0., bool angular_mom = false);
 
 	void initialize();
 

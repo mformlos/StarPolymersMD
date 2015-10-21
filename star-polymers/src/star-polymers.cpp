@@ -342,16 +342,16 @@ int main(int argc, char* argv[]) {
     }
 
 	if (argc > 1 && strcmp(argv[1], "Chain") == 0) {
-		box.add_chain(TypeA, TypeB, 10.);
+		box.add_chain(TypeA, TypeB, 5.);
 		output_file << "building a chain" << std::endl;
     }
 	else {
-		if (continue_run) box.add_star(std::string(argv[1]), TypeA, TypeB, Arms, 10.);
-		else box.add_star(TypeA, TypeB, Arms, 10.);
+		if (continue_run) box.add_star(std::string(argv[1]), TypeA, TypeB, Arms, 5.);
+		else box.add_star(TypeA, TypeB, Arms, 5.);
 		output_file << "building a star" << std::endl;
 	}
 
-	MPC hydrodynamics{box, Temperature, Shear};
+	MPC hydrodynamics{box, Temperature, 5, Shear};
 
 	if (MPC_on) {
 		thermostat = new Thermostat_None{ box, StepSize };

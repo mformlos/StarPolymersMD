@@ -7,13 +7,13 @@
 
 #include "MPC.h"
 
-MPC::MPC(Box& box, double aTemperature, double aShear, bool angular_mom) :
+MPC::MPC(Box& box, double aTemperature, int N_c, double aShear, bool angular_mom) :
 Hydrodynamics { box },
 Temperature { aTemperature },
 Shear { aShear },
 angular_momentum { angular_mom }{
 	NumberOfCells = SimBox.BoxSize[0]*SimBox.BoxSize[1]*SimBox.BoxSize[2] - 1;
-	NumberOfMPCParticles = 10*(NumberOfCells+1);
+	NumberOfMPCParticles = N_c*(NumberOfCells+1);
 	BoxSize[0] = SimBox.BoxSize[0];
 	BoxSize[1] = SimBox.BoxSize[1];
 	BoxSize[2] = SimBox.BoxSize[2];
