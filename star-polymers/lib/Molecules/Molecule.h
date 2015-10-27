@@ -40,6 +40,7 @@ public:
 	void initialize_open_star(Vector3d BoxCenter, unsigned A, unsigned B, unsigned Arms, double Temperature, double Bond = 1.01, double AnchorBond = 2.0);
 	void star_from_file(Vector3d BoxCenter, string filename, unsigned A, unsigned B, unsigned Arms);
 	double calculate_Ekin();
+	Vector3d calculate_center_of_mass();
 
 	std::ostream& print(std::ostream& os) const;
 	template<class UnitaryFunc>

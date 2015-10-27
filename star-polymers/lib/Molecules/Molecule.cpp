@@ -45,6 +45,15 @@ double Molecule::calculate_Ekin() {
 	return Ekin;
 }
 
+Vector3d Molecule::calculate_center_of_mass() {
+	Vector3d com {Vector3d::Zero()};
+	for (auto& mono : Monomers) {
+		com += mono.Position;
+	}
+	com /= NumberOfMonomers;
+	return com;
+}
+
 void Molecule::initialize_straight_chain(unsigned A, unsigned B, double temperature, double bondLength) {
 	Vector3d tempPos{Vector3d::Zero()};
 	Vector3d average_vel{Vector3d::Zero()};

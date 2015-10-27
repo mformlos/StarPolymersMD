@@ -336,7 +336,7 @@ int main(int argc, char* argv[]) {
 	MPC_Step = 100.0*StepSize;
 	Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
     VelocityX velocity_average_x{0.2};
-    if (continue_run) {
+    if (continue_run && MPC_on) {
     	velocity_average_x.initialize("./results/fluid_profile"+ss_para_old.str()+".dat");
     	std::cout << "initialized" << std::endl;
     }
@@ -417,8 +417,10 @@ int main(int argc, char* argv[]) {
 			statistic_file.flush();
 			if(MPC_on) hydrodynamics(velocity_average_x);
 
-			/*std::cout << n << " ";
-			box.print_Temperature(std::cout);
+			std::cout << n << " ";
+			box.print_center_of_mass(std::cout);
+			std::cout << '\n';
+			/*box.print_Temperature(std::cout);
 			std::cout << std::endl;
 			output_file << n << " ";
 			box.print_Epot(output_file);
@@ -460,7 +462,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-    velocity_average_x.print_result(fluid_profile);
+    if (MPC_on) velocity_average_x.print_result(fluid_profile);
 	end_config_file = fopen(end_config_file_name.c_str(), "w");
 	box.print_PDB_with_velocity(end_config_file, Steps_Total);
     if(continue_run && overwrite) remove(argv[1]);

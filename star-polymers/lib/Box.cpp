@@ -34,6 +34,7 @@ void Box::add_star(unsigned A, unsigned B, unsigned Arms, double Mass, double Bo
 	BoxCenter << BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5;
 	Molecules.back().initialize_open_star(BoxCenter, A, B, Arms, Temperature, Bond, AnchorBond);
 	wrap(Molecules.back());
+	set_center_of_mass_to_zero(Molecules.back());
 	NumberOfMonomers += (A+B)*Arms + 1;
 }
 
@@ -43,6 +44,7 @@ void Box::add_star(string filename, unsigned A, unsigned B, unsigned Arms, doubl
 	BoxCenter << BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5;
 	Molecules.back().star_from_file(BoxCenter, filename, A, B, Arms);
 	wrap(Molecules.back());
+	set_center_of_mass_to_zero(Molecules.back());
 	NumberOfMonomers += (A+B)*Arms + 1;
 }
 
@@ -50,7 +52,7 @@ inline Vector3d& Box::wrap(Vector3d& pos) {
 	for (unsigned i = 0; i < 3; i++) {
 		double a {floor(pos(i)/BoxSize[i])};
 		if (a > 0.0) {
-			if (i == 1) std::cout << "particle out of box" << std::endl;
+		    std::cout << "particle out of box" << std::endl;
 			pos(i) -= a* BoxSize[i];
 
 		}
@@ -63,7 +65,7 @@ inline Vector3d Box::wrap(Vector3d&& pos) {
 	for (unsigned i = 0; i < 3; ++i) {
 		double a { floor(pos(i)/BoxSize[i])};
 		if (a > 0.0) {
-			if (i == 1) std::cout << "particle out of box" << std::endl;
+			std::cout << "particle out of box" << std::endl;
 			pos(i) -= a* BoxSize[i];
 		}
 	}
@@ -108,6 +110,16 @@ void Box::resize(double Lx, double Ly, double Lz) {
 	}
 }
 
+void Box::set_center_of_mass_to_zero(Molecule& mol) {
+	Vector3d com {mol.calculate_center_of_mass()};
+	for (unsigned i = 0; i < 3; i++) {
+		com(i) -= BoxSize[i]*0.5;
+	}
+	for (auto& mono : mol.Monomers) {
+		mono.Position -= com;
+		wrap(mono);
+	}
+}
 
 Vector3d Box::relative_position(Particle& one, Particle& two) {
 	Vector3d result {two.Position - one.Position};
@@ -723,6 +735,14 @@ std::ostream& Box::print_radius_of_gyration(std::ostream& os) {
 	return os;
 }
 
+std::ostream& Box::print_center_of_mass(std::ostream& os) {
+	Vector3d BoxCenter {BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5};
+	for (auto& mol : Molecules) {
+		Vector3d com {mol.calculate_center_of_mass()};
+		os << com.transpose() << " " << (com-BoxCenter).norm() << " ";
+	}
+	return os;
+}
 
 template<class UnitaryFunc>
 UnitaryFunc Box::unitary(UnitaryFunc&& func) const {

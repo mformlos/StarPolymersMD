@@ -61,6 +61,7 @@ public:
 
 
 	void resize(double Lx, double Ly, double Lz);
+	void set_center_of_mass_to_zero(Molecule&);
 
 	Vector3d relative_position(Particle& one, Particle& two);
 
@@ -90,6 +91,7 @@ public:
 	std::ostream& print_Temperature(std::ostream& os);
 	std::ostream& print_Ekin_and_Temperature(std::ostream& os);
 	std::ostream& print_radius_of_gyration(std::ostream& os);
+	std::ostream& print_center_of_mass(std::ostream& os);
 
 	// outputs
 
