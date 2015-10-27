@@ -50,6 +50,7 @@ Molecule& Molecule::operator = (const Molecule& other) {
 	for(unsigned i = 0; i < NumberOfMonomers; i++ ) {
 		Monomers.push_back(other.Monomers[i]);
 	}
+	return *this;
 }
 
 MDParticle& Molecule::operator [](int i) {return Monomers[i];}
