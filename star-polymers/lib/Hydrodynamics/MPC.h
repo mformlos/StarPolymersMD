@@ -16,11 +16,12 @@
 #include "Particle.h"
 #include "Molecule.h"
 #include "Rand.h"
-#include "Box.h"
 #include "Analysis.h"
 #include "Hydrodynamics.h"
 
+class Box;
 class MPC : public Hydrodynamics{
+	friend class Box;
 protected:
 	double Temperature;
 	double Shear;
@@ -50,11 +51,11 @@ public:
 	void thermostat(unsigned i, const Vector3d& CMV);
 	void thermostat(const std::vector<MPCParticle*>&, const Vector3d&);
 	inline void shiftParticles(const Vector3d& Shift);
-	inline void LEBC(Particle&);
-	inline Vector3d& wrap(Vector3d&);
-	inline Vector3d wrap(Vector3d&&);
-	inline void wrap(Particle&);
-
+	void LEBC(Particle&);
+	Vector3d& wrap(Vector3d&);
+	Vector3d wrap(Vector3d&&);
+	void wrap(Particle&);
+    Vector3d relative_position(Particle& one, Particle& two);
 
 
 

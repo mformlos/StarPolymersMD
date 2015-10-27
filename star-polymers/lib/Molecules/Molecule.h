@@ -32,9 +32,11 @@ public:
 
 	Molecule(unsigned);
 	Molecule(unsigned, double);
+	Molecule(const Molecule& other);
 
 	MDParticle& operator [](int i);    // Elementweiser Zugriff
 	const MDParticle& operator [](int i) const;
+	Molecule& operator = (const Molecule& other);
 
 	void initialize_straight_chain(unsigned A, unsigned B, double Temperature, double bond = 1.01);
 	void initialize_open_star(Vector3d BoxCenter, unsigned A, unsigned B, unsigned Arms, double Temperature, double Bond = 1.01, double AnchorBond = 2.0);

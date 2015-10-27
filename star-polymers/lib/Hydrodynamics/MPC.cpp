@@ -28,6 +28,7 @@ angular_momentum { angular_mom }{
 	for ( unsigned i = 0 ; i < NumberOfMPCParticles ; i++ ) {
 		Fluid.push_back(MPCParticle(1.0));
 	}
+	box.MPC_on(this);
 }
 
 void MPC::initialize() {
@@ -77,8 +78,7 @@ void MPC::step(const double& dt) {
 void MPC::streaming(const double& dt) {
 	for (auto& part : Fluid) {
 		part.Position += part.Velocity*dt;
-		if (shear_on) LEBC(part);
-		else wrap(part);
+		wrap(part);
 	}
 }
 
@@ -163,14 +163,12 @@ void MPC::thermostat(unsigned Index, const Vector3d& CMV){
 inline void MPC::shiftParticles(const Vector3d& Shift) {
 	for (auto& part : Fluid) {
 		part.Position += Shift;
-		if(shear_on) LEBC(part);
-		else wrap(part);
+		wrap(part);
 	}
 	for (auto& mol : SimBox.Molecules ) {
 		for (auto& mono : mol.Monomers) {
 			mono.Position += Shift;
-			if(shear_on) LEBC(mono);
-			else wrap(mono);
+			wrap(mono);
 		}
 	}
 }
@@ -268,7 +266,7 @@ unsigned MPC::filledCells() {
 }
 
 
-inline void MPC::LEBC(Particle &part) {
+void MPC::LEBC(Particle &part) {
 	double cy { floor(part.Position(1) / BoxSize[1]) };
 	part.Position(0) -= BoxSize[0]*floor(part.Position(0)/BoxSize[0]);
 	part.Position(0) -= cy*delrx;
@@ -278,23 +276,37 @@ inline void MPC::LEBC(Particle &part) {
 	part.Velocity(0) -= cy*Shear*BoxSize[1];
 }
 
-inline Vector3d& MPC::wrap(Vector3d& pos) {
+Vector3d MPC::relative_position(Particle& one, Particle& two) {
+	Vector3d rel_pos {two.Position - one.Position};
+	double cy {round(rel_pos(1)/BoxSize[1])};
+	rel_pos(0) -= BoxSize[0]*round(rel_pos(0)/BoxSize[0]);
+	rel_pos(0) -= cy*delrx;
+	rel_pos(0) -= BoxSize[0]*round(rel_pos(0)/BoxSize[0]);
+	rel_pos(1) -= BoxSize[1]*cy;
+	rel_pos(2) -= BoxSize[2]*round(rel_pos(2)/BoxSize[2]);
+	return rel_pos;
+}
+
+Vector3d& MPC::wrap(Vector3d& pos) {
 	for (unsigned i = 0; i < 3; i++) {
 		pos(i) -= floor(pos(i)/BoxSize[i]) * BoxSize[i];
 	}
 	return pos;
 }
 
-inline Vector3d MPC::wrap(Vector3d&& pos) {
+Vector3d MPC::wrap(Vector3d&& pos) {
 	for (unsigned i = 0; i < 3; i++) {
 		pos(i) -= floor(pos(i)/BoxSize[i]) * BoxSize[i];
 	}
 	return pos;
 }
 
-inline void MPC::wrap(Particle& part) {
-	part.Position = wrap(part.Position);
+void MPC::wrap(Particle& part) {
+	if (shear_on) LEBC(part);
+	else part.Position = wrap(part.Position);
 }
+
+
 
 void MPC::print_fluid(FILE* fluid_file, int step, int z_start, int z_stop) {
 	fprintf(fluid_file, "TIME     %d \n", step);

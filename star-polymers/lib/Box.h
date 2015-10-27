@@ -18,7 +18,10 @@
 #include "Potentials.h"
 #include "Functions.h"
 
+
 //class Thermostat;
+
+class MPC;
 
 class Box {
 	friend class Thermostat_None;
@@ -35,11 +38,13 @@ protected:
 	double VerletRadius2;
 	unsigned NumberOfMonomers;
 
+    MPC* MPC_routine;
 
 	std::array<int,3> BoxSize;
 	std::array<int,3> CellSize;
 	std::array<double,3> CellSideLength;
 	std::vector<Molecule> Molecules;
+	std::vector<Molecule> Molecules_com_reference_frame;
 	std::vector<std::vector<std::vector<std::forward_list<MDParticle*>>>> CellList;
 	//Thermostat Thermo;  //to be declared
 
@@ -47,6 +52,8 @@ protected:
 
 public:
 	Box(double Lx, double Ly, double Lz, double temperature, double Lambda);
+
+	void MPC_on(MPC*);
 
 	void add_chain(unsigned A, unsigned B, double Mass, double Bond = 1.01);
 	void add_star(unsigned A, unsigned B, unsigned Arms, double Mass, double Bond = 1.01, double AnchorBond = 2.0);
@@ -62,6 +69,8 @@ public:
 
 	void resize(double Lx, double Ly, double Lz);
 	void set_center_of_mass_to_zero(Molecule&);
+	void center_of_mass_reference_frame();
+
 
 	Vector3d relative_position(Particle& one, Particle& two);
 

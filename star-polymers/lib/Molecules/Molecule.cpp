@@ -25,6 +25,33 @@ Molecule::Molecule(unsigned N, double mass) :
 			}
 		}
 
+Molecule::Molecule(const Molecule& other) :
+		Ekin {other.Ekin},
+		Epot {other.Epot},
+		NumberOfMonomers { other.NumberOfMonomers },
+		AType {other.AType},
+		BType {other.BType},
+		Arms {other.Arms} {
+			Monomers.reserve(NumberOfMonomers);
+			for(unsigned i = 0; i < NumberOfMonomers; i++ ) {
+				Monomers.push_back(other.Monomers[i]);
+			}
+ 		}
+
+Molecule& Molecule::operator = (const Molecule& other) {
+	Ekin = other.Ekin;
+	Epot = other.Epot;
+	NumberOfMonomers = other.NumberOfMonomers;
+	AType = other.AType;
+	BType = other.BType;
+	Arms = other.Arms;
+	Monomers.clear();
+	Monomers.reserve(NumberOfMonomers);
+	for(unsigned i = 0; i < NumberOfMonomers; i++ ) {
+		Monomers.push_back(other.Monomers[i]);
+	}
+}
+
 MDParticle& Molecule::operator [](int i) {return Monomers[i];}
 
 const MDParticle& Molecule::operator [](int i) const {return Monomers[i];}

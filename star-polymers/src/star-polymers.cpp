@@ -400,6 +400,7 @@ int main(int argc, char* argv[]) {
 
 		if (n > Steps_Equil && !(n%Steps_Output)) {
 			thermostat -> propagate(true);
+			box.center_of_mass_reference_frame();
 			std::tuple<double,double> patches= box.calculate_patches_new();
 			std::tuple<double,Matrix3d> gyration = box.calculate_gyration_tensor();
 			statistic_file << n << " ";
