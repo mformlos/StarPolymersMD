@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(STAR_POLYMERS)
 
-list( APPEND CMAKE_CXX_FLAGS "-std=c++1y ${CMAKE_CXX_FLAGS} -Wall -g -O3 ")
+list( APPEND CMAKE_CXX_FLAGS "-std=c++1y ${CMAKE_CXX_FLAGS} -Wall -g -fopenmp -O3 ")
 
  
 include_directories ("${PROJECT_BINARY_DIR}")

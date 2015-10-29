@@ -61,16 +61,16 @@ void MPC::step(const double& dt) {
 	shiftParticles(Shift);
 	sort();
 
-	//#pragma omp parallel num_threads(3)
-	//{
-    	//#pragma omp for
+	#pragma omp parallel num_threads(16)
+	{
+    	#pragma omp for
 		for (unsigned Index = 0; Index <= NumberOfCells; ++Index) {
 			Vector3d CMV { };
 			calculateCMV(Index, CMV);
 			thermostat(Index, CMV);
 			collide(Index, CMV);
 		}
-	//}
+	}
 	Shift = -Shift;
 	shiftParticles(Shift);
 }

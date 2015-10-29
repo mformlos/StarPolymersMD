@@ -453,7 +453,7 @@ Vector3d Box::calculate_rotation_frequency() {
 				}
 			}
 			//angular_momentum += shifted_position.cross(shifted_position);
-			angular_momentum += mono.Position.cross(mono.Position);
+			angular_momentum += mono.Position.cross(mono.Velocity);
 			inertia_tensor(1,0) = inertia_tensor(0,1);
 			inertia_tensor(2,1) = inertia_tensor(1,2);
 			inertia_tensor(2,0) = inertia_tensor(0,2);
