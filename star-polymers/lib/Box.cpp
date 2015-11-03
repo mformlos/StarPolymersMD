@@ -9,7 +9,9 @@ Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
 	VerletRadius { 2.0 },
 	VerletRadius2 { 4.0 },
 	NumberOfMonomers { },
-	MPC_routine{nullptr} {
+	MPC_routine{nullptr},
+	COM_Pos {Vector3d::Zero()},
+	COM_Vel {Vector3d::Zero()} {
 		BoxSize[0] = Lx;
 		BoxSize[1] = Ly;
 		BoxSize[2] = Lz;
@@ -153,6 +155,10 @@ void Box::center_of_mass_reference_frame() {
 		for(auto& mono : centered_molecule.Monomers) {
 			mono.Position -= center_of_mass;
 			mono.Velocity -= center_of_mass_velocity;
+		}
+		if (n ==0) {
+			COM_Pos = center_of_mass - shift_anchor_to_center;
+			COM_Vel = center_of_mass_velocity;
 		}
 		Molecules_com_reference_frame[n] = centered_molecule;
 	}

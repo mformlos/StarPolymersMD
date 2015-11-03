@@ -92,7 +92,7 @@ int main(int argc, char* argv[]) {
 
 	MPCroutine.initialize();
 
-	VelocityX velocity_average {0.2};
+	VelocityX velocity_average {box, MPCroutine, 0.2};
 	nothing no_function { };
 	clock_t begin = clock();
 

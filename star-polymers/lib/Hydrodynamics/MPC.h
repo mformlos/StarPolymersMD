@@ -12,6 +12,7 @@
 #include <array>
 #include <vector>
 #include <cmath>
+#include <fstream>
 #include "Functions.h"
 #include "Particle.h"
 #include "Molecule.h"
@@ -22,6 +23,7 @@
 class Box;
 class MPC : public Hydrodynamics{
 	friend class Box;
+	friend class VelocityX;
 protected:
 	double Temperature;
 	double Shear;
@@ -40,6 +42,7 @@ public:
 	MPC(Box&, double, int N_c, double aShear = 0., bool angular_mom = false);
 
 	void initialize();
+	void initialize(string filename);
 
 	//MPC routine:
 	void step(const double& dt);
@@ -52,9 +55,17 @@ public:
 	void thermostat(const std::vector<MPCParticle*>&, const Vector3d&);
 	inline void shiftParticles(const Vector3d& Shift);
 	void LEBC(Particle&);
+	void LEBC(Vector3d&, Vector3d&);
 	Vector3d& wrap(Vector3d&);
 	Vector3d wrap(Vector3d&&);
 	void wrap(Particle&);
+	void wrap(Vector3d&, Vector3d&);
+
+	void LEBC_to_zero(Vector3d&, Vector3d&);
+	Vector3d& wrap_to_zero(Vector3d&);
+	void wrap_to_zero(Vector3d&, Vector3d&);
+	void wrap_to_zero(Particle&);
+
     Vector3d relative_position(Particle& one, Particle& two);
 
 
@@ -99,6 +110,7 @@ public:
 
 	void print_fluid(FILE*, int, int, int);
 	void print_fluid_with_coordinates(FILE*, int, int, int);
+	void print_fluid_complete(FILE*);
 
 };
 

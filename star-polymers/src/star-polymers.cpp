@@ -277,7 +277,9 @@ int main(int argc, char* argv[]) {
 	ofstream statistic_file { };
 	FILE* config_file { };
 	FILE* fluid_file { };
+	FILE* end_fluid_file { };
 	ofstream fluid_profile { };
+	string end_fluid_file_name {"./results/end_fluid"+ss_para.str()+".dat"};
 	string oldname = "./results/statistics"+ss_para_old.str()+".dat";
 	string newname = "./results/statistics"+ss_para.str()+".dat";
 	if(continue_run && overwrite) rename(oldname.c_str(), newname.c_str());
@@ -335,11 +337,8 @@ int main(int argc, char* argv[]) {
 
 	MPC_Step = 100.0*StepSize;
 	Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
-    VelocityX velocity_average_x{0.2};
-    if (continue_run && MPC_on) {
-    	velocity_average_x.initialize("./results/fluid_profile"+ss_para_old.str()+".dat");
-    	std::cout << "initialized" << std::endl;
-    }
+
+
 
 	if (argc > 1 && strcmp(argv[1], "Chain") == 0) {
 		box.add_chain(TypeA, TypeB, 5.);
@@ -352,6 +351,12 @@ int main(int argc, char* argv[]) {
 	}
 
 	MPC hydrodynamics{box, Temperature, 5, Shear};
+    VelocityX velocity_average_x{box, hydrodynamics,0.2};
+
+    if (continue_run && MPC_on) {
+      	velocity_average_x.initialize("./results/fluid_profile"+ss_para_old.str()+".dat");
+      	std::cout << "initialized" << std::endl;
+    }
 
 	if (MPC_on) {
 		thermostat = new Thermostat_None{ box, StepSize };
@@ -365,7 +370,14 @@ int main(int argc, char* argv[]) {
 
 
 
-	if (MPC_on) hydrodynamics.initialize(); //hydrodynamics -> initialize();
+	if (MPC_on) {
+		string continue_fluid {"./results/end_fluid"+ss_para_old.str()+".dat"};
+		if (file_exists(continue_fluid)) {
+			hydrodynamics.initialize(continue_fluid);
+			std::cout << "yeah" << std::endl;
+		}
+		else hydrodynamics.initialize(); //hydrodynamics -> initialize();
+	}
 	clock_t begin = clock();
 
 	long int n { }; 
@@ -381,7 +393,10 @@ int main(int argc, char* argv[]) {
 			new_total_str = new_total.str();
 			file_handling(statistic_file, ss_para, "statistics", Step_total, new_total_str);
 			file_handling(output_file, ss_para, "output", Step_total, new_total_str);
-            if (MPC_on) file_handling(fluid_profile, ss_para, "fluid_profile", Step_total, new_total_str);
+            if (MPC_on) {
+    		    velocity_average_x.print_result(fluid_profile);
+            	file_handling(fluid_profile, ss_para, "fluid_profile", Step_total, new_total_str);
+            }
             if (pdb_print) file_handling(config_file, ss_para, "config", Step_total, new_total_str);
             if (fluid_print) file_handling(fluid_file, ss_para, "fluid", Step_total, new_total_str);
 
@@ -391,6 +406,16 @@ int main(int argc, char* argv[]) {
 			end_config_file = fopen(newname.c_str(), "w"); 
 			box.print_PDB_with_velocity(end_config_file, n);
 			fclose(end_config_file);
+			if (MPC_on) {
+				newname =  "./results/end_fluid"+ss_para.str()+".dat";
+				newname.replace(newname.find(Step_total), Step_total.length(),new_total.str());
+				end_fluid_file = fopen(newname.c_str(), "w");
+				hydrodynamics.print_fluid_complete(end_fluid_file);
+				fclose(end_fluid_file);
+				string overwrite_fluid {"./results/end_fluid"+ss_para_old.str()+".dat"};
+				if (continue_run && overwrite) remove(overwrite_fluid.c_str());
+			}
+
 
 			output_file << "signal " << signal_caught << "caught, data saved" << std::endl;
 
@@ -421,6 +446,7 @@ int main(int argc, char* argv[]) {
 			std::cout << n << " ";
 			box.print_center_of_mass(std::cout);
 			std::cout << '\n';
+			std::cout.flush();
 			/*box.print_Temperature(std::cout);
 			std::cout << std::endl;
 			output_file << n << " ";
@@ -468,6 +494,13 @@ int main(int argc, char* argv[]) {
 	box.print_PDB_with_velocity(end_config_file, Steps_Total);
     if(continue_run && overwrite) remove(argv[1]);
 
+    if (MPC_on) {
+    	end_fluid_file = fopen(end_fluid_file_name.c_str(), "w");
+    	hydrodynamics.print_fluid_complete(end_fluid_file);
+    	fclose(end_fluid_file);
+    	string overwrite_fluid {"./results/end_fluid"+ss_para_old.str()+".dat"};
+    	if (continue_run && overwrite) remove(overwrite_fluid.c_str());
+    }
 
 	clock_t end = clock();
 	//box.print_molecules(std::cout);

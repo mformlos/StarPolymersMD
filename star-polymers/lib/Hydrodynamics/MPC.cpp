@@ -52,6 +52,43 @@ void MPC::initialize() {
 	}*/
 }
 
+void MPC::initialize(string filename) {
+	ifstream file {filename};
+	string line { };
+	Vector3d pos {Vector3d::Zero()};
+	Vector3d vel {Vector3d::Zero()};
+	Vector3d CMV(0., 0., 0.);
+	int count {};
+	for (auto& part : Fluid) {
+		if (file >> pos(0) >> pos(1) >> pos(2) >> vel(0) >> vel(1) >> vel(2)) {
+			if (floor(pos(0)/BoxSize[0]) != 0.0 || floor(pos(1)/BoxSize[1] != 0.0) || floor(pos(2)/BoxSize[2]) != 0.0) {
+				for (unsigned i = 0 ; i < 3; i++) {
+					part.Position(i) = BoxSize[i]*Rand::real_uniform();
+					part.Velocity(i) = Rand::real_uniform() - 0.5;
+				}
+				count ++;
+			}
+			else {
+				part.Position = pos;
+				part.Velocity = vel;
+			}
+		}
+		else {
+			for (unsigned i = 0 ; i < 3; i++) {
+				part.Position(i) = BoxSize[i]*Rand::real_uniform();
+				part.Velocity(i) = Rand::real_uniform() - 0.5;
+			}
+		}
+		wrap(part);
+		CMV += part.Velocity;
+	}
+	std::cout << count << std::endl;
+	CMV /= NumberOfMPCParticles;
+	for (auto& part : Fluid) {
+		part.Velocity -= CMV;
+	}
+}
+
 //MPC routine:
 void MPC::step(const double& dt) {
 	delrx += Shear*BoxSize[1]*dt;
@@ -61,7 +98,7 @@ void MPC::step(const double& dt) {
 	shiftParticles(Shift);
 	sort();
 
-	#pragma omp parallel num_threads(16)
+	#pragma omp parallel
 	{
     	#pragma omp for
 		for (unsigned Index = 0; Index <= NumberOfCells; ++Index) {
@@ -276,6 +313,26 @@ void MPC::LEBC(Particle &part) {
 	part.Velocity(0) -= cy*Shear*BoxSize[1];
 }
 
+void MPC::LEBC(Vector3d& pos, Vector3d& vel) {
+	double cy { floor(pos(1) / BoxSize[1]) };
+	pos(0) -= BoxSize[0]*floor(pos(0)/BoxSize[0]);
+	pos(0) -= cy*delrx;
+	pos(0) -= BoxSize[0]*floor(pos(0)/BoxSize[0]);
+	pos(1) -= BoxSize[1]*cy;
+	pos(2) -= BoxSize[2]*floor(pos(2)/BoxSize[2]);
+	vel(0) -= cy*Shear*BoxSize[1];
+}
+
+void MPC::LEBC_to_zero(Vector3d& pos, Vector3d& vel) {
+	double cy { round(pos(1) / BoxSize[1]) };
+		pos(0) -= BoxSize[0]*round(pos(0)/BoxSize[0]);
+		pos(0) -= cy*delrx;
+		pos(0) -= BoxSize[0]*round(pos(0)/BoxSize[0]);
+		pos(1) -= BoxSize[1]*cy;
+		pos(2) -= BoxSize[2]*round(pos(2)/BoxSize[2]);
+		vel(0) -= cy*Shear*BoxSize[1];
+}
+
 Vector3d MPC::relative_position(Particle& one, Particle& two) {
 	Vector3d rel_pos {two.Position - one.Position};
 	double cy {round(rel_pos(1)/BoxSize[1])};
@@ -306,6 +363,27 @@ void MPC::wrap(Particle& part) {
 	else part.Position = wrap(part.Position);
 }
 
+void MPC::wrap(Vector3d& pos, Vector3d& vel) {
+	if (shear_on) LEBC(pos, vel);
+	else wrap(pos);
+}
+
+Vector3d& MPC::wrap_to_zero(Vector3d& pos){
+	for (unsigned i = 0; i < 3; i++) {
+		pos(i) -= floor(pos(i)/BoxSize[i]) * BoxSize[i];
+	}
+	return pos;
+}
+
+void MPC::wrap_to_zero(Particle& part){
+	if (shear_on) LEBC_to_zero(part.Position, part.Velocity);
+	else wrap_to_zero(part.Position);
+}
+
+void MPC::wrap_to_zero(Vector3d& pos, Vector3d& vel){
+	if (shear_on) LEBC_to_zero(pos, vel);
+	else wrap_to_zero(pos);
+}
 
 
 void MPC::print_fluid(FILE* fluid_file, int step, int z_start, int z_stop) {
@@ -339,6 +417,22 @@ void MPC::print_fluid_with_coordinates(FILE* fluid_file, int step, int z_start, 
 		}
 	}
 	fprintf(fluid_file, "\n");
+}
+
+void MPC::print_fluid_complete(FILE* fluid_file) {
+    Vector3d pos {Vector3d::Zero()};
+    Vector3d vel {Vector3d::Zero()};
+    Vector3d shift_pos {SimBox.COM_Pos};
+    for (unsigned i = 0; i < 3; i++) {
+    	shift_pos(i) -= BoxSize[i];
+    }
+	for (auto& part : Fluid) {
+
+		pos = part.Position - shift_pos;
+		vel = part.Velocity - SimBox.COM_Vel;
+		wrap(pos, vel);
+		fprintf(fluid_file, "%f %f %f %f %f %f \n", pos(0), pos(1), pos(2), vel(0), vel(1), vel(2));
+	}
 }
 
 

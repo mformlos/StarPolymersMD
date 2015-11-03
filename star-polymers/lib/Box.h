@@ -29,6 +29,7 @@ class Box {
 	friend class Nose_Hoover;
 	friend class Andersen;
 	friend class MPC;
+	friend class VelocityX;
 protected:
 	double SystemTime;
 	double Temperature;
@@ -45,6 +46,8 @@ protected:
 	std::array<double,3> CellSideLength;
 	std::vector<Molecule> Molecules;
 	std::vector<Molecule> Molecules_com_reference_frame;
+	Vector3d COM_Pos;
+	Vector3d COM_Vel;
 	std::vector<std::vector<std::vector<std::forward_list<MDParticle*>>>> CellList;
 	//Thermostat Thermo;  //to be declared
 

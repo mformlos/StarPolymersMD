@@ -16,16 +16,21 @@
 
 class VelocityX: public Analysis<Particle> {
 protected:
+	Box& SimBox;
+	MPC& MPC_routine;
 	std::map<double, double> vel_x_average;
 	std::map<double, double>::iterator vel_x_average_iter;
 	std::map<double, double> vel_x_average_count;
 	std::map<double, double>::iterator vel_x_average_count_iter;
 
+
 	double width;
 	//Function_Output vel_x_average;
 
 public:
-	VelocityX(double a_width = 0.5) :
+	VelocityX(Box& box, MPC& mpc, double a_width = 0.5) :
+		SimBox { box },
+		MPC_routine { mpc },
 		vel_x_average { },
 		vel_x_average_iter { },
 		vel_x_average_count { },
@@ -47,8 +52,13 @@ public:
 
 
 	void operator() (const Particle& part) {
-		double y {floor(part.Position(1)/ width) * width };
-		vel_x_average[y] += part.Velocity(0);
+		Vector3d pos {part.Position - SimBox.COM_Pos};
+		Vector3d vel {part.Velocity - SimBox.COM_Vel};
+		MPC_routine.wrap_to_zero(pos, vel);
+		double y {floor(pos(1)/ width) * width };
+		vel_x_average[y] += vel(0);
+		//double y {floor(pos(0)/width)*width };
+		//vel_x_average[y] += vel(1);
 		vel_x_average_iter = vel_x_average.begin();
 		vel_x_average_count[y]++;
 		vel_x_average_count_iter = vel_x_average_count.begin();
