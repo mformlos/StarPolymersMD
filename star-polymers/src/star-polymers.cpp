@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
 	long int Steps_Equil { }, Steps_Total { }, Steps_Output { }, Steps_Start { }; 
 	long int Steps_pdb { }, Steps_fluid { };
 	double Temperature { }, Lambda { }, Shear { }, StepSize { }, MPC_Step{ };
-	bool MPC_on {false}, continue_run {false}, pdb_print {false}, fluid_print {false}, overwrite{true};
+	bool MPC_on {false}, continue_run {false}, pdb_print {false}, fluid_print {false}, overwrite{true}, fluid_profile_print {false};
 	string s_para { };
 	stringstream ss_para { }, ss_para_old { };
 	Thermostat *thermostat{};
@@ -173,6 +173,9 @@ int main(int argc, char* argv[]) {
 						std::cout << Steps_fluid <<std::endl;
 					}
 				}
+				else if (strcmp(argv[i_para], "profile") == 0) {
+					fluid_profile_print = true;
+				}
 			}
 			i_para++;
 		}
@@ -249,6 +252,9 @@ int main(int argc, char* argv[]) {
 					Steps_fluid = (long int)stold(argv[i_para]);
 					std::cout << Steps_fluid <<std::endl;
 				}
+			}
+			else if (strcmp(argv[i_para], "profile") == 0) {
+				fluid_profile_print = true;
 			}
 			i_para++;
 		}
@@ -353,7 +359,7 @@ int main(int argc, char* argv[]) {
 	MPC hydrodynamics{box, Temperature, 5, Shear};
     VelocityX velocity_average_x{box, hydrodynamics,0.2};
 
-    if (continue_run && MPC_on) {
+    if (continue_run && MPC_on && fluid_profile_print) {
       	velocity_average_x.initialize("./results/fluid_profile"+ss_para_old.str()+".dat");
       	std::cout << "initialized" << std::endl;
     }
@@ -393,7 +399,7 @@ int main(int argc, char* argv[]) {
 			new_total_str = new_total.str();
 			file_handling(statistic_file, ss_para, "statistics", Step_total, new_total_str);
 			file_handling(output_file, ss_para, "output", Step_total, new_total_str);
-            if (MPC_on) {
+            if (MPC_on && fluid_profile_print) {
     		    velocity_average_x.print_result(fluid_profile);
             	file_handling(fluid_profile, ss_para, "fluid_profile", Step_total, new_total_str);
             }
@@ -441,12 +447,15 @@ int main(int argc, char* argv[]) {
 			for (int i = 0; i < 3; i++) statistic_file << rotation_frequency(i) << " ";
 			statistic_file << "\n";
 			statistic_file.flush();
-			if(MPC_on) hydrodynamics(velocity_average_x);
+			if(MPC_on && fluid_profile_print) hydrodynamics(velocity_average_x);
 
-			std::cout << n << " ";
-			box.print_center_of_mass(std::cout);
-			std::cout << '\n';
-			std::cout.flush();
+			//std::cout << n << " ";
+			output_file << n << " ";
+			box.print_center_of_mass(output_file);
+			output_file << '\n';
+			output_file.flush();
+			//std::cout << '\n';
+			//std::cout.flush();
 			/*box.print_Temperature(std::cout);
 			std::cout << std::endl;
 			output_file << n << " ";
@@ -489,7 +498,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-    if (MPC_on) velocity_average_x.print_result(fluid_profile);
+    if (MPC_on && fluid_profile_print) velocity_average_x.print_result(fluid_profile);
 	end_config_file = fopen(end_config_file_name.c_str(), "w");
 	box.print_PDB_with_velocity(end_config_file, Steps_Total);
     if(continue_run && overwrite) remove(argv[1]);
