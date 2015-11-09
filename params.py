@@ -32,14 +32,15 @@ MPC = namedtuple("MPC", ["Status", "Shear"])
 ParamSetContinue = namedtuple("ParamSetContinue", "File, step_size, step_total, step_output, Lx, Ly, Lz, MPC, Shear, pdb, pdb_out, fluid, fluid_out")
 
 #paramSets=[ParamSetMixed([Type(3,3)],[3],[1.1],0.5, 50, 50, 50, 0.01, 1E3, 1E4, 1E3, [MPC("MPC", [0.3])], "pdb", 1E6, "No",1E6)]
-#paramSets=[ParamSetMixed([Type(21,9)],[6,9,15],[0.8,1.05,1.15],0.5, 120, 120, 120, 0.01, 1E6, 5E8, 1E4,[MPC("No", [0.0])],"pdb", 1E5, "No",1E6)] 
-paramSets=[ParamSetMixed([Type(21,9)],[6],[1.05],0.5, 50, 50, 50, 0.001, 1E5, 5E8, 1E3,[MPC("MPC", [0.0, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1])],"pdb", 1E6, "No",1E6)] 
+paramSets=[ParamSetMixed([Type(21,9)],[6,9,15],[0.5,0.8,1.05,1.15],0.5, 120, 120, 120, 0.01, 1E6, 5E8, 1E4,[MPC("No", [0.0])],"pdb", 1E5, "No",1E6)] 
+#paramSets=[ParamSetMixed([Type(21,9)],[6],[1.05],0.5, 50, 50, 50, 0.001, 1E5, 5E8, 1E3,[MPC("MPC", [0.0, 0.0005, 0.005])],"pdb", 1E6, "No",1E6)] 
 
 #paramSets=[ParamSetMixed([Type(2,6)],[3],[1.1],1.0, 50, 50, 60, 0.01, 1E3, 1E6, 1E3,[MPC("No", [0.0])],"pdb", 1E3, "No",1E3)] 
 
-nJobPerTask=1
-coresPerRun=16
-tasksPerRun=coresPerRun*nJobPerTask
+coresPerJob=16
+coresPerRun=5
+tasksPerRun=16
+
 
 
 pythonCmd="python"
@@ -84,7 +85,7 @@ for paramSet in paramSets:
                         jobParam= ParamSet(TypeA, TypeB, Arms, Lambda, Temperature, Lx, Ly, Lz, step_size, step_warm, step_total, step_output, Hydrodynamic.Status, Shear, pdb, pdb_out, fluid, fluid_out)
                         mpc_string = ""
                         if (jobParam.MPC == "MPC"): 
-                            mpc_string = "MPCON_Shear%.2f.pdb" %jobParam.Shear
+                            mpc_string = "MPCON_Shear%.4f.pdb" %jobParam.Shear
                         else: 
                             mpc_string = "MPCOFF.pdb"
                         file_name = "./results/end_config_Star_A%i_B%i_Arms%i_Lx%i_Ly%i_Lz%i_Lambda%.2f_T%.2f_run*_" %(jobParam.TypeA, jobParam.TypeB, jobParam.Arms, jobParam.Lx, jobParam.Ly, jobParam.Lz, jobParam.Lambda, jobParam.Temperature)
