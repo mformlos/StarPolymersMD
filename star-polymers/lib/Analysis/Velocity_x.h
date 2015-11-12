@@ -40,8 +40,8 @@ protected:
 
 public:
 	VelocityX(Box& box, MPC& mpc, double a_width = 0.5) :
-		SimBox { box },
-		MPC_routine { mpc },
+		SimBox ( box ),
+		MPC_routine ( mpc ),
 		vel_x_average { },
 		vel_x_average_iter { },
 		vel_x_average_count { },
