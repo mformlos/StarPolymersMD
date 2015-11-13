@@ -449,13 +449,13 @@ int main(int argc, char* argv[]) {
 			statistic_file.flush();
 			if(MPC_on && fluid_profile_print) hydrodynamics(velocity_average_x);
 
-			//std::cout << n << " ";
+			std::cout << n << " ";
 			output_file << n << " ";
 			box.print_center_of_mass(output_file);
 			output_file << '\n';
 			output_file.flush();
-			//std::cout << '\n';
-			//std::cout.flush();
+			std::cout << '\n';
+			std::cout.flush();
 			/*box.print_Temperature(std::cout);
 			std::cout << std::endl;
 			output_file << n << " ";
@@ -484,7 +484,8 @@ int main(int argc, char* argv[]) {
 				fflush(config_file);
 			}
 			if (fluid_print && (Steps_fluid > 0 ? !(n%Steps_fluid) : true)) {
-				hydrodynamics.print_fluid_with_coordinates(fluid_file, n, (int)BoxZ/2 - 2, (int)BoxZ/2 + 2);
+				hydrodynamics.print_fluid(fluid_file, n, (int)BoxZ/2, (int)BoxZ/2);
+				//hydrodynamics.print_fluid_with_coordinates(fluid_file, n, (int)BoxZ/2 - 2, (int)BoxZ/2 + 2);
 				//hydrodynamics -> print_fluid_with_coordinates(fluid_file, n, (int)BoxZ/2 - 2, (int)BoxZ/2 + 2);
 				fflush(fluid_file);
 			}

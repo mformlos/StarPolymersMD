@@ -218,7 +218,7 @@ inline void MPC::calculateCMV(unsigned Index, Vector3d& CMV ){
 		CMV += part -> Velocity * part -> Mass;
 		totalMass += part -> Mass;
 	}
-	CMV /= totalMass;
+	if (totalMass > 0) CMV /= totalMass;
 }
 
 inline void MPC::calculateCMP(unsigned Index, Vector3d& CMP) {
@@ -228,7 +228,7 @@ inline void MPC::calculateCMP(unsigned Index, Vector3d& CMP) {
 		CMP += part -> Position * part -> Mass;
 		totalMass += part -> Mass;
 	}
-	CMP /= totalMass;
+	if (totalMass > 0) CMP /= totalMass;
 }
 
 inline void MPC::calculateFluidVelocity(unsigned Index, Vector3d& FluidVelocity) {
@@ -238,7 +238,7 @@ inline void MPC::calculateFluidVelocity(unsigned Index, Vector3d& FluidVelocity)
 		MPCParticle * part {MPCCellList[Index][i]};
 	    FluidVelocity += part -> Velocity;
 	}
-	FluidVelocity /= (double)i;
+	if (i > 0) FluidVelocity /= (double)i;
 }
 
 inline void MPC::calculateAngular(unsigned Index, Vector3d& Angular, const Vector3d& CMV, const Vector3d& CMP, const Matrix3d& Rotation) {
@@ -386,7 +386,7 @@ void MPC::wrap_to_zero(Vector3d& pos, Vector3d& vel){
 }
 
 
-void MPC::print_fluid(FILE* fluid_file, int step, int z_start, int z_stop) {
+/*void MPC::print_fluid(FILE* fluid_file, int step, int z_start, int z_stop) {
 	fprintf(fluid_file, "TIME     %d \n", step);
 	for (int z = z_start; z < z_stop; z++) {
 		fprintf(fluid_file, "Z %d \n", z);
@@ -396,6 +396,28 @@ void MPC::print_fluid(FILE* fluid_file, int step, int z_start, int z_stop) {
 				Vector3d CMV { };
 				calculateFluidVelocity(Index, CMV);
 				fprintf(fluid_file, "%f %f %f ", CMV(0), CMV(1), CMV(2));
+			}
+			fprintf(fluid_file, "\n");
+		}
+		fprintf(fluid_file, "\n");
+	}
+	fprintf(fluid_file, "\n");
+}*/
+
+void MPC::print_fluid(FILE* fluid_file, int step, int z_start, int z_stop) {
+	fprintf(fluid_file, "TIME %d \n", step);
+	for (int z = z_start; z <= z_stop; z++) {
+		fprintf(fluid_file, "Z %d \n", z );
+		for(int x = 0; x < BoxSize[0]; x++) fprintf(fluid_file, "%f ", x+0.5);
+		fprintf(fluid_file, "\n");
+		for (int y = 0; y < BoxSize[1]; y++) fprintf(fluid_file, "%f ", y+0.5);
+		fprintf(fluid_file, "\n");
+		for(int x = 0; x < BoxSize[0]; x++) {
+			for (int y = 0; y < BoxSize[1]; y++) {
+				int Index = x + BoxSize[0]*y+BoxSize[0]*BoxSize[1]*z;
+				Vector3d CMV { };
+				calculateFluidVelocity(Index, CMV);
+				fprintf(fluid_file, "%f %f ", CMV(0), CMV(1));
 			}
 			fprintf(fluid_file, "\n");
 		}
