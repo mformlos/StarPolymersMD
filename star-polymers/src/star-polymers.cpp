@@ -101,7 +101,7 @@ int main(int argc, char* argv[]) {
 
 
 	//defaults für: TypeA, TypeB, Arms, Lambda, Temperature, BoxSize(x, y, z), stepsize, step_aufwärm, step_total, step_output
-	long double a_para[]{3, 0, 3, 1.0, 0.5, 10, 10, 50, 0.01, 1E2, 1E10, 1E2};
+	long double a_para[]{3, 0, 3, 1.0, 0.5, 10, 10, 50, 0.001, 1E2, 1E10, 1E2};
 	int a_para_size = sizeof(a_para) / sizeof(*a_para);
 	int i_para { }, start_i_para { };
 
@@ -449,13 +449,13 @@ int main(int argc, char* argv[]) {
 			statistic_file.flush();
 			if(MPC_on && fluid_profile_print) hydrodynamics(velocity_average_x);
 
-			std::cout << n << " ";
+			//std::cout << n << " ";
 			output_file << n << " ";
 			box.print_center_of_mass(output_file);
 			output_file << '\n';
 			output_file.flush();
-			std::cout << '\n';
-			std::cout.flush();
+			//std::cout << '\n';
+			//std::cout.flush();
 			/*box.print_Temperature(std::cout);
 			std::cout << std::endl;
 			output_file << n << " ";
