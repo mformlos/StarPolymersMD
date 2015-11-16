@@ -67,6 +67,7 @@ public:
 	void wrap_to_zero(Particle&);
 
     Vector3d relative_position(Particle& one, Particle& two);
+    Vector3d relative_position(const Vector3d, const Vector3d);
 
 
 

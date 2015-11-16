@@ -344,6 +344,17 @@ Vector3d MPC::relative_position(Particle& one, Particle& two) {
 	return rel_pos;
 }
 
+Vector3d MPC::relative_position(const Vector3d pos_one, const Vector3d pos_two) {
+	Vector3d rel_pos {pos_two - pos_one};
+	double cy {round(rel_pos(1)/BoxSize[1])};
+	rel_pos(0) -= BoxSize[0]*round(rel_pos(0)/BoxSize[0]);
+	rel_pos(0) -= cy*delrx;
+	rel_pos(0) -= BoxSize[0]*round(rel_pos(0)/BoxSize[0]);
+	rel_pos(1) -= BoxSize[1]*cy;
+	rel_pos(2) -= BoxSize[2]*round(rel_pos(2)/BoxSize[2]);
+	return rel_pos;
+}
+
 Vector3d& MPC::wrap(Vector3d& pos) {
 	for (unsigned i = 0; i < 3; i++) {
 		pos(i) -= floor(pos(i)/BoxSize[i]) * BoxSize[i];

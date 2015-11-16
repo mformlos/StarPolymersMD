@@ -26,6 +26,7 @@ inline double Fene_Force(double r2){
 	try {
 		if (r2 == 0.0) throw 1;
 		force = -30.0/(1.0 - (r2/2.25));
+		if (fabs(force) > 1e4 ) std::cout << "Fene!" << std::endl;
 	}
 	catch(...) { std::cout << "r = 0 !" << std::endl; }
 	return force;
@@ -46,6 +47,8 @@ inline double Fene_Anchor_Force(double r2) {
 	try {
 		if (r2 == 0.0) throw 1;
 		force = -30.0/(1.0 - (r2/20.25));
+		if (fabs(force) > 1e4 ) std::cout << "Fene Anchor!" << std::endl;
+
 	}
 	catch(...) { std::cout << "r = 0 !" << std::endl; }
 	return force;
@@ -71,6 +74,7 @@ inline double TypeAA_Force(double r2) {
 		rm24 *= rm24;
 		rm24 *= rm24;
 		force = 192.0*rm2*rm24*(rm24 - 0.5);
+		if (fabs(force) > 1e4 ) std::cout << "AA!" << std::endl;
 	}
 	return force;
 }
@@ -110,6 +114,8 @@ inline double TypeBB_Force(double r2, double lambda) {
 		rm24 *= rm24;
 		force = 192.0*lambda*rm2*rm24*(rm24 - 0.5);
 	}
+	if (fabs(force) > 1e4 ) std::cout << "BB!" << std::endl;
+
 	return force;
 }
 

@@ -76,6 +76,9 @@ public:
 
 
 	Vector3d relative_position(Particle& one, Particle& two);
+	Vector3d relative_position(const Vector3d one, const Vector3d two);
+
+
 
 	void update_VerletLists();
 	void check_VerletLists();

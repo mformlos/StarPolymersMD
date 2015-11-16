@@ -92,8 +92,12 @@ inline Vector3d Box::wrap_to_zero(Vector3d pos) {
 
 
 inline void Box::wrap(Particle& part) {
-	if (MPC_routine != nullptr) MPC_routine -> wrap(part);
-	else part.Position = wrap(part.Position);
+	if (MPC_routine != nullptr) {
+		MPC_routine -> wrap(part);
+	}
+	else {
+		part.Position = wrap(part.Position);
+	}
 }
 
 inline void Box::wrap(Molecule& mol) {
@@ -117,7 +121,7 @@ void Box::resize(double Lx, double Ly, double Lz) {
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
 			mono.Position += Center;
-			wrap(mono.Position);
+			wrap(mono);
 		}
 	}
 }
@@ -159,6 +163,10 @@ void Box::center_of_mass_reference_frame() {
 		if (n ==0) {
 			COM_Pos = center_of_mass - shift_anchor_to_center;
 			COM_Vel = center_of_mass_velocity;
+			if (MPC_routine != nullptr) {
+				MPC_routine -> wrap(COM_Pos, COM_Vel);
+			}
+
 		}
 		Molecules_com_reference_frame[n] = centered_molecule;
 	}
@@ -172,6 +180,21 @@ Vector3d Box::relative_position(Particle& one, Particle& two) {
 	}
 	else {
 		result = two.Position - one.Position;
+		for (unsigned i = 0; i < 3; ++i) {
+			result(i) -= round(result(i)/BoxSize[i]) * BoxSize[i];
+		}
+		return result;
+	}
+}
+
+Vector3d Box::relative_position(const Vector3d pos_one, const Vector3d pos_two) {
+	Vector3d result{}; // {two.Position - one.Position};
+	if (MPC_routine != nullptr) {
+		result = MPC_routine -> relative_position(pos_one, pos_two);
+		return result;
+	}
+	else {
+		result = pos_two - pos_one;
 		for (unsigned i = 0; i < 3; ++i) {
 			result(i) -= round(result(i)/BoxSize[i]) * BoxSize[i];
 		}
@@ -242,10 +265,11 @@ void Box::check_VerletLists() {
 	Vector3d displacement {Vector3d::Zero()};
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
-			displacement = mono.Position - mono.VerletPosition;
+			displacement = relative_position(mono.Position, mono.VerletPosition);
+			/*displacement = mono.Position - mono.VerletPosition;
 			for (unsigned i = 0; i < 3; ++i) {
 				displacement(i) -= round(displacement(i)/BoxSize[i]) * BoxSize[i];
-			}
+			}*/
 			if (displacement.norm() > (VerletRadius - Cutoff)*0.5) {
 				update_VerletLists();
 				return;

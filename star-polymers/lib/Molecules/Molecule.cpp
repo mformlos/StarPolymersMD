@@ -189,7 +189,6 @@ void Molecule::star_from_file(Vector3d BoxCenter, string filename, unsigned A, u
 		mono.Velocity(0) = stod(line.substr(55, 7));
 		mono.Velocity(1) = stod(line.substr(63, 7));
 		mono.Velocity(2) = stod(line.substr(71, 7));
-
 	}
 	unsigned monomers_per_arm {AType+BType};
 	for (unsigned i = 0; i < Arms; i++) {

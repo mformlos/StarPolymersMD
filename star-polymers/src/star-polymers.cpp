@@ -344,7 +344,8 @@ int main(int argc, char* argv[]) {
 	MPC_Step = 100.0*StepSize;
 	Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
 
-
+	MPC hydrodynamics{box, Temperature, 5, Shear};
+	VelocityX velocity_average_x{box, hydrodynamics,0.2};
 
 	if (argc > 1 && strcmp(argv[1], "Chain") == 0) {
 		box.add_chain(TypeA, TypeB, 5.);
@@ -356,8 +357,7 @@ int main(int argc, char* argv[]) {
 		output_file << "building a star" << std::endl;
 	}
 
-	MPC hydrodynamics{box, Temperature, 5, Shear};
-    VelocityX velocity_average_x{box, hydrodynamics,0.2};
+
 
     if (continue_run && MPC_on && fluid_profile_print) {
       	velocity_average_x.initialize("./results/fluid_profile"+ss_para_old.str()+".dat");
@@ -450,17 +450,17 @@ int main(int argc, char* argv[]) {
 			if(MPC_on && fluid_profile_print) hydrodynamics(velocity_average_x);
 
 			//std::cout << n << " ";
-			output_file << n << " ";
-			box.print_center_of_mass(output_file);
-			output_file << '\n';
-			output_file.flush();
-			//std::cout << '\n';
+			//output_file << n << " ";
+			//box.print_center_of_mass(std::cout);
+			//output_file << '\n';
+			//output_file.flush();
 			//std::cout.flush();
 			/*box.print_Temperature(std::cout);
 			std::cout << std::endl;
 			output_file << n << " ";
-			box.print_Epot(output_file);
-			box.print_Ekin(output_file);
+			box.print_Epot(std::cout);
+			box.print_Ekin(std::cout);
+			std::cout << '\n';
 			if (MPC_on) output_file << hydrodynamics -> calculateCurrentTemperature() << " ";
 			else box.print_Temperature(output_file);*/
 			/*std::list<unsigned> patches = box.calculate_patches();
