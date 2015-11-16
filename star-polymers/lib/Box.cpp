@@ -227,6 +227,12 @@ void Box::update_VerletLists() {
 				CellNumber[i] = (int)(mono.Position(i)/CellSideLength[i]);
 			}
 			mono.VerletPosition = mono.Position;
+			if (CellNumber[0] >= CellSize[0] || CellNumber[1] >= CellSize[1] || CellNumber[2] >= CellSize[2]) {
+				std::cout << mono.Position.transpose() << std::endl;
+				FILE* dump_file { };
+				dump_file = fopen("core_dump.pdb", "a");
+				print_PDB_with_velocity(dump_file,0);
+			}
 			CellList[CellNumber[0]][CellNumber[1]][CellNumber[2]].push_front(&mono);
 		}
 	}

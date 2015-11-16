@@ -8,6 +8,7 @@
 #ifndef LIB_BOX_H_
 #define LIB_BOX_H_
 
+#include <cstdio>
 #include <iostream>
 #include <array>
 #include <vector>
