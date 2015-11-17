@@ -7,10 +7,11 @@
 
 #include "MPC.h"
 
-MPC::MPC(Box& box, double aTemperature, int N_c, double aShear, bool angular_mom) :
+MPC::MPC(Box& box, double aTemperature, int N_c, double aShear, unsigned step, bool angular_mom) :
 Hydrodynamics { box },
 Temperature { aTemperature },
 Shear { aShear },
+step_update {step},
 angular_momentum { angular_mom }{
 	NumberOfCells = SimBox.BoxSize[0]*SimBox.BoxSize[1]*SimBox.BoxSize[2] - 1;
 	NumberOfMPCParticles = N_c*(NumberOfCells+1);
@@ -90,26 +91,29 @@ void MPC::initialize(string filename) {
 }
 
 //MPC routine:
-void MPC::step(const double& dt) {
+void MPC::step(const long int& t, const double& dt) {
 	delrx += Shear*BoxSize[1]*dt;
 	delrx -= BoxSize[0]*floor(delrx/BoxSize[0]);
-	streaming(dt);
-	Vector3d Shift(Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5);
-	shiftParticles(Shift);
-	sort();
+	if (t%step_update) return;
+	else {
+		streaming(dt);
+		Vector3d Shift(Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5);
+		shiftParticles(Shift);
+		sort();
 
-	#pragma omp parallel
-	{
-    	#pragma omp for
-		for (unsigned Index = 0; Index <= NumberOfCells; ++Index) {
-			Vector3d CMV { };
-			calculateCMV(Index, CMV);
-			thermostat(Index, CMV);
-			collide(Index, CMV);
+		#pragma omp parallel
+		{
+			#pragma omp for
+			for (unsigned Index = 0; Index <= NumberOfCells; ++Index) {
+				Vector3d CMV { };
+				calculateCMV(Index, CMV);
+				thermostat(Index, CMV);
+				collide(Index, CMV);
+			}
 		}
+		Shift = -Shift;
+		shiftParticles(Shift);
 	}
-	Shift = -Shift;
-	shiftParticles(Shift);
 }
 
 void MPC::streaming(const double& dt) {

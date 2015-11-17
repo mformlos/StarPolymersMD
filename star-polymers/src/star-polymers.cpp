@@ -344,7 +344,7 @@ int main(int argc, char* argv[]) {
 	MPC_Step = 100.0*StepSize;
 	Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
 
-	MPC hydrodynamics{box, Temperature, 5, Shear};
+	MPC hydrodynamics{box, Temperature, 5, Shear, 100};
 	VelocityX velocity_average_x{box, hydrodynamics,0.2};
 
 	if (argc > 1 && strcmp(argv[1], "Chain") == 0) {
@@ -494,8 +494,8 @@ int main(int argc, char* argv[]) {
 
 		}
 		else thermostat -> propagate(false);
-		if (MPC_on && !(n%100)) {
-			hydrodynamics.step(MPC_Step); //hydrodynamics -> step(1.0);
+		if (MPC_on) {
+			hydrodynamics.step(n, MPC_Step); //hydrodynamics -> step(1.0);
 		}
 	}
 

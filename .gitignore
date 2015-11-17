@@ -4,3 +4,6 @@ star-polymers/.cproject
 star-polymers/.project
 star-polymers/eigen/
 star-polymers/.settings/
+results/
+*.dat
+*.pdb

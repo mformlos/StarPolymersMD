@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 
 
 
-	MPC MPCroutine {box, Temperature, 10, Shear, AngularMomentumConservation};
+	MPC MPCroutine {box, Temperature, 10, Shear, 1, AngularMomentumConservation};
 
 	ss_para << "_N" << BoxX*BoxY*BoxZ*10;
 	ss_para << "_Shear" << Shear;
@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
 	clock_t begin = clock();
 
 	for (int n = 0; n < Steps_Total; ++n) {
-		MPCroutine.step(0.01);
+		MPCroutine.step(n, 0.01);
 		if (n > Steps_Equil && !(n%Steps_Output)) {
 			std::cout << n << " " << MPCroutine.calculateCurrentTemperature() << std::endl;
 			/*for (auto& part : MPCroutine.Fluid) {

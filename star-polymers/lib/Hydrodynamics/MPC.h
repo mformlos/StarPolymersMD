@@ -27,6 +27,7 @@ class MPC : public Hydrodynamics{
 protected:
 	double Temperature;
 	double Shear;
+	unsigned step_update;
 	unsigned NumberOfCells;
 	unsigned NumberOfMPCParticles;
 	double c;
@@ -39,13 +40,13 @@ protected:
 	std::vector<unsigned> MPCCellListFluidParticles;
 public:
 	std::vector<MPCParticle> Fluid;
-	MPC(Box&, double, int N_c, double aShear = 0., bool angular_mom = false);
+	MPC(Box&, double, int N_c, double aShear = 0., unsigned step = 1, bool angular_mom = false);
 
 	void initialize();
 	void initialize(string filename);
 
 	//MPC routine:
-	void step(const double& dt);
+	void step(const long int& t, const double& dt);
 	void streaming(const double& dt);
 	void sort();
 	void sort(std::vector<std::vector<MPCParticle*>>&);
