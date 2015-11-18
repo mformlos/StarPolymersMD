@@ -31,7 +31,7 @@ void Box::MPC_on(MPC* new_routine) {
 void Box::add_chain(unsigned A, unsigned B, double mass, double bondLength) {
 	Molecules.push_back(Molecule{A+B, mass});
 	Molecules.back().initialize_straight_chain(A, B, Temperature, bondLength);
-	wrap(Molecules.back());
+	//wrap(Molecules.back());
 	NumberOfMonomers += (A+B);
 	Molecules_com_reference_frame.push_back(Molecule{Molecules.back()});
 }
@@ -39,9 +39,10 @@ void Box::add_chain(unsigned A, unsigned B, double mass, double bondLength) {
 void Box::add_star(unsigned A, unsigned B, unsigned Arms, double Mass, double Bond, double AnchorBond) {
 	Molecules.push_back(Molecule{(A+B)*Arms+1, Mass});
 	Vector3d BoxCenter {Vector3d::Zero()};
-	BoxCenter << BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5;
+	//BoxCenter << BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5;
+	BoxCenter << 0., 0., 0.;
 	Molecules.back().initialize_open_star(BoxCenter, A, B, Arms, Temperature, Bond, AnchorBond);
-	wrap(Molecules.back());
+	//wrap(Molecules.back());
 	set_center_of_mass_to_zero(Molecules.back());
 	NumberOfMonomers += (A+B)*Arms + 1;
 	Molecules_com_reference_frame.push_back(Molecule{Molecules.back()});
@@ -50,9 +51,10 @@ void Box::add_star(unsigned A, unsigned B, unsigned Arms, double Mass, double Bo
 void Box::add_star(string filename, unsigned A, unsigned B, unsigned Arms, double Mass) {
 	Molecules.push_back(Molecule{(A+B)*Arms+1, Mass});
 	Vector3d BoxCenter {Vector3d::Zero()};
-	BoxCenter << BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5;
+	//BoxCenter << BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5;
+	BoxCenter << 0., 0., 0.;
 	Molecules.back().star_from_file(BoxCenter, filename, A, B, Arms);
-	wrap(Molecules.back());
+	//wrap(Molecules.back());
 	set_center_of_mass_to_zero(Molecules.back());
 	NumberOfMonomers += (A+B)*Arms + 1;
 	Molecules_com_reference_frame.push_back(Molecule{Molecules.back()});
@@ -113,43 +115,43 @@ void Box::resize(double Lx, double Ly, double Lz) {
 	BoxSize[0] = Lx;
 	BoxSize[1] = Ly;
 	BoxSize[2] = Lz;
-	wrap();
+	//wrap();
 	Vector3d BoxCenter {Vector3d::Zero()};
-	BoxCenter << BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5;
+	//BoxCenter << BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5;
 	Vector3d Center{Vector3d::Zero()};
 	Center = BoxCenter - Molecules.front().Monomers.front().Position;
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
 			mono.Position += Center;
-			wrap(mono);
+			//wrap(mono);
 		}
 	}
 }
 
 void Box::set_center_of_mass_to_zero(Molecule& mol) {
 	Vector3d com {mol.calculate_center_of_mass()};
-	for (unsigned i = 0; i < 3; i++) {
+	/*for (unsigned i = 0; i < 3; i++) {
 		com(i) -= BoxSize[i]*0.5;
-	}
+	}*/
 	for (auto& mono : mol.Monomers) {
 		mono.Position -= com;
-		wrap(mono);
+		//wrap(mono);
 	}
 }
 
 void Box::center_of_mass_reference_frame() {
 	for (unsigned n = 0; n < Molecules.size(); n++) {
 		Molecule centered_molecule {Molecules[n]};
-		Vector3d shift_anchor_to_center {Vector3d::Zero()};
+		//Vector3d shift_anchor_to_center {Vector3d::Zero()};
 		Vector3d center_of_mass {Vector3d::Zero()};
 		Vector3d center_of_mass_velocity {Vector3d::Zero()};
-		for (int i = 0; i < 3; i++) {
+		/*for (int i = 0; i < 3; i++) {
 			shift_anchor_to_center(i) = BoxSize[i]*0.5 - Molecules[n].Monomers[0].Position(i);
 		}
 		for (auto& mono : centered_molecule.Monomers) {
 			mono.Position += shift_anchor_to_center;
 			wrap(mono);
-		}
+		}*/
 		for (auto& mono : centered_molecule.Monomers) {
 			center_of_mass += mono.Position;
 			center_of_mass_velocity += mono.Velocity;
@@ -161,11 +163,11 @@ void Box::center_of_mass_reference_frame() {
 			mono.Velocity -= center_of_mass_velocity;
 		}
 		if (n ==0) {
-			COM_Pos = center_of_mass - shift_anchor_to_center;
+			COM_Pos = center_of_mass; //- shift_anchor_to_center;
 			COM_Vel = center_of_mass_velocity;
-			if (MPC_routine != nullptr) {
+			/*if (MPC_routine != nullptr) {
 				MPC_routine -> wrap(COM_Pos, COM_Vel);
-			}
+			}*/
 
 		}
 		Molecules_com_reference_frame[n] = centered_molecule;
@@ -224,7 +226,7 @@ void Box::update_VerletLists() {
 	for (auto& mol: Molecules) {
 		for (auto& mono : mol.Monomers) {
 			for (int i = 0; i < 3; ++i) {
-				CellNumber[i] = (int)(mono.Position(i)/CellSideLength[i]);
+				CellNumber[i] = (int)((mono.Position(i)-COM_Pos(i)+BoxSize[i]*0.5)/CellSideLength[i]);
 			}
 			mono.VerletPosition = mono.Position;
 			if (CellNumber[0] >= CellSize[0] || CellNumber[1] >= CellSize[1] || CellNumber[2] >= CellSize[2]) {
@@ -237,12 +239,13 @@ void Box::update_VerletLists() {
 		}
 	}
 
+	center_of_mass_reference_frame();
 	//make VerletLists
 	int p { }, q { }, r { };
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
 			for (int i = 0; i < 3; ++i) {
-				CellNumber[i] = (int)(mono.Position(i)/CellSideLength[i]);
+				CellNumber[i] = (int)((mono.Position(i)-COM_Pos(i)+BoxSize[i]*0.5)/CellSideLength[i]);
 			}
 			for (int j = CellNumber[0]-1; j < CellNumber[0]+2; ++j) {
 				for (int k = CellNumber[1]-1; k < CellNumber[1]+2; ++k) {
@@ -254,7 +257,8 @@ void Box::update_VerletLists() {
 
 						for (auto& other : CellList[p][q][r]) {
 							if (other == &mono) continue;
-							distance = relative_position(mono, *other);
+							distance = other -> Position - mono.Position;
+							//distance = relative_position(mono, *other);
 							radius2 = distance.dot(distance);
 							if (radius2 <= VerletRadius2) {
 								mono.VerletList.push_front(other);
@@ -271,9 +275,9 @@ void Box::check_VerletLists() {
 	Vector3d displacement {Vector3d::Zero()};
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
-			displacement = relative_position(mono.Position, mono.VerletPosition);
-			/*displacement = mono.Position - mono.VerletPosition;
-			for (unsigned i = 0; i < 3; ++i) {
+			//displacement = relative_position(mono.Position, mono.VerletPosition);
+			displacement = mono.Position - mono.VerletPosition;
+			/*for (unsigned i = 0; i < 3; ++i) {
 				displacement(i) -= round(displacement(i)/BoxSize[i]) * BoxSize[i];
 			}*/
 			if (displacement.norm() > (VerletRadius - Cutoff)*0.5) {
@@ -295,7 +299,8 @@ void Box::calculate_forces(bool calc_epot) {
 		for (auto& mono : mol.Monomers) mono.Force *= 0.0;
 		for (unsigned i = 0; i < mol.Monomers.size(); i++) {
 			for (unsigned j = i + 1; j < mol.Monomers.size(); j++) {
-				distance = relative_position(mol[i], mol[j]);
+				//distance = relative_position(mol[i], mol[j]);
+				distance = mol[j].Position - mol[i].Position;
 				radius2 = distance.dot(distance);
 				if (mol[i].AmphiType == 1 && mol[j].AmphiType == 1) { // BB Type
 					if (calc_epot) mol.Epot += TypeBB_Potential(radius2, Lambda);
@@ -314,7 +319,8 @@ void Box::calculate_forces(bool calc_epot) {
 				}
 			}
 			for (auto& neighbor : mol[i].Neighbors) { //Fene bonds
-				distance = relative_position(mol[i], *neighbor);
+				//distance = relative_position(mol[i], *neighbor);
+				distance = neighbor -> Position - mol[i].Position;
 				radius2 = distance.dot(distance);
 				if (mol[i].Anchor) {
 					if (calc_epot) mol.Epot += Fene_Anchor_Potential(radius2);
@@ -346,7 +352,7 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 		for (auto& mono : mol.Monomers) {
 
 			for (auto& other : mono.VerletList) {
-				Vector3d distance {relative_position(mono, *other)};
+				Vector3d distance {other -> Position - mono.Position}; //{relative_position(mono, *other)};
 				double radius2 {distance.dot(distance)};
 				//distance = relative_position(mono, *other);
 				//radius2 = distance.dot(distance);
@@ -366,7 +372,7 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 				}
 			}
 			for (auto& neighbor : mono.Neighbors) { //Fene bonds
-				Vector3d distance {relative_position(mono, *neighbor)};
+				Vector3d distance {neighbor -> Position - mono.Position};//{relative_position(mono, *neighbor)};
 				double radius2 {distance.dot(distance)};
 				//distance = relative_position(mono, *neighbor);
 				//radius2 = distance.dot(distance);
@@ -396,7 +402,7 @@ double Box::calculate_ekin() {
 
 double Box::calculate_epot(MDParticle& part1, MDParticle& part2) {
 	double epot { };
-	Vector3d distance = relative_position(part1, part2);
+	Vector3d distance {part2.Position - part1.Position};// = relative_position(part1, part2);
 	double radius2 = distance.dot(distance);
 	if (part1.AmphiType == 1 && part2.AmphiType == 1) epot += TypeBB_Potential(radius2, Lambda);
 	else epot += TypeAA_Potential(radius2);
@@ -821,10 +827,10 @@ std::ostream& Box::print_radius_of_gyration(std::ostream& os) {
 }
 
 std::ostream& Box::print_center_of_mass(std::ostream& os) {
-	Vector3d BoxCenter {BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5};
+	//Vector3d BoxCenter {BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5};
 	for (auto& mol : Molecules) {
 		Vector3d com {mol.calculate_center_of_mass()};
-		os << com.transpose() << " " << (com-BoxCenter).norm() << " ";
+		os << com.transpose() << " "; // << (com-BoxCenter).norm() << " ";
 	}
 	return os;
 }

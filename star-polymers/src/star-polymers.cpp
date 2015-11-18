@@ -357,7 +357,9 @@ int main(int argc, char* argv[]) {
 		output_file << "building a star" << std::endl;
 	}
 
-
+	box.print_molecules(std::cout);
+	std::cout << '\n';
+	box.print_center_of_mass(std::cout);
 
     if (continue_run && MPC_on && fluid_profile_print) {
       	velocity_average_x.initialize("./results/fluid_profile"+ss_para_old.str()+".dat");
@@ -385,6 +387,8 @@ int main(int argc, char* argv[]) {
 		else hydrodynamics.initialize(); //hydrodynamics -> initialize();
 	}
 	clock_t begin = clock();
+
+
 
 	long int n { }; 
 	if (continue_run) n = Steps_Start + 1;
@@ -450,10 +454,10 @@ int main(int argc, char* argv[]) {
 			if(MPC_on && fluid_profile_print) hydrodynamics(velocity_average_x);
 
 			//std::cout << n << " ";
-			//output_file << n << " ";
-			//box.print_center_of_mass(std::cout);
-			//output_file << '\n';
-			//output_file.flush();
+			output_file << n << " ";
+			box.print_center_of_mass(output_file);
+			output_file << '\n';
+			output_file.flush();
 			//std::cout.flush();
 			/*box.print_Temperature(std::cout);
 			std::cout << std::endl;

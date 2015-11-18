@@ -30,7 +30,7 @@ void Andersen::propagate(bool calc_epot) {
 			mono.Position += mono.Velocity*DeltaT;
 		}
 	}
-	SimBox.wrap();
+	//SimBox.wrap();
  	SimBox.check_VerletLists();
 	SimBox.calculate_forces_verlet(calc_epot);
 
