@@ -1,7 +1,7 @@
 #include "Box.h"
 #include "MPC.h"
 
-Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
+Box::Box(int Lx, int Ly, int Lz, double temperature, double lambda) :
 	SystemTime { },
 	Temperature { temperature },
 	Lambda { lambda },
@@ -9,9 +9,11 @@ Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
 	VerletRadius { 2.0 },
 	VerletRadius2 { 4.0 },
 	NumberOfMonomers { },
-	MPC_routine{nullptr},
 	COM_Pos {Vector3d::Zero()},
 	COM_Vel {Vector3d::Zero()} {
+		if (Lx%2) Lx++;
+		if (Ly%2) Ly++;
+		if (Lz%2) Lz++;
 		BoxSize[0] = Lx;
 		BoxSize[1] = Ly;
 		BoxSize[2] = Lz;
@@ -24,9 +26,7 @@ Box::Box(double Lx, double Ly, double Lz, double temperature, double lambda) :
 		CellList = std::vector<std::vector<std::vector<std::forward_list<MDParticle*>>>>(CellSize[0], std::vector<std::vector<std::forward_list<MDParticle*>>>(CellSize[1], std::vector<std::forward_list<MDParticle*>>(CellSize[2], std::forward_list<MDParticle*>())));
 }
 
-void Box::MPC_on(MPC* new_routine) {
-	MPC_routine = new_routine;
-}
+
 
 void Box::add_chain(unsigned A, unsigned B, double mass, double bondLength) {
 	Molecules.push_back(Molecule{A+B, mass});
@@ -38,76 +38,19 @@ void Box::add_chain(unsigned A, unsigned B, double mass, double bondLength) {
 
 void Box::add_star(unsigned A, unsigned B, unsigned Arms, double Mass, double Bond, double AnchorBond) {
 	Molecules.push_back(Molecule{(A+B)*Arms+1, Mass});
-	Vector3d BoxCenter {Vector3d::Zero()};
-	//BoxCenter << BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5;
-	BoxCenter << 0., 0., 0.;
-	Molecules.back().initialize_open_star(BoxCenter, A, B, Arms, Temperature, Bond, AnchorBond);
-	//wrap(Molecules.back());
+	Molecules.back().initialize_open_star(A, B, Arms, Temperature, Bond, AnchorBond);
 	set_center_of_mass_to_zero(Molecules.back());
 	NumberOfMonomers += (A+B)*Arms + 1;
 	Molecules_com_reference_frame.push_back(Molecule{Molecules.back()});
+	center_of_mass_reference_frame();
 }
 
 void Box::add_star(string filename, unsigned A, unsigned B, unsigned Arms, double Mass) {
 	Molecules.push_back(Molecule{(A+B)*Arms+1, Mass});
-	Vector3d BoxCenter {Vector3d::Zero()};
-	//BoxCenter << BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5;
-	BoxCenter << 0., 0., 0.;
-	Molecules.back().star_from_file(BoxCenter, filename, A, B, Arms);
-	//wrap(Molecules.back());
-	set_center_of_mass_to_zero(Molecules.back());
+	Molecules.back().star_from_file(filename, A, B, Arms);
 	NumberOfMonomers += (A+B)*Arms + 1;
 	Molecules_com_reference_frame.push_back(Molecule{Molecules.back()});
-}
-
-inline Vector3d& Box::wrap(Vector3d& pos) {
-	for (unsigned i = 0; i < 3; i++) {
-		double a {floor(pos(i)/BoxSize[i])};
-		if (a > 0.0) {
-		    std::cout << "particle out of box" << std::endl;
-			pos(i) -= a* BoxSize[i];
-
-		}
-	}
-	return pos;
-}
-
-
-inline Vector3d Box::wrap(Vector3d&& pos) {
-	for (unsigned i = 0; i < 3; ++i) {
-		double a { floor(pos(i)/BoxSize[i])};
-		if (a > 0.0) {
-			std::cout << "particle out of box" << std::endl;
-			pos(i) -= a* BoxSize[i];
-		}
-	}
-	return pos;
-}
-
-inline Vector3d Box::wrap_to_zero(Vector3d pos) {
-	for (unsigned i = 0; i < 3; i++) {
-		if (pos(i) > BoxSize[i]*0.5) pos(i) -= BoxSize[i];
-		else if (pos(i) < -BoxSize[i]*0.5) pos(i) += BoxSize[i];
-	}
-	return pos;
-}
-
-
-inline void Box::wrap(Particle& part) {
-	if (MPC_routine != nullptr) {
-		MPC_routine -> wrap(part);
-	}
-	else {
-		part.Position = wrap(part.Position);
-	}
-}
-
-inline void Box::wrap(Molecule& mol) {
-	for (auto& mono : mol.Monomers) wrap(mono);
-}
-
-void Box::wrap() {
-	for (auto& mol : Molecules) wrap(mol);
+	center_of_mass_reference_frame();
 }
 
 
@@ -115,43 +58,20 @@ void Box::resize(double Lx, double Ly, double Lz) {
 	BoxSize[0] = Lx;
 	BoxSize[1] = Ly;
 	BoxSize[2] = Lz;
-	//wrap();
-	Vector3d BoxCenter {Vector3d::Zero()};
-	//BoxCenter << BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5;
-	Vector3d Center{Vector3d::Zero()};
-	Center = BoxCenter - Molecules.front().Monomers.front().Position;
-	for (auto& mol : Molecules) {
-		for (auto& mono : mol.Monomers) {
-			mono.Position += Center;
-			//wrap(mono);
-		}
-	}
 }
 
 void Box::set_center_of_mass_to_zero(Molecule& mol) {
 	Vector3d com {mol.calculate_center_of_mass()};
-	/*for (unsigned i = 0; i < 3; i++) {
-		com(i) -= BoxSize[i]*0.5;
-	}*/
 	for (auto& mono : mol.Monomers) {
 		mono.Position -= com;
-		//wrap(mono);
 	}
 }
 
 void Box::center_of_mass_reference_frame() {
 	for (unsigned n = 0; n < Molecules.size(); n++) {
 		Molecule centered_molecule {Molecules[n]};
-		//Vector3d shift_anchor_to_center {Vector3d::Zero()};
 		Vector3d center_of_mass {Vector3d::Zero()};
 		Vector3d center_of_mass_velocity {Vector3d::Zero()};
-		/*for (int i = 0; i < 3; i++) {
-			shift_anchor_to_center(i) = BoxSize[i]*0.5 - Molecules[n].Monomers[0].Position(i);
-		}
-		for (auto& mono : centered_molecule.Monomers) {
-			mono.Position += shift_anchor_to_center;
-			wrap(mono);
-		}*/
 		for (auto& mono : centered_molecule.Monomers) {
 			center_of_mass += mono.Position;
 			center_of_mass_velocity += mono.Velocity;
@@ -165,44 +85,11 @@ void Box::center_of_mass_reference_frame() {
 		if (n ==0) {
 			COM_Pos = center_of_mass; //- shift_anchor_to_center;
 			COM_Vel = center_of_mass_velocity;
-			/*if (MPC_routine != nullptr) {
-				MPC_routine -> wrap(COM_Pos, COM_Vel);
-			}*/
-
 		}
 		Molecules_com_reference_frame[n] = centered_molecule;
 	}
 }
 
-Vector3d Box::relative_position(Particle& one, Particle& two) {
-	Vector3d result{}; // {two.Position - one.Position};
-	if (MPC_routine != nullptr) {
-		result = MPC_routine -> relative_position(one, two);
-		return result;
-	}
-	else {
-		result = two.Position - one.Position;
-		for (unsigned i = 0; i < 3; ++i) {
-			result(i) -= round(result(i)/BoxSize[i]) * BoxSize[i];
-		}
-		return result;
-	}
-}
-
-Vector3d Box::relative_position(const Vector3d pos_one, const Vector3d pos_two) {
-	Vector3d result{}; // {two.Position - one.Position};
-	if (MPC_routine != nullptr) {
-		result = MPC_routine -> relative_position(pos_one, pos_two);
-		return result;
-	}
-	else {
-		result = pos_two - pos_one;
-		for (unsigned i = 0; i < 3; ++i) {
-			result(i) -= round(result(i)/BoxSize[i]) * BoxSize[i];
-		}
-		return result;
-	}
-}
 
 void Box::update_VerletLists() {
 	std::array<int,3> CellNumber { };
@@ -223,14 +110,16 @@ void Box::update_VerletLists() {
 	}
 
 	//sort into CellLists
+	center_of_mass_reference_frame();
+
 	for (auto& mol: Molecules) {
 		for (auto& mono : mol.Monomers) {
 			for (int i = 0; i < 3; ++i) {
 				CellNumber[i] = (int)((mono.Position(i)-COM_Pos(i)+BoxSize[i]*0.5)/CellSideLength[i]);
 			}
 			mono.VerletPosition = mono.Position;
-			if (CellNumber[0] >= CellSize[0] || CellNumber[1] >= CellSize[1] || CellNumber[2] >= CellSize[2]) {
-				std::cout << mono.Position.transpose() << std::endl;
+			if (CellNumber[0] < 0 || CellNumber[0] >= CellSize[0] || CellNumber[1] < 0 || CellNumber[1] >= CellSize[1] || CellNumber[2] < 0 || CellNumber[2] >= CellSize[2]) {
+				std::cout << mono.Position.transpose() << " " << COM_Pos.transpose() << std::endl;
 				FILE* dump_file { };
 				dump_file = fopen("core_dump.pdb", "a");
 				print_PDB_with_velocity(dump_file,0);
@@ -239,7 +128,6 @@ void Box::update_VerletLists() {
 		}
 	}
 
-	center_of_mass_reference_frame();
 	//make VerletLists
 	int p { }, q { }, r { };
 	for (auto& mol : Molecules) {
@@ -258,7 +146,6 @@ void Box::update_VerletLists() {
 						for (auto& other : CellList[p][q][r]) {
 							if (other == &mono) continue;
 							distance = other -> Position - mono.Position;
-							//distance = relative_position(mono, *other);
 							radius2 = distance.dot(distance);
 							if (radius2 <= VerletRadius2) {
 								mono.VerletList.push_front(other);
@@ -275,11 +162,7 @@ void Box::check_VerletLists() {
 	Vector3d displacement {Vector3d::Zero()};
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
-			//displacement = relative_position(mono.Position, mono.VerletPosition);
 			displacement = mono.Position - mono.VerletPosition;
-			/*for (unsigned i = 0; i < 3; ++i) {
-				displacement(i) -= round(displacement(i)/BoxSize[i]) * BoxSize[i];
-			}*/
 			if (displacement.norm() > (VerletRadius - Cutoff)*0.5) {
 				update_VerletLists();
 				return;
@@ -299,7 +182,6 @@ void Box::calculate_forces(bool calc_epot) {
 		for (auto& mono : mol.Monomers) mono.Force *= 0.0;
 		for (unsigned i = 0; i < mol.Monomers.size(); i++) {
 			for (unsigned j = i + 1; j < mol.Monomers.size(); j++) {
-				//distance = relative_position(mol[i], mol[j]);
 				distance = mol[j].Position - mol[i].Position;
 				radius2 = distance.dot(distance);
 				if (mol[i].AmphiType == 1 && mol[j].AmphiType == 1) { // BB Type
@@ -312,14 +194,12 @@ void Box::calculate_forces(bool calc_epot) {
 				else { // AA Type
 					if (calc_epot) mol.Epot += TypeAA_Potential(radius2);
 					force_abs = TypeAA_Force(radius2);
-					if (force_abs > 1e5) std::cout << "AA! " << i <<  " " << j << " " << radius2 <<  std::endl;
 					force = distance*force_abs;
 					mol[i].Force -= force;
 					mol[j].Force += force;
 				}
 			}
 			for (auto& neighbor : mol[i].Neighbors) { //Fene bonds
-				//distance = relative_position(mol[i], *neighbor);
 				distance = neighbor -> Position - mol[i].Position;
 				radius2 = distance.dot(distance);
 				if (mol[i].Anchor) {
@@ -340,9 +220,7 @@ void Box::calculate_forces(bool calc_epot) {
 }
 
 void Box::calculate_forces_verlet(bool calc_epot) {
-	//double radius2 { };
 	double force_abs { };
-	//Vector3d distance { };
 	Vector3d force { };
 	for (auto& mol : Molecules) {
 		mol.Epot = 0.0;
@@ -352,10 +230,8 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 		for (auto& mono : mol.Monomers) {
 
 			for (auto& other : mono.VerletList) {
-				Vector3d distance {other -> Position - mono.Position}; //{relative_position(mono, *other)};
+				Vector3d distance {other -> Position - mono.Position};
 				double radius2 {distance.dot(distance)};
-				//distance = relative_position(mono, *other);
-				//radius2 = distance.dot(distance);
 				if (mono.AmphiType == 1 && other -> AmphiType == 1) { // BB Type
 					if (calc_epot) mol.Epot += 0.5*TypeBB_Potential(radius2, Lambda);
 					force_abs = TypeBB_Force(radius2, Lambda);
@@ -365,8 +241,6 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 				else { // AA Type
 					if (calc_epot) mol.Epot += 0.5*TypeAA_Potential(radius2);
 					force_abs = TypeAA_Force(radius2);
-					if (force_abs > 1e5) std::cout << "AA! " << mono.Position.transpose() <<  " " << other -> Position.transpose() << " " << radius2 <<  std::cout;
-
 					force = distance*force_abs;
 					mono.Force -= force;
 				}
@@ -374,8 +248,6 @@ void Box::calculate_forces_verlet(bool calc_epot) {
 			for (auto& neighbor : mono.Neighbors) { //Fene bonds
 				Vector3d distance {neighbor -> Position - mono.Position};//{relative_position(mono, *neighbor)};
 				double radius2 {distance.dot(distance)};
-				//distance = relative_position(mono, *neighbor);
-				//radius2 = distance.dot(distance);
 				if (mono.Anchor) {
 					if (calc_epot) mol.Epot += Fene_Anchor_Potential(radius2);
 					force_abs = Fene_Anchor_Force(radius2);
@@ -402,7 +274,7 @@ double Box::calculate_ekin() {
 
 double Box::calculate_epot(MDParticle& part1, MDParticle& part2) {
 	double epot { };
-	Vector3d distance {part2.Position - part1.Position};// = relative_position(part1, part2);
+	Vector3d distance {part2.Position - part1.Position};
 	double radius2 = distance.dot(distance);
 	if (part1.AmphiType == 1 && part2.AmphiType == 1) epot += TypeBB_Potential(radius2, Lambda);
 	else epot += TypeAA_Potential(radius2);
@@ -422,7 +294,7 @@ double Box::calculate_radius_of_gyration() {
 		double r_gyr_mol { };
 		for (unsigned i = 0; i < mol.Monomers.size(); ++i) {
 			for (unsigned j = i+1; j < mol.Monomers.size(); ++j) {
-				Vector3d distance {relative_position(mol[i], mol[j])};
+				Vector3d distance {mol[i].Position - mol[j].Position};
 				r_gyr_mol += distance.dot(distance);
 			}
 		}
@@ -440,27 +312,13 @@ std::tuple<double, Matrix3d> Box::calculate_gyration_tensor() {
 	for (auto& mol: Molecules_com_reference_frame) {
 		double r_gyr_mol { };
 		Matrix3d gyr_tensor_mol {Matrix3d::Zero()};
-		/*Vector3d shift_anchor_to_center {Vector3d::Zero()};
-		Vector3d center_of_mass {Vector3d::Zero()};
-		for (int i = 0; i < 3; i++) {
-			shift_anchor_to_center(i) = BoxSize[i]*0.5 - mol.Monomers[0].Position(i);
-		}
 		for (auto& mono : mol.Monomers) {
-			center_of_mass += wrap(mono.Position + shift_anchor_to_center);
-		}
-		center_of_mass /= mol.NumberOfMonomers;*/
-		for (auto& mono : mol.Monomers) {
-			//Vector3d shifted_position = wrap(mono.Position +shift_anchor_to_center);
-			//shifted_position = shifted_position - center_of_mass;
-			//r_gyr_mol += shifted_position.dot(shifted_position);
 			for (int alpha = 0; alpha < 3; alpha++) {
 				for (int beta = 0; beta < 3; beta++) {
-					//gyr_tensor_mol(alpha, beta) += shifted_position(alpha)*shifted_position(beta);
 					gyr_tensor_mol(alpha, beta) += mono.Position(alpha)*mono.Position(beta);
 				}
 			}
 		}
-		//r_gyr_mol /= mol.NumberOfMonomers;
 		gyr_tensor_mol /= mol.NumberOfMonomers;
 		gyr_tensor += gyr_tensor_mol;
 
@@ -479,22 +337,14 @@ Vector3d Box::calculate_rotation_frequency() {
 		Vector3d omega_mol {Vector3d::Zero()};
 		Matrix3d inertia_tensor {Matrix3d::Zero()};
 		Vector3d angular_momentum {Vector3d::Zero()};
-		//Vector3d shift_anchor_to_center {Vector3d::Zero()};
-		/*for (int i = 0; i < 3; i++) {
-			shift_anchor_to_center(i) = BoxSize[i]*0.5 - mol.Monomers[0].Position(i);
-		}*/
 		for (auto& mono : mol.Monomers) {
-			//Vector3d shifted_position {wrap(mono.Position + shift_anchor_to_center)};
-			//double rsqr = shifted_position.squaredNorm();
 			double rsqr {mono.Position.squaredNorm()};
 			for (unsigned i = 0; i < 3; i++) {
 				for (unsigned j = i; j < 3; j++) {
-					//inertia_tensor(i,j) -= shifted_position(i)*shifted_position(j);
 					inertia_tensor(i,j) -= mono.Position(i)*mono.Position(j);
 					if (i == j) inertia_tensor(i,j) += rsqr;
 				}
 			}
-			//angular_momentum += shifted_position.cross(shifted_position);
 			angular_momentum += mono.Position.cross(mono.Velocity);
 			inertia_tensor(1,0) = inertia_tensor(0,1);
 			inertia_tensor(2,1) = inertia_tensor(1,2);
@@ -507,40 +357,7 @@ Vector3d Box::calculate_rotation_frequency() {
 	return omega;
 }
 
-std::list<unsigned> Box::calculate_clusters() {
-	std::list<unsigned> cluster_sizes { };
-	for (auto& mol : Molecules) {
-		std::list<MDParticle*> copy_Particles { };
-		for(auto& mono : mol.Monomers) {
-			copy_Particles.push_back(&mono);
-		}
-		std::list<MDParticle*> Particles_in_cluster { };
-		while (!copy_Particles.empty()) {
-			MDParticle* part1 { };
-			if (Particles_in_cluster.empty()) {
-				part1 = &*copy_Particles.back();
-				copy_Particles.pop_back();
 
-				cluster_sizes.push_back(1);
-			}
-			else {
-				part1 = &*Particles_in_cluster.back();
-				Particles_in_cluster.pop_back();
-			}
-			for (auto& part2 : part1 -> VerletList) {
-				auto iter = std::find(copy_Particles.begin(), copy_Particles.end(), part2);
- 				if (iter != copy_Particles.end()){
-					if (calculate_epot(*part1, *part2) < 0.0) {
-						Particles_in_cluster.splice(Particles_in_cluster.end(), copy_Particles, iter);
-						cluster_sizes.back()++;
-					}
-				}
-			}
-		}
-	}
-	cluster_sizes.sort();
-	return cluster_sizes;
-}
 
 std::list<unsigned> Box::calculate_patches() {
 	std::list<unsigned> patches { };
@@ -617,13 +434,11 @@ std::tuple<double, double> Box::calculate_patches_new() {
 		}// arm_bond matrix filled
 
 		std::vector<std::vector<unsigned>> clusters(mol.Arms, std::vector<unsigned>());
-		//std::vector<std::list<unsigned>> clusters(mol.Arms, std::list<unsigned>());
 		for (unsigned i = 0; i < mol.Arms; i++) clusters[i].push_back(i); //each arm is one cluster
 
 
 		for (unsigned i = 0; i < mol.Arms; i++) { //loop trough cluster i
 			std::vector<unsigned>::iterator iter {};
-			//std::list<unsigned>::iterator iter{};
 			if (clusters[i].empty()) continue;
 			iter = clusters[i].begin();
 			int n {0};
@@ -631,18 +446,14 @@ std::tuple<double, double> Box::calculate_patches_new() {
 				unsigned arm_first{};
 				if (clusters[i].empty()) continue;
 				arm_first = *iter; // first arm in cluster
-			    //arm_first = clusters[i][n];
 				for (unsigned j = i+1; j < mol.Arms; j++) { //loop trough all clusters j > i
 					 for (auto& arm_second : clusters[j]) { //loop through all arms in cluster j
 
 						 if (arm_bond[arm_first][arm_second]) {
-							 //iter = clusters[i].insert(clusters[i].end(), clusters[j].begin(), clusters[j].end()); //move all to cluster i
 							 clusters[i].insert(clusters[i].end(), clusters[j].begin(), clusters[j].end()); //move all to cluster i
 							 clusters[j].clear(); //delete all in j
-							 //iter--;
 							 if (n > 0) iter = clusters[i].begin()+n;
 							 else iter = clusters[i].begin();
-							 //std::cout << "bond at :" << i << " " << j << " iter now at: " << *iter << std::endl;
 						 }
 					 }
 
@@ -687,17 +498,10 @@ std::ostream& Box::print_molecules(std::ostream& os) const {
 void Box::print_PDB(FILE* pdb, int step) {
 	int mol_count {0};
 	fprintf(pdb, "MODEL     %d \n", step);
-	/*Vector3d shift_anchor_to_center {0.,0.,0.};
-	for (int i = 0; i < 3; i++){
-		//shift_anchor_to_center(i)= BoxSize[i]*0.5 - Molecules[0].Monomers[0].Position(i);
-		shift_anchor_to_center(i) = -Molecules[0].Monomers[0].Position(i);
-	}*/
-	for (auto& mol : Molecules_com_reference_frame) {
+	//for (auto& mol : Molecules_com_reference_frame) {
+	for (auto& mol : Molecules) {
 		mol_count++;
 		for (unsigned i = 0; i < mol.NumberOfMonomers; i++) {
-			//Vector3d pos_print = mol.Monomers[i].Position + shift_anchor_to_center;
-			//pos_print = wrap_to_zero(pos_print);
-			//wrap(pos_print);
 			Vector3d pos_print {mol.Monomers[i].Position};
 			if (mol.Monomers[i].AmphiType) fprintf(pdb, "ATOM %6d  C   GLY    %2d     %7.3f %7.3f %7.3f \n", i+1, mol_count, pos_print(0), pos_print(1), pos_print(2));
 			else fprintf(pdb, "ATOM %6d  O   GLY    %2d     %7.3f %7.3f %7.3f \n", i+1, mol_count, pos_print(0), pos_print(1), pos_print(2));
@@ -718,7 +522,7 @@ void Box::print_PDB(FILE* pdb, int step) {
 			fprintf(pdb, "\n");
 		}
 		for (unsigned i = 0; i < mol.Arms; i++) {
-			fprintf(pdb, "CONECT %4u %4u %4u \n", i*(mol.AType+mol.BType) + 2, 1 , i*(mol.AType+mol.BType) + 3);
+			fprintf(pdb, "CONECT %4u %4u \n", i*(mol.AType+mol.BType) + 2, 1); // , i*(mol.AType+mol.BType) + 3);
 			for(unsigned j = 1; j < (mol.AType+mol.BType); j++) {
 				unsigned number{i*(mol.AType+mol.BType) + j};
 				fprintf(pdb, "CONECT %4u %4u %4u \n", number +1 , number, number+2);
@@ -733,18 +537,10 @@ void Box::print_PDB(FILE* pdb, int step) {
 void Box::print_PDB_with_velocity(FILE* pdb, int step) {
 	int mol_count {0};
 	fprintf(pdb, "MODEL     %d \n", step);
-	/*Vector3d shift_anchor_to_center {0.,0.,0.};
-	for (int i = 0; i < 3; i++){
-		//shift_anchor_to_center(i)= BoxSize[i]*0.5 - Molecules[0].Monomers[0].Position(i);
-		shift_anchor_to_center(i) = -Molecules[0].Monomers[0].Position(i);
-
-	}*/
-	for (auto& mol : Molecules_com_reference_frame) {
-		mol_count++;
+	//for (auto& mol : Molecules_com_reference_frame) {
+	for (auto& mol : Molecules) {
+    	mol_count++;
 		for (unsigned i = 0; i < mol.NumberOfMonomers; i++) {
-			//Vector3d pos_print = mol.Monomers[i].Position + shift_anchor_to_center;
-			//wrap(pos_print);
-			//pos_print = wrap_to_zero(pos_print);
             Vector3d pos_print {mol.Monomers[i].Position};
 			fprintf(pdb, "ATOM %6d  C   GLY    %2d     %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f \n", i, mol_count, pos_print(0), pos_print(1), pos_print(2), mol.Monomers[i].Velocity(0), mol.Monomers[i].Velocity(1), mol.Monomers[i].Velocity(2));
 		}
@@ -764,7 +560,7 @@ void Box::print_PDB_with_velocity(FILE* pdb, int step) {
 			fprintf(pdb, "\n");
 		}
 		for (unsigned i = 0; i < mol.Arms; i++) {
-			fprintf(pdb, "CONECT %4u %4u %4u \n", i*(mol.AType+mol.BType) + 2, 1 , i*(mol.AType+mol.BType) + 3);
+			fprintf(pdb, "CONECT %4u %4u \n", i*(mol.AType+mol.BType) + 2, 1);
 			for(unsigned j = 1; j < (mol.AType+mol.BType); j++) {
 				unsigned number{i*(mol.AType+mol.BType) + j};
 				fprintf(pdb, "CONECT %4u %4u %4u \n", number +1 , number, number+2);
@@ -827,7 +623,6 @@ std::ostream& Box::print_radius_of_gyration(std::ostream& os) {
 }
 
 std::ostream& Box::print_center_of_mass(std::ostream& os) {
-	//Vector3d BoxCenter {BoxSize[0]*0.5, BoxSize[1]*0.5, BoxSize[2]*0.5};
 	for (auto& mol : Molecules) {
 		Vector3d com {mol.calculate_center_of_mass()};
 		os << com.transpose() << " "; // << (com-BoxCenter).norm() << " ";

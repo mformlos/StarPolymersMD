@@ -39,8 +39,8 @@ public:
 	Molecule& operator = (const Molecule& other);
 
 	void initialize_straight_chain(unsigned A, unsigned B, double Temperature, double bond = 1.01);
-	void initialize_open_star(Vector3d BoxCenter, unsigned A, unsigned B, unsigned Arms, double Temperature, double Bond = 1.01, double AnchorBond = 2.0);
-	void star_from_file(Vector3d BoxCenter, string filename, unsigned A, unsigned B, unsigned Arms);
+	void initialize_open_star(unsigned A, unsigned B, unsigned Arms, double Temperature, double Bond = 1.01, double AnchorBond = 2.0);
+	void star_from_file(string filename, unsigned A, unsigned B, unsigned Arms);
 	double calculate_Ekin();
 	Vector3d calculate_center_of_mass();
 

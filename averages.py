@@ -6,12 +6,12 @@ import sys
 
 f_output = open("./results/averages.dat", "w") 
 filenames = "./results/statistics*"
-equil = 0
+equil = 10000000
 if len(sys.argv) > 1: 
     equil = float(sys.argv[1])
 
 for file in sorted(glob.glob(filenames)): 
-    averages = np.zeros(16)
+    averages = np.zeros(19)
     gyration = np.zeros((3,3))
     N = 0
     N_patch = 0
@@ -19,9 +19,11 @@ for file in sorted(glob.glob(filenames)):
     stat = open(file, "r")
     print file
     for i, line in enumerate(stat): 
+        if i == 0:
+            continue
         data = line.split(" ")
         if float(data[0])>equil:   
-            for j in range(15): 
+            for j in range(18): 
                 if j == 4 and float(data[j+1]) > 0.0: 
                     N_patch += 1   
                 averages[j] += float(data[j+1])
@@ -39,12 +41,12 @@ for file in sorted(glob.glob(filenames)):
             eigenvalues = np.sort(eigenvalues) 
             ev = eigenvalues[::-1]
             I = ev[0]+ev[1]+ev[2]
-            averages[15] += (3.*ev[0]-I)*(3.*ev[1]-I)*(3.*ev[2]-I)/pow(I,3)
+            averages[18] += (3.*ev[0]-I)*(3.*ev[1]-I)*(3.*ev[2]-I)/pow(I,3)
 
     stat.close()
 
-    for j in range(16):
-        if j == 5: 
+    for j in range(19):
+        if j == 4: 
             averages[j] /= float(N_patch) 
         else:  
             averages[j] /= float(N)
@@ -75,7 +77,7 @@ for file in sorted(glob.glob(filenames)):
     Lambda = Lambda[0]
 
     f_output.write("%s %s %s" %(Arms, alpha, Lambda)) 
-    for j in range(16):
+    for j in range(19):
         f_output.write(" %f" %averages[j])
     for j in range(3): 
         f_output.write(" %f" %eigenvalues[j])

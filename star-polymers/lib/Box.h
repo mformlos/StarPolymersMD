@@ -31,7 +31,8 @@ class Box {
 	friend class Andersen;
 	friend class MPC;
 	friend class VelocityX;
-protected:
+//protected:
+public:
 	double SystemTime;
 	double Temperature;
 	double Lambda;
@@ -39,8 +40,6 @@ protected:
 	double VerletRadius;
 	double VerletRadius2;
 	unsigned NumberOfMonomers;
-
-    MPC* MPC_routine;
 
 	std::array<int,3> BoxSize;
 	std::array<int,3> CellSize;
@@ -55,30 +54,16 @@ protected:
 
 
 public:
-	Box(double Lx, double Ly, double Lz, double temperature, double Lambda);
+	Box(int Lx, int Ly, int Lz, double temperature, double Lambda);
 
-	void MPC_on(MPC*);
 
 	void add_chain(unsigned A, unsigned B, double Mass, double Bond = 1.01);
 	void add_star(unsigned A, unsigned B, unsigned Arms, double Mass, double Bond = 1.01, double AnchorBond = 2.0);
 	void add_star(string filename, unsigned A, unsigned B, unsigned Arms, double Mass);
 
-	Vector3d& wrap (Vector3d& pos);
-	Vector3d wrap (Vector3d&& pos);
-	Vector3d wrap_to_zero(Vector3d pos);
-	void wrap(Particle& part);
-	void wrap(Molecule& mol);
-	void wrap();
-
-
 	void resize(double Lx, double Ly, double Lz);
 	void set_center_of_mass_to_zero(Molecule&);
 	void center_of_mass_reference_frame();
-
-
-	Vector3d relative_position(Particle& one, Particle& two);
-	Vector3d relative_position(const Vector3d one, const Vector3d two);
-
 
 
 	void update_VerletLists();
@@ -92,7 +77,6 @@ public:
 	double calculate_radius_of_gyration();
 	std::tuple<double, Matrix3d> calculate_gyration_tensor();
 	Vector3d calculate_rotation_frequency();
-	std::list<unsigned> calculate_clusters();
 	std::list<unsigned> calculate_patches();
 	std::tuple<double, double> calculate_patches_new();
 

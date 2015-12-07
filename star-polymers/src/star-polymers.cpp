@@ -352,12 +352,14 @@ int main(int argc, char* argv[]) {
 		output_file << "building a chain" << std::endl;
     }
 	else {
-		if (continue_run) box.add_star(std::string(argv[1]), TypeA, TypeB, Arms, 5.);
+		if (continue_run) {
+			box.add_star(std::string(argv[1]), TypeA, TypeB, Arms, 5.);
+			box.print_molecules(std::cout);
+		}
 		else box.add_star(TypeA, TypeB, Arms, 5.);
 		output_file << "building a star" << std::endl;
 	}
 
-	box.print_molecules(std::cout);
 	std::cout << '\n';
 	box.print_center_of_mass(std::cout);
 
@@ -388,7 +390,8 @@ int main(int argc, char* argv[]) {
 	}
 	clock_t begin = clock();
 
-
+	box.Molecules[0].Monomers[149].print_neighbor();
+	std::cout << box.Molecules[0].Monomers[149].Force.transpose();
 
 	long int n { }; 
 	if (continue_run) n = Steps_Start + 1;
@@ -453,12 +456,13 @@ int main(int argc, char* argv[]) {
 			statistic_file.flush();
 			if(MPC_on && fluid_profile_print) hydrodynamics(velocity_average_x);
 
-			//std::cout << n << " ";
+			std::cout << n << " ";
 			output_file << n << " ";
-			box.print_center_of_mass(output_file);
+			box.print_center_of_mass(std::cout);
 			output_file << '\n';
 			output_file.flush();
-			//std::cout.flush();
+			std::cout << '\n';
+			std::cout.flush();
 			/*box.print_Temperature(std::cout);
 			std::cout << std::endl;
 			output_file << n << " ";
@@ -484,7 +488,7 @@ int main(int argc, char* argv[]) {
 			//output_file << '\n';
 			//output_file.flush();
 			if (pdb_print && (Steps_pdb > 0 ? !(n%Steps_pdb) : true)) {
-				box.print_PDB(config_file, n);
+				box.print_PDB_with_velocity(config_file, n);
 				fflush(config_file);
 			}
 			if (fluid_print && (Steps_fluid > 0 ? !(n%Steps_fluid) : true)) {
@@ -498,6 +502,8 @@ int main(int argc, char* argv[]) {
 
 		}
 		else thermostat -> propagate(false);
+		//std::cout << box.Molecules[0].Monomers[149].Position.transpose() << " " << box.Molecules[0].Monomers[149].Velocity.transpose() << " ";
+		//std::cout << box.Molecules[0].Monomers[149].Force.transpose() << " " << box.Molecules[0].Monomers[149].CellIndex << std::endl;
 		if (MPC_on) {
 			hydrodynamics.step(n, MPC_Step); //hydrodynamics -> step(1.0);
 		}

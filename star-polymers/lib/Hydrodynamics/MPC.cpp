@@ -37,9 +37,10 @@ void MPC::initialize() {
 	//double ekin { };
 	for (auto& part : Fluid) {
 		for (unsigned i = 0 ; i < 3; i++) {
-			part.Position(i) = BoxSize[i]*Rand::real_uniform();
+			part.Position(i) = BoxSize[i]*(Rand::real_uniform() - 0.5);
 			part.Velocity(i) = Rand::real_uniform() - 0.5;
 		}
+		wrap(part);
 		CMV += part.Velocity;
 	}
 	CMV /= NumberOfMPCParticles;
@@ -47,6 +48,7 @@ void MPC::initialize() {
 		part.Velocity -= CMV;
 		//ekin += part.Velocity.squaredNorm();
 	}
+
 	//double vel_scale = sqrt(3.*(double)NumberOfMPCParticles*Temperature/(ekin*2.0));
 	/*for (auto& part : Fluid) {
 		part.Velocity *= vel_scale;
@@ -62,9 +64,9 @@ void MPC::initialize(string filename) {
 	int count {};
 	for (auto& part : Fluid) {
 		if (file >> pos(0) >> pos(1) >> pos(2) >> vel(0) >> vel(1) >> vel(2)) {
-			if (floor(pos(0)/BoxSize[0]) != 0.0 || floor(pos(1)/BoxSize[1] != 0.0) || floor(pos(2)/BoxSize[2]) != 0.0) {
+			if (fabs(round(pos(0)/BoxSize[0])) >= 1.0 || (fabs(round(pos(1)/BoxSize[1])) >= 1.0) || fabs(round(pos(2)/BoxSize[2])) >= 1.0) {
 				for (unsigned i = 0 ; i < 3; i++) {
-					part.Position(i) = BoxSize[i]*Rand::real_uniform();
+					part.Position(i) = BoxSize[i]*(Rand::real_uniform() - 0.5);
 					part.Velocity(i) = Rand::real_uniform() - 0.5;
 				}
 				count ++;
@@ -76,7 +78,7 @@ void MPC::initialize(string filename) {
 		}
 		else {
 			for (unsigned i = 0 ; i < 3; i++) {
-				part.Position(i) = BoxSize[i]*Rand::real_uniform();
+				part.Position(i) = BoxSize[i]*(Rand::real_uniform() - 0.5);
 				part.Velocity(i) = Rand::real_uniform() - 0.5;
 			}
 		}
@@ -93,7 +95,7 @@ void MPC::initialize(string filename) {
 //MPC routine:
 void MPC::step(const long int& t, const double& dt) {
 	delrx += Shear*BoxSize[1]*dt;
-	delrx -= BoxSize[0]*floor(delrx/BoxSize[0]);
+	delrx -= BoxSize[0]*round(delrx/BoxSize[0]);
 	if (t%step_update) return;
 	else {
 		streaming(dt);
@@ -105,16 +107,35 @@ void MPC::step(const long int& t, const double& dt) {
 		{
 			#pragma omp for
 			for (unsigned Index = 0; Index <= NumberOfCells; ++Index) {
+				if (MPCCellListFluidParticles[Index] < MPCCellList[Index].size()) periodic_image_box(Index);
 				Vector3d CMV { };
 				calculateCMV(Index, CMV);
 				thermostat(Index, CMV);
 				collide(Index, CMV);
+				if (MPCCellListFluidParticles[Index] < MPCCellList[Index].size()) undo_periodic_image_box(Index);
 			}
 		}
 		Shift = -Shift;
 		shiftParticles(Shift);
 	}
 }
+
+void MPC::periodic_image_box(unsigned Index) {
+	std::vector<MPCParticle*>::iterator iter = MPCCellList[Index].begin()+MPCCellListFluidParticles[Index];
+	int periodic_box = (int)round(((*iter) -> Position(1))/BoxSize[1]);
+	for (iter = MPCCellList[Index].begin() ; iter < MPCCellList[Index].begin() + MPCCellListFluidParticles[Index]; iter++) {
+		(*iter) -> Velocity(1) += Shear*BoxSize[1]*periodic_box;
+	}
+}
+
+void MPC::undo_periodic_image_box(unsigned Index) {
+	std::vector<MPCParticle*>::iterator iter = MPCCellList[Index].begin()+MPCCellListFluidParticles[Index];
+	int periodic_box = (int)round(((*iter) -> Position(1))/BoxSize[1]);
+	for (iter = MPCCellList[Index].begin() ; iter < MPCCellList[Index].begin() + MPCCellListFluidParticles[Index]; iter++) {
+		(*iter) -> Velocity(1) -= Shear*BoxSize[1]*periodic_box;
+	}
+}
+
 
 void MPC::streaming(const double& dt) {
 	for (auto& part : Fluid) {
@@ -133,16 +154,28 @@ void MPC::sort() {
 		number = 0;
 	}
 	for (auto& part : Fluid) {
-		part.CellIndex = (int)part.Position(0) + BoxSize[0]*(int)part.Position(1)+BoxSize[0]*BoxSize[1]*(int)part.Position(2);
+		part.CellIndex = (int)(part.Position(0)+BoxSize[0]*0.5) + BoxSize[0]*(int)(part.Position(1)+BoxSize[1]*0.5)+BoxSize[0]*BoxSize[1]*(int)(part.Position(2)+BoxSize[2]*0.5);
 		//std::cout << part.CellIndex << std::endl;
-		MPCCellList[part.CellIndex].push_back(&part);
-		MPCCellListFluidParticles[part.CellIndex]++;
+		try {
+			if (part.CellIndex < 0 || part.CellIndex > NumberOfCells) throw 20;
+			MPCCellList[part.CellIndex].push_back(&part);
+			MPCCellListFluidParticles[part.CellIndex]++;
+		}
+		catch(...) {std::cout << "CellIndex of fluid out of range! " << part.CellIndex << " " << part.Position.transpose() << std::endl;
+			exit(0); }
 	}
 	for (auto& mol : SimBox.Molecules) {
 		for (auto& mono : mol.Monomers) {
-			mono.CellIndex = (int)mono.Position(0) + BoxSize[0]*(int)mono.Position(1)+BoxSize[0]*BoxSize[1]*(int)mono.Position(2);
+			Particle WrappedMonomer{mono.Position, mono.Velocity, mono.Mass};
+			wrap(WrappedMonomer);
+			mono.CellIndex = (int)(WrappedMonomer.Position(0) + BoxSize[0]*0.5) + BoxSize[0]*(int)(WrappedMonomer.Position(1)+BoxSize[1]*0.5) + BoxSize[0]*BoxSize[1]*(int)(WrappedMonomer.Position(2) + BoxSize[2]*0.5);
 			//std::cout << mono.CellIndex << std::endl;
-			MPCCellList[mono.CellIndex].push_back(&mono);
+			try {
+				if (mono.CellIndex < 0 || mono.CellIndex > NumberOfCells) throw 20;
+				MPCCellList[mono.CellIndex].push_back(&mono);
+			}
+			catch(...) {std::cout << "CellIndex of monomer out of range! " << mono.CellIndex << std::endl;
+				exit(0);}
 		}
 	}
 }
@@ -209,7 +242,6 @@ inline void MPC::shiftParticles(const Vector3d& Shift) {
 	for (auto& mol : SimBox.Molecules ) {
 		for (auto& mono : mol.Monomers) {
 			mono.Position += Shift;
-			wrap(mono);
 		}
 	}
 }
@@ -308,22 +340,22 @@ unsigned MPC::filledCells() {
 
 
 void MPC::LEBC(Particle &part) {
-	double cy { floor(part.Position(1) / BoxSize[1]) };
-	part.Position(0) -= BoxSize[0]*floor(part.Position(0)/BoxSize[0]);
+	double cy { round(part.Position(1) / BoxSize[1]) };
+	part.Position(0) -= BoxSize[0]*round(part.Position(0)/BoxSize[0]);
 	part.Position(0) -= cy*delrx;
-	part.Position(0) -= BoxSize[0]*floor(part.Position(0)/BoxSize[0]);
+	part.Position(0) -= BoxSize[0]*round(part.Position(0)/BoxSize[0]);
 	part.Position(1) -= BoxSize[1]*cy;
-	part.Position(2) -= BoxSize[2]*floor(part.Position(2)/BoxSize[2]);
+	part.Position(2) -= BoxSize[2]*round(part.Position(2)/BoxSize[2]);
 	part.Velocity(0) -= cy*Shear*BoxSize[1];
 }
 
 void MPC::LEBC(Vector3d& pos, Vector3d& vel) {
-	double cy { floor(pos(1) / BoxSize[1]) };
-	pos(0) -= BoxSize[0]*floor(pos(0)/BoxSize[0]);
+	double cy { round(pos(1) / BoxSize[1]) };
+	pos(0) -= BoxSize[0]*round(pos(0)/BoxSize[0]);
 	pos(0) -= cy*delrx;
-	pos(0) -= BoxSize[0]*floor(pos(0)/BoxSize[0]);
+	pos(0) -= BoxSize[0]*round(pos(0)/BoxSize[0]);
 	pos(1) -= BoxSize[1]*cy;
-	pos(2) -= BoxSize[2]*floor(pos(2)/BoxSize[2]);
+	pos(2) -= BoxSize[2]*round(pos(2)/BoxSize[2]);
 	vel(0) -= cy*Shear*BoxSize[1];
 }
 
@@ -361,14 +393,14 @@ Vector3d MPC::relative_position(const Vector3d pos_one, const Vector3d pos_two) 
 
 Vector3d& MPC::wrap(Vector3d& pos) {
 	for (unsigned i = 0; i < 3; i++) {
-		pos(i) -= floor(pos(i)/BoxSize[i]) * BoxSize[i];
+		pos(i) -= round(pos(i)/BoxSize[i]) * BoxSize[i];
 	}
 	return pos;
 }
 
 Vector3d MPC::wrap(Vector3d&& pos) {
 	for (unsigned i = 0; i < 3; i++) {
-		pos(i) -= floor(pos(i)/BoxSize[i]) * BoxSize[i];
+		pos(i) -= round(pos(i)/BoxSize[i]) * BoxSize[i];
 	}
 	return pos;
 }
@@ -385,7 +417,7 @@ void MPC::wrap(Vector3d& pos, Vector3d& vel) {
 
 Vector3d& MPC::wrap_to_zero(Vector3d& pos){
 	for (unsigned i = 0; i < 3; i++) {
-		pos(i) -= floor(pos(i)/BoxSize[i]) * BoxSize[i];
+		pos(i) -= round(pos(i)/BoxSize[i]) * BoxSize[i];
 	}
 	return pos;
 }
@@ -460,14 +492,14 @@ void MPC::print_fluid_complete(FILE* fluid_file) {
     Vector3d pos {Vector3d::Zero()};
     Vector3d vel {Vector3d::Zero()};
     Vector3d shift_pos {SimBox.COM_Pos};
-    for (unsigned i = 0; i < 3; i++) {
+    /*for (unsigned i = 0; i < 3; i++) {
     	shift_pos(i) -= BoxSize[i];
-    }
+    }*/
 	for (auto& part : Fluid) {
 
-		pos = part.Position - shift_pos;
+		/*pos = part.Position - shift_pos;
 		vel = part.Velocity - SimBox.COM_Vel;
-		wrap(pos, vel);
+		wrap(pos, vel);*/
 		fprintf(fluid_file, "%f %f %f %f %f %f \n", pos(0), pos(1), pos(2), vel(0), vel(1), vel(2));
 	}
 }

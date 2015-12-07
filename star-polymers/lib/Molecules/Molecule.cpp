@@ -113,8 +113,7 @@ void Molecule::initialize_straight_chain(unsigned A, unsigned B, double temperat
 	std::cout << " ekin after: " << calculate_Ekin() << std::endl;
 }
 
-void Molecule::initialize_open_star(Vector3d BoxCenter, unsigned A, unsigned B, unsigned arms, double Temperature, double Bond, double AnchorBond) {
-	Vector3d Center {Vector3d::Zero()};
+void Molecule::initialize_open_star(unsigned A, unsigned B, unsigned arms, double Temperature, double Bond, double AnchorBond) {
 	Vector3d direction{Vector3d::Zero()};
 	Vector3d average_vel{Vector3d::Zero()};
 	AType = A;
@@ -164,14 +163,9 @@ void Molecule::initialize_open_star(Vector3d BoxCenter, unsigned A, unsigned B, 
 	for (auto& mono : Monomers) {
 		mono.Velocity *= scale;
 	}
-	Center = BoxCenter - Monomers[0].Position;
-	for (auto& mono : Monomers) {
-		mono.Position += Center;
-	}
 }
 
-void Molecule::star_from_file(Vector3d BoxCenter, string filename, unsigned A, unsigned B, unsigned arms) {
-	Vector3d Center{Vector3d::Zero()};
+void Molecule::star_from_file(string filename, unsigned A, unsigned B, unsigned arms) {
 	ifstream input {filename};
 	AType = A;
 	BType = B;
@@ -204,10 +198,10 @@ void Molecule::star_from_file(Vector3d BoxCenter, string filename, unsigned A, u
 			}
 		}
 	}
-	Center = BoxCenter - Monomers[0].Position;
+	/*Center = BoxCenter - Monomers[0].Position;
 	for (auto& mono : Monomers) {
 		mono.Position += Center;
-	}
+	}*/
 }
 
 std::ostream& Molecule::print(std::ostream& os) const {
