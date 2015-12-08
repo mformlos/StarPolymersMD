@@ -25,7 +25,7 @@ void Thermostat_None::propagate(bool calc_epot) {
 		}
 	}
 
-	SimBox.wrap();
+	//SimBox.wrap();
  	SimBox.check_VerletLists();
 	SimBox.calculate_forces_verlet(calc_epot);
 

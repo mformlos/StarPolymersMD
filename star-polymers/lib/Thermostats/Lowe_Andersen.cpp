@@ -27,7 +27,7 @@ void Lowe_Andersen::dtime(double dt) {
 }
 
 void Lowe_Andersen::collide(Particle& one, Particle& two) {
-	Vector3d unit_sep = SimBox.relative_position(one, two);
+	Vector3d unit_sep = two.Position - one.Position;
 	double dist = unit_sep.norm();
 	if (dist < InteractionRadius) {
 		unit_sep /= dist;
@@ -49,7 +49,6 @@ void Lowe_Andersen::propagate(bool calc_epot) {
 			mono.Position += mono.Velocity*DeltaT;
 		}
 	}
-	SimBox.wrap();
 	SimBox.check_VerletLists();
     SimBox.calculate_forces_verlet(calc_epot);
 

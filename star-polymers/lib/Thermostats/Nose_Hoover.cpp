@@ -30,7 +30,6 @@ void Nose_Hoover::pos_vel(bool calc_epot) {
 		}
 	}
 
-	SimBox.wrap();
 	SimBox.calculate_forces(calc_epot);
 
 	for (auto& mol : SimBox.Molecules) {

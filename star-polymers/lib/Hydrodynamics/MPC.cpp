@@ -29,7 +29,6 @@ angular_momentum { angular_mom }{
 	for ( unsigned i = 0 ; i < NumberOfMPCParticles ; i++ ) {
 		Fluid.push_back(MPCParticle(1.0));
 	}
-	box.MPC_on(this);
 }
 
 void MPC::initialize() {
