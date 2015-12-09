@@ -45,9 +45,9 @@ void Box::add_star(unsigned A, unsigned B, unsigned Arms, double Mass, double Bo
 	center_of_mass_reference_frame();
 }
 
-void Box::add_star(string filename, unsigned A, unsigned B, unsigned Arms, double Mass) {
+void Box::add_star(string filename, unsigned A, unsigned B, unsigned Arms, double Mass, bool set_zero) {
 	Molecules.push_back(Molecule{(A+B)*Arms+1, Mass});
-	Molecules.back().star_from_file(filename, A, B, Arms);
+	Molecules.back().star_from_file(filename, A, B, Arms, set_zero);
 	NumberOfMonomers += (A+B)*Arms + 1;
 	Molecules_com_reference_frame.push_back(Molecule{Molecules.back()});
 	center_of_mass_reference_frame();
@@ -625,7 +625,7 @@ std::ostream& Box::print_radius_of_gyration(std::ostream& os) {
 std::ostream& Box::print_center_of_mass(std::ostream& os) {
 	for (auto& mol : Molecules) {
 		Vector3d com {mol.calculate_center_of_mass()};
-		os << com.transpose() << " "; // << (com-BoxCenter).norm() << " ";
+		os << com.transpose() << " " << mol.calculate_center_of_mass_velocity().transpose() << '\n'; // << (com-BoxCenter).norm() << " ";
 	}
 	return os;
 }

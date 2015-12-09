@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
 	long int Steps_Equil { }, Steps_Total { }, Steps_Output { }, Steps_Start { }; 
 	long int Steps_pdb { }, Steps_fluid { };
 	double Temperature { }, Lambda { }, Shear { }, StepSize { }, MPC_Step{ };
-	bool MPC_on {false}, continue_run {false}, pdb_print {false}, fluid_print {false}, overwrite{true}, fluid_profile_print {false};
+	bool MPC_on {false}, continue_run {false}, pdb_print {false}, fluid_print {false}, overwrite{true}, set_zero{false}, fluid_profile_print {false};
 	string s_para { };
 	stringstream ss_para { }, ss_para_old { };
 	Thermostat *thermostat{};
@@ -201,6 +201,7 @@ int main(int argc, char* argv[]) {
 		TypeB = stoi(find_parameter(s_para,"B"));
 		Arms = stoi(find_parameter(s_para,"Arms"));
 		Steps_Start = stol(find_parameter(s_para,"run"));
+		if (Steps_Start == 0) set_zero = true;
 		Temperature = stod(find_parameter(s_para,"T"));
 		Shear = stod(find_parameter(s_para, "Shear"));
 		Lambda = stod(find_parameter(s_para,"Lambda"));
@@ -353,8 +354,8 @@ int main(int argc, char* argv[]) {
     }
 	else {
 		if (continue_run) {
-			box.add_star(std::string(argv[1]), TypeA, TypeB, Arms, 5.);
-			box.print_molecules(std::cout);
+			box.add_star(std::string(argv[1]), TypeA, TypeB, Arms, 5., set_zero);
+			box.print_molecules(output_file);
 		}
 		else box.add_star(TypeA, TypeB, Arms, 5.);
 		output_file << "building a star" << std::endl;
@@ -362,6 +363,7 @@ int main(int argc, char* argv[]) {
 
 	std::cout << '\n';
 	box.print_center_of_mass(std::cout);
+
 
     if (continue_run && MPC_on && fluid_profile_print) {
       	velocity_average_x.initialize("./results/fluid_profile"+ss_para_old.str()+".dat");
@@ -390,8 +392,6 @@ int main(int argc, char* argv[]) {
 	}
 	clock_t begin = clock();
 
-	box.Molecules[0].Monomers[149].print_neighbor();
-	std::cout << box.Molecules[0].Monomers[149].Force.transpose();
 
 	long int n { }; 
 	if (continue_run) n = Steps_Start + 1;

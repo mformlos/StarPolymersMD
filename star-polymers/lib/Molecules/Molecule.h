@@ -40,9 +40,10 @@ public:
 
 	void initialize_straight_chain(unsigned A, unsigned B, double Temperature, double bond = 1.01);
 	void initialize_open_star(unsigned A, unsigned B, unsigned Arms, double Temperature, double Bond = 1.01, double AnchorBond = 2.0);
-	void star_from_file(string filename, unsigned A, unsigned B, unsigned Arms);
+	void star_from_file(string filename, unsigned A, unsigned B, unsigned Arms, bool set_zero = false);
 	double calculate_Ekin();
 	Vector3d calculate_center_of_mass();
+	Vector3d calculate_center_of_mass_velocity();
 
 	std::ostream& print(std::ostream& os) const;
 	template<class UnitaryFunc>

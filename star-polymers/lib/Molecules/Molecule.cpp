@@ -82,6 +82,16 @@ Vector3d Molecule::calculate_center_of_mass() {
 	return com;
 }
 
+Vector3d Molecule::calculate_center_of_mass_velocity() {
+	Vector3d com {Vector3d::Zero()};
+	for (auto& mono : Monomers) {
+		com += mono.Velocity;
+	}
+	com /= NumberOfMonomers;
+	return com;
+}
+
+
 void Molecule::initialize_straight_chain(unsigned A, unsigned B, double temperature, double bondLength) {
 	Vector3d tempPos{Vector3d::Zero()};
 	Vector3d average_vel{Vector3d::Zero()};
@@ -165,7 +175,7 @@ void Molecule::initialize_open_star(unsigned A, unsigned B, unsigned arms, doubl
 	}
 }
 
-void Molecule::star_from_file(string filename, unsigned A, unsigned B, unsigned arms) {
+void Molecule::star_from_file(string filename, unsigned A, unsigned B, unsigned arms, bool set_zero) {
 	ifstream input {filename};
 	AType = A;
 	BType = B;
@@ -197,6 +207,14 @@ void Molecule::star_from_file(string filename, unsigned A, unsigned B, unsigned 
 				if (k != monomers_per_arm) Monomers[index].set_neighbor(Monomers[index+1]);
 			}
 		}
+	}
+	if (set_zero) {
+		Vector3d com {calculate_center_of_mass()};
+        Vector3d com_vel {calculate_center_of_mass_velocity()};
+        for (auto& mono : Monomers) {
+        	mono.Position -= com;
+        	mono.Velocity -= com_vel;
+        }
 	}
 	/*Center = BoxCenter - Monomers[0].Position;
 	for (auto& mono : Monomers) {

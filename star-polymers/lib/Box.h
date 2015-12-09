@@ -59,7 +59,7 @@ public:
 
 	void add_chain(unsigned A, unsigned B, double Mass, double Bond = 1.01);
 	void add_star(unsigned A, unsigned B, unsigned Arms, double Mass, double Bond = 1.01, double AnchorBond = 2.0);
-	void add_star(string filename, unsigned A, unsigned B, unsigned Arms, double Mass);
+	void add_star(string filename, unsigned A, unsigned B, unsigned Arms, double Mass, bool set_zero = false);
 
 	void resize(double Lx, double Ly, double Lz);
 	void set_center_of_mass_to_zero(Molecule&);
