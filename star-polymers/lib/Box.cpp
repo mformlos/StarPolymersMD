@@ -118,13 +118,16 @@ void Box::update_VerletLists() {
 				CellNumber[i] = (int)((mono.Position(i)-COM_Pos(i)+BoxSize[i]*0.5)/CellSideLength[i]);
 			}
 			mono.VerletPosition = mono.Position;
-			if (CellNumber[0] < 0 || CellNumber[0] >= CellSize[0] || CellNumber[1] < 0 || CellNumber[1] >= CellSize[1] || CellNumber[2] < 0 || CellNumber[2] >= CellSize[2]) {
-				std::cout << mono.Position.transpose() << " " << COM_Pos.transpose() << std::endl;
-				FILE* dump_file { };
-				dump_file = fopen("core_dump.pdb", "a");
-				print_PDB_with_velocity(dump_file,0);
+			try  {
+				if (CellNumber[0] < 0 || CellNumber[0] >= CellSize[0] || CellNumber[1] < 0 || CellNumber[1] >= CellSize[1] || CellNumber[2] < 0 || CellNumber[2] >= CellSize[2]) {
+					std::cout << "CellNumber at update_verlet_lists out of bounds " << CellNumber[0] << " "  << CellNumber[1] << " " << CellNumber[2] << " " << mono.Position.transpose() << " " << COM_Pos.transpose() << std::endl;
+					FILE* dump_file { };
+					dump_file = fopen("core_dump.pdb", "a");
+					print_PDB_with_velocity(dump_file,0);
+				}
+				CellList[CellNumber[0]][CellNumber[1]][CellNumber[2]].push_front(&mono);
 			}
-			CellList[CellNumber[0]][CellNumber[1]][CellNumber[2]].push_front(&mono);
+			catch(...) { std::cout << "CellNumber at update_verlet_lists out of bounds and not caught " << CellNumber[0] << " "  << CellNumber[1] << " " << CellNumber[2] << " " << mono.Position.transpose() << " " << COM_Pos.transpose() << std::endl;}
 		}
 	}
 
@@ -139,18 +142,22 @@ void Box::update_VerletLists() {
 				for (int k = CellNumber[1]-1; k < CellNumber[1]+2; ++k) {
 					for (int l = CellNumber[2]-1; l < CellNumber[2]+2; ++l) {
 
-						p = my_modulus(j, CellSize[0]);
+						if ( j < 0 || k < 0 || l < 0) continue;
+						/*p = my_modulus(j, CellSize[0]);
 						q = my_modulus(k, CellSize[1]);
 						r = my_modulus(l, CellSize[2]);
-
-						for (auto& other : CellList[p][q][r]) {
-							if (other == &mono) continue;
-							distance = other -> Position - mono.Position;
-							radius2 = distance.dot(distance);
-							if (radius2 <= VerletRadius2) {
-								mono.VerletList.push_front(other);
+						*/
+						try {
+							for (auto& other : CellList[p][q][r]) {
+								if (other == &mono) continue;
+								distance = other -> Position - mono.Position;
+								radius2 = distance.dot(distance);
+								if (radius2 <= VerletRadius2) {
+									mono.VerletList.push_front(other);
+								}
 							}
 						}
+						catch(...) {std::cout << "CellNumber at update_verlet_lists out of bounds at second loop " << CellNumber[0] << " "  << CellNumber[1] << " " << CellNumber[2] << " " << mono.Position.transpose() << " " << COM_Pos.transpose() << std::endl; }
 					}
 				}
 			}

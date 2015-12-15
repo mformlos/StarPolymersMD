@@ -458,7 +458,7 @@ int main(int argc, char* argv[]) {
 
 			std::cout << n << " ";
 			output_file << n << " ";
-			box.print_center_of_mass(std::cout);
+			box.print_center_of_mass(output_file);
 			output_file << '\n';
 			output_file.flush();
 			std::cout << '\n';
