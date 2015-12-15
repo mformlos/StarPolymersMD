@@ -124,6 +124,7 @@ void Box::update_VerletLists() {
 					FILE* dump_file { };
 					dump_file = fopen("core_dump.pdb", "a");
 					print_PDB_with_velocity(dump_file,0);
+					throw 1;
 				}
 				CellList[CellNumber[0]][CellNumber[1]][CellNumber[2]].push_front(&mono);
 			}
