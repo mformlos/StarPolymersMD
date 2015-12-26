@@ -56,6 +56,7 @@ public:
 	void thermostat(const std::vector<MPCParticle*>&, const Vector3d&);
 	void periodic_image_box(unsigned);
 	void undo_periodic_image_box(unsigned);
+	void check_bounds();
 	inline void shiftParticles(const Vector3d& Shift);
 	void LEBC(Particle&);
 	void LEBC(Vector3d&, Vector3d&);

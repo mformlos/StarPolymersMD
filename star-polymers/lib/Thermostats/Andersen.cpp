@@ -32,6 +32,7 @@ void Andersen::propagate(bool calc_epot) {
 	}
 	//SimBox.wrap();
  	SimBox.check_VerletLists();
+ 	//SimBox.calculate_forces(calc_epot);
 	SimBox.calculate_forces_verlet(calc_epot);
 
 	for (auto& mol : SimBox.Molecules) {

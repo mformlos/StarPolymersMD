@@ -97,6 +97,7 @@ void MPC::step(const long int& t, const double& dt) {
 	delrx -= BoxSize[0]*round(delrx/BoxSize[0]);
 	if (t%step_update) return;
 	else {
+		check_bounds();
 		streaming(dt);
 		Vector3d Shift(Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5, Rand::real_uniform() - 0.5);
 		shiftParticles(Shift);
@@ -106,12 +107,12 @@ void MPC::step(const long int& t, const double& dt) {
 		{
 			#pragma omp for
 			for (unsigned Index = 0; Index <= NumberOfCells; ++Index) {
-				if (MPCCellListFluidParticles[Index] < MPCCellList[Index].size()) periodic_image_box(Index);
+				//if (MPCCellListFluidParticles[Index] < MPCCellList[Index].size()) periodic_image_box(Index);
 				Vector3d CMV { };
 				calculateCMV(Index, CMV);
 				thermostat(Index, CMV);
 				collide(Index, CMV);
-				if (MPCCellListFluidParticles[Index] < MPCCellList[Index].size()) undo_periodic_image_box(Index);
+				//if (MPCCellListFluidParticles[Index] < MPCCellList[Index].size()) undo_periodic_image_box(Index);
 			}
 		}
 		Shift = -Shift;
@@ -135,6 +136,35 @@ void MPC::undo_periodic_image_box(unsigned Index) {
 	}
 }
 
+void MPC::check_bounds() {
+	bool out_of_box{false};
+	for (auto& mol : SimBox.Molecules) {
+		if (out_of_box) break;
+		for (auto& mono : mol.Monomers) {
+			if (out_of_box) break;
+			for (int i = 0; i < 3; i++) {
+				if (fabs(mono.Position(i)) >= BoxSize[i]*0.5 ) {
+					out_of_box = true;
+					break;
+				}
+			}
+		}
+	}
+	if (out_of_box) {
+		Vector3d COM {SimBox.Molecules[0].calculate_center_of_mass()};
+		Vector3d COM_Vel {SimBox.Molecules[0].calculate_center_of_mass_velocity()};
+		for (auto& mol : SimBox.Molecules) {
+			for (auto& mono : mol.Monomers) {
+				mono.Position -= COM;
+				mono.Velocity -= COM_Vel;
+			}
+		}
+		for (auto& part : Fluid) {
+			part.Position -= COM;
+			wrap(part);
+		}
+	}
+}
 
 void MPC::streaming(const double& dt) {
 	for (auto& part : Fluid) {
@@ -166,7 +196,7 @@ void MPC::sort() {
 	for (auto& mol : SimBox.Molecules) {
 		for (auto& mono : mol.Monomers) {
 			Particle WrappedMonomer{mono.Position, mono.Velocity, mono.Mass};
-			wrap(WrappedMonomer);
+			//wrap(WrappedMonomer);
 			mono.CellIndex = (int)(WrappedMonomer.Position(0) + BoxSize[0]*0.5) + BoxSize[0]*(int)(WrappedMonomer.Position(1)+BoxSize[1]*0.5) + BoxSize[0]*BoxSize[1]*(int)(WrappedMonomer.Position(2) + BoxSize[2]*0.5);
 			//std::cout << mono.CellIndex << std::endl;
 			try {
