@@ -133,23 +133,22 @@ void Box::update_VerletLists() {
 	}
 
 	//make VerletLists
-	int p { }, q { }, r { };
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
 			for (int i = 0; i < 3; ++i) {
 				CellNumber[i] = (int)((mono.Position(i)-COM_Pos(i)+BoxSize[i]*0.5)/CellSideLength[i]);
 			}
 			for (int j = CellNumber[0]-1; j < CellNumber[0]+2; ++j) {
+				if( j < 0 || j >= CellSize[0]) continue;
 				for (int k = CellNumber[1]-1; k < CellNumber[1]+2; ++k) {
+					if (k < 0 || k >= CellSize[1]) continue;
 					for (int l = CellNumber[2]-1; l < CellNumber[2]+2; ++l) {
 
-						if ( j < 0 || k < 0 || l < 0) continue;
-						/*p = my_modulus(j, CellSize[0]);
-						q = my_modulus(k, CellSize[1]);
-						r = my_modulus(l, CellSize[2]);
-						*/
+						if ( l < 0 || l >= CellSize[2]) continue;
+
+
 						try {
-							for (auto& other : CellList[p][q][r]) {
+							for (auto& other : CellList[j][k][l]) {
 								if (other == &mono) continue;
 								distance = other -> Position - mono.Position;
 								radius2 = distance.dot(distance);
