@@ -128,7 +128,10 @@ void Box::update_VerletLists() {
 				}
 				CellList[CellNumber[0]][CellNumber[1]][CellNumber[2]].push_front(&mono);
 			}
-			catch(...) { std::cout << "CellNumber at update_verlet_lists out of bounds and not caught " << CellNumber[0] << " "  << CellNumber[1] << " " << CellNumber[2] << " " << mono.Position.transpose() << " " << COM_Pos.transpose() << std::endl;}
+			catch(...) {
+				std::cout << "CellNumber at update_verlet_lists out of bounds and not caught " << CellNumber[0] << " "  << CellNumber[1] << " " << CellNumber[2] << " " << mono.Position.transpose() << " " << COM_Pos.transpose() << std::endl;
+				raise(SIGSEGV);
+			}
 		}
 	}
 
@@ -157,7 +160,10 @@ void Box::update_VerletLists() {
 								}
 							}
 						}
-						catch(...) {std::cout << "CellNumber at update_verlet_lists out of bounds at second loop " << CellNumber[0] << " "  << CellNumber[1] << " " << CellNumber[2] << " " << mono.Position.transpose() << " " << COM_Pos.transpose() << std::endl; }
+						catch(...) {
+							std::cout << "CellNumber at update_verlet_lists out of bounds at second loop " << CellNumber[0] << " "  << CellNumber[1] << " " << CellNumber[2] << " " << mono.Position.transpose() << " " << COM_Pos.transpose() << std::endl;
+							raise(SIGSEGV);
+						}
 					}
 				}
 			}
@@ -549,7 +555,10 @@ void Box::print_PDB_with_velocity(FILE* pdb, int step) {
     	mol_count++;
 		for (unsigned i = 0; i < mol.NumberOfMonomers; i++) {
             Vector3d pos_print {mol.Monomers[i].Position};
-			fprintf(pdb, "ATOM %6d  C   GLY    %2d     %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f \n", i, mol_count, pos_print(0), pos_print(1), pos_print(2), mol.Monomers[i].Velocity(0), mol.Monomers[i].Velocity(1), mol.Monomers[i].Velocity(2));
+            if (mol.Monomers[i].AmphiType) {
+            	fprintf(pdb, "ATOM %6d  C   GLY    %2d     %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f \n", i, mol_count, pos_print(0), pos_print(1), pos_print(2), mol.Monomers[i].Velocity(0), mol.Monomers[i].Velocity(1), mol.Monomers[i].Velocity(2));
+            }
+            else fprintf(pdb, "ATOM %6d  O   GLY    %2d     %7.3f %7.3f %7.3f %7.3f %7.3f %7.3f \n", i, mol_count, pos_print(0), pos_print(1), pos_print(2), mol.Monomers[i].Velocity(0), mol.Monomers[i].Velocity(1), mol.Monomers[i].Velocity(2));
 		}
 		fprintf(pdb, "TER \n");
 		unsigned count{1};

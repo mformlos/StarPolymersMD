@@ -211,6 +211,7 @@ void Molecule::star_from_file(string filename, unsigned A, unsigned B, unsigned 
 	if (set_zero) {
 		Vector3d com {calculate_center_of_mass()};
         Vector3d com_vel {calculate_center_of_mass_velocity()};
+        std::cout << "center of mass before: " << com << std::endl;
         for (auto& mono : Monomers) {
         	mono.Position -= com;
         	mono.Velocity -= com_vel;

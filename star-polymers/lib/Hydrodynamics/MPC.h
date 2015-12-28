@@ -19,6 +19,7 @@
 #include "Rand.h"
 #include "Analysis.h"
 #include "Hydrodynamics.h"
+#include <csignal>
 
 class Box;
 class MPC : public Hydrodynamics{

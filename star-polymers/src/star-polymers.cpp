@@ -34,19 +34,19 @@ void signal_handler( int signum )
     // terminate program
 }
 
-void file_handling(ofstream& os, stringstream& ss_para, string type, string old_steps, string new_steps) {
+void file_handling(ofstream& os, string ss_para, string type, string old_steps, string new_steps) {
 	string oldname { };
 	string newname { };
-	oldname = "./results/"+ type+ss_para.str()+".dat";
+	oldname = "./results/"+ type+ss_para;
 	newname = oldname;
 	newname.replace(newname.find(old_steps), old_steps.length(),new_steps);
 	rename(oldname.c_str(), newname.c_str());
 	os.close();
 }
-void file_handling(FILE* file, stringstream& ss_para, string type, string old_steps, string new_steps) {
+void file_handling(FILE* file, string ss_para, string type, string old_steps, string new_steps) {
 	string oldname { };
 	string newname { };
-	oldname = "./results/"+ type+ss_para.str()+".dat";
+	oldname = "./results/"+ type+ss_para;
 	newname = oldname;
 	newname.replace(newname.find(old_steps), old_steps.length(),new_steps);
 	rename(oldname.c_str(), newname.c_str());
@@ -88,7 +88,7 @@ inline bool file_exists (const std::string& name) {
 int main(int argc, char* argv[]) {
 	signal_caught = 0;
 	signal(SIGINT, signal_handler);
-	//signal(SIGSEGV, signal_handler);
+	signal(SIGSEGV, signal_handler);
 	int BoxX { }, BoxY { }, BoxZ { }, TypeA { }, TypeB { }, Arms { };
 	long int Steps_Equil { }, Steps_Total { }, Steps_Output { }, Steps_Start { }; 
 	long int Steps_pdb { }, Steps_fluid { };
@@ -201,6 +201,7 @@ int main(int argc, char* argv[]) {
 		TypeB = stoi(find_parameter(s_para,"B"));
 		Arms = stoi(find_parameter(s_para,"Arms"));
 		Steps_Start = stol(find_parameter(s_para,"run"));
+		std::cout << "Steps Start: " << Steps_Start << std::endl;
 		if (Steps_Start == 0) set_zero = true;
 		Temperature = stod(find_parameter(s_para,"T"));
 		Shear = stod(find_parameter(s_para, "Shear"));
@@ -314,7 +315,7 @@ int main(int argc, char* argv[]) {
 		string fluid_file_name = newname;
 		fluid_file = fopen(fluid_file_name.c_str(), "a");
 	}
-	if(MPC_on) {
+	if(MPC_on && fluid_profile_print) {
 		oldname = "./results/fluid_profile"+ss_para_old.str()+".dat";
 		newname = "./results/fluid_profile"+ss_para.str()+".dat";
 		if (continue_run && overwrite) rename(oldname.c_str(), newname.c_str());
@@ -404,14 +405,18 @@ int main(int argc, char* argv[]) {
 			new_total.precision(0);
 			new_total << scientific << n;
 			new_total_str = new_total.str();
-			file_handling(statistic_file, ss_para, "statistics", Step_total, new_total_str);
-			file_handling(output_file, ss_para, "output", Step_total, new_total_str);
+			file_handling(statistic_file, ss_para.str()+".dat", "statistics", Step_total, new_total_str);
+			file_handling(output_file, ss_para.str()+".dat", "output", Step_total, new_total_str);
             if (MPC_on && fluid_profile_print) {
+            	std::cout << "printing fluid profile..." << std::endl;
     		    velocity_average_x.print_result(fluid_profile);
-            	file_handling(fluid_profile, ss_para, "fluid_profile", Step_total, new_total_str);
+            	file_handling(fluid_profile, ss_para.str()+".dat", "fluid_profile", Step_total, new_total_str);
             }
-            if (pdb_print) file_handling(config_file, ss_para, "config", Step_total, new_total_str);
-            if (fluid_print) file_handling(fluid_file, ss_para, "fluid", Step_total, new_total_str);
+            if (pdb_print) {
+            	std::cout << "printing pdb..." << std::endl;
+            	file_handling(config_file, ss_para.str()+".pdb", "config", Step_total, new_total_str);
+            }
+            if (fluid_print) file_handling(fluid_file, ss_para.str()+".dat", "fluid", Step_total, new_total_str);
 
 
 			newname = "./results/end_config"+ss_para.str()+".pdb";
@@ -456,12 +461,12 @@ int main(int argc, char* argv[]) {
 			statistic_file.flush();
 			if(MPC_on && fluid_profile_print) hydrodynamics(velocity_average_x);
 
-			std::cout << n << " ";
+			//std::cout << n << " ";
 			output_file << n << " ";
 			box.print_center_of_mass(output_file);
 			output_file << '\n';
 			output_file.flush();
-			std::cout << '\n';
+			//std::cout << '\n';
 			std::cout.flush();
 			/*box.print_Temperature(std::cout);
 			std::cout << std::endl;

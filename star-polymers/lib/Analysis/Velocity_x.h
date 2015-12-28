@@ -78,7 +78,7 @@ public:
 		Vector3d vel {part.Velocity - SimBox.COM_Vel};
 		//Vector3d vel {part.Velocity};
 		//vel(0) -= SimBox.COM_Pos(1)*0.003;
-		MPC_routine.wrap_to_zero(pos, vel);
+		MPC_routine.wrap(pos, vel);
 		double x {floor(pos(0)/ width) * width };
 		vel_x_average[x].vel_x += vel(0);
 		vel_x_average[x].vel_y += vel(1);

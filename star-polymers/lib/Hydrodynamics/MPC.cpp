@@ -68,11 +68,11 @@ void MPC::initialize(string filename) {
 					part.Position(i) = BoxSize[i]*(Rand::real_uniform() - 0.5);
 					part.Velocity(i) = Rand::real_uniform() - 0.5;
 				}
-				count ++;
 			}
 			else {
 				part.Position = pos;
 				part.Velocity = vel;
+				count ++;
 			}
 		}
 		else {
@@ -161,6 +161,7 @@ void MPC::check_bounds() {
 		}
 		for (auto& part : Fluid) {
 			part.Position -= COM;
+			part.Velocity(1) -= COM(1)*Shear;
 			wrap(part);
 		}
 	}
@@ -190,8 +191,10 @@ void MPC::sort() {
 			MPCCellList[part.CellIndex].push_back(&part);
 			MPCCellListFluidParticles[part.CellIndex]++;
 		}
-		catch(...) {std::cout << "CellIndex of fluid out of range! " << part.CellIndex << " " << part.Position.transpose() << std::endl;
-			exit(0); }
+		catch(...) {
+			std::cout << "CellIndex of fluid out of range! " << part.CellIndex << " " << part.Position.transpose() << std::endl;
+			raise(SIGSEGV);
+		}
 	}
 	for (auto& mol : SimBox.Molecules) {
 		for (auto& mono : mol.Monomers) {
@@ -203,8 +206,10 @@ void MPC::sort() {
 				if (mono.CellIndex < 0 || mono.CellIndex > NumberOfCells) throw 20;
 				MPCCellList[mono.CellIndex].push_back(&mono);
 			}
-			catch(...) {std::cout << "CellIndex of monomer out of range! " << mono.CellIndex << std::endl;
-				exit(0);}
+			catch(...) {
+				std::cout << "CellIndex of monomer out of range! " << mono.CellIndex << std::endl;
+				raise(SIGSEGV);
+			}
 		}
 	}
 }
@@ -520,15 +525,10 @@ void MPC::print_fluid_with_coordinates(FILE* fluid_file, int step, int z_start, 
 void MPC::print_fluid_complete(FILE* fluid_file) {
     Vector3d pos {Vector3d::Zero()};
     Vector3d vel {Vector3d::Zero()};
-    Vector3d shift_pos {SimBox.COM_Pos};
-    /*for (unsigned i = 0; i < 3; i++) {
-    	shift_pos(i) -= BoxSize[i];
-    }*/
 	for (auto& part : Fluid) {
 
-		/*pos = part.Position - shift_pos;
-		vel = part.Velocity - SimBox.COM_Vel;
-		wrap(pos, vel);*/
+		pos = part.Position;
+		vel = part.Velocity;
 		fprintf(fluid_file, "%f %f %f %f %f %f \n", pos(0), pos(1), pos(2), vel(0), vel(1), vel(2));
 	}
 }

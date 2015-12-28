@@ -18,6 +18,7 @@
 #include "MatVec.h"
 #include "Potentials.h"
 #include "Functions.h"
+#include <csignal>
 
 
 //class Thermostat;
