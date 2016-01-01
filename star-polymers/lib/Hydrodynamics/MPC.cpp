@@ -207,7 +207,7 @@ void MPC::sort() {
 				MPCCellList[mono.CellIndex].push_back(&mono);
 			}
 			catch(...) {
-				std::cout << "CellIndex of monomer out of range! " << mono.CellIndex << std::endl;
+				std::cout << "CellIndex of monomer out of range! " << mono.CellIndex << " " << mono.Position.transpose() << std::endl;
 				raise(SIGSEGV);
 			}
 		}
