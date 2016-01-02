@@ -143,7 +143,7 @@ void MPC::check_bounds() {
 		for (auto& mono : mol.Monomers) {
 			if (out_of_box) break;
 			for (int i = 0; i < 3; i++) {
-				if (fabs(mono.Position(i)) >= BoxSize[i]*0.5 ) {
+				if (fabs(mono.Position(i)) >= (BoxSize[i]*0.5 - 0.5) ) {
 					out_of_box = true;
 					break;
 				}
