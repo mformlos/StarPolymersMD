@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
 	clock_t begin = clock();
 
 	for (int n = 0; n < Steps_Total; ++n) {
-		MPCroutine.step(n, 0.01);
+		MPCroutine.step(n, StepSize);
 		if (n > Steps_Equil && !(n%Steps_Output)) {
 			std::cout << n << " " << MPCroutine.calculateCurrentTemperature() << std::endl;
 			/*for (auto& part : MPCroutine.Fluid) {

@@ -161,7 +161,8 @@ void MPC::check_bounds() {
 		}
 		for (auto& part : Fluid) {
 			part.Position -= COM;
-			part.Velocity(1) -= COM(1)*Shear;
+			//part.Velocity(1) -= COM(1)*Shear;
+			part.Velocity -= COM_Vel;
 			wrap(part);
 		}
 	}
@@ -252,19 +253,27 @@ void MPC::thermostat(unsigned Index, const Vector3d& CMV){
 	double ekinOld { };
 	double scaling { };
 	unsigned count { };
-	for (unsigned i = 0; i < MPCCellListFluidParticles[Index]; i++) {
+	for (auto& part : MPCCellList[Index]) {
+		ekinOld += part -> Mass * (part -> Velocity - CMV).squaredNorm();
+		count++;
+	}
+	/*for (unsigned i = 0; i < MPCCellListFluidParticles[Index]; i++) {
 		MPCParticle * part {MPCCellList[Index][i]};
 		ekinOld += part -> Mass * (part -> Velocity -CMV).squaredNorm();
 		count++;
-	}
+	}*/
 
 	if (count < 2) return;
 	ekinOld *= 0.5;
 	scaling = sqrt(Rand::real_gamma(3.*(count-1)*Temperature/2.)/ekinOld);
+	for (auto& part : MPCCellList[Index]) {
+		part -> Velocity = scaling * part -> Velocity + (1 - scaling)*CMV;
+	}
+	/*
 	for (unsigned i = 0; i < MPCCellListFluidParticles[Index]; i++) {
 		MPCParticle * part {MPCCellList[Index][i]};
 		part -> Velocity = scaling * part -> Velocity + (1-scaling)*CMV;
-	}
+	}*/
 
 }
 
