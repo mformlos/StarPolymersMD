@@ -265,7 +265,7 @@ void MPC::thermostat(unsigned Index, const Vector3d& CMV){
 
 	if (count < 2) return;
 	ekinOld *= 0.5;
-	scaling = sqrt(Rand::real_gamma(3.*(count-1)*Temperature/2.)/ekinOld);
+	scaling = sqrt(Rand::real_gamma(1.5*(count-1),Temperature)/ekinOld);
 	for (auto& part : MPCCellList[Index]) {
 		part -> Velocity = scaling * part -> Velocity + (1 - scaling)*CMV;
 	}

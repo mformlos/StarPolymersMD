@@ -23,7 +23,9 @@ public:
 	static double real_uniform(double);
 	static double real_uniform(double, double);
 	static double real_chisquared(unsigned n);
-	static double real_gamma(double shape);
+	//static double real_gamma(double shape);
+	static double real_gamma(double, double);
+
 };
 
 #endif

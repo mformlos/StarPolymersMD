@@ -72,15 +72,19 @@ int main(int argc, char* argv[]) {
 
 	MPC MPCroutine {box, Temperature, 5, Shear, 1, AngularMomentumConservation};
 
-	ss_para << "_N" << BoxX*BoxY*BoxZ*10;
+	ss_para << "_N" << BoxX*BoxY*BoxZ*5;
 	ss_para << "_Shear" << Shear;
 	ss_para << "_h" << StepSize;
 	if (AngularMomentumConservation) ss_para << "_AMC";
 
 	ofstream fluid_file { };
+	ofstream temperature_file { };
 
 	string fluid_file_name = "fluid" + ss_para.str() +".dat";
+	string temperature_file_name = "temperature" + ss_para.str() + ".dat";
+
 	fluid_file.open(fluid_file_name, ios::out | ios::trunc);
+	temperature_file.open(temperature_file_name, ios::out | ios::trunc);
 
 
 	std::cout << "Temperature: " << Temperature <<  std::endl;
@@ -105,6 +109,7 @@ int main(int argc, char* argv[]) {
 			}*/
 			//MPCroutine(velocity_average, no_function);
 			MPCroutine(velocity_average);
+			temperature_file << n << " " << MPCroutine.calculateCurrentTemperature() << std::endl;
 			//MPCroutine.unitary(velocity_average);
 		}
 

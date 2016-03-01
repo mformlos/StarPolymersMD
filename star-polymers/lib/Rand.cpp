@@ -33,7 +33,11 @@ double Rand::real_chisquared(unsigned n){
 	return dis_chisquared(generator);
 }
 
-double Rand::real_gamma(double shape) {
+/*double Rand::real_gamma(double shape) {
 	dis_gamma.param(gamma_distribution<double>::param_type(shape, 1.0));
+	return dis_gamma(generator);
+}*/
+double Rand::real_gamma(double a, double b) {
+	dis_gamma.param(gamma_distribution<double>::param_type(a, b));
 	return dis_gamma(generator);
 }
