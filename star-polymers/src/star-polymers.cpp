@@ -20,6 +20,7 @@
 #include "Lowe_Andersen.h"
 #include "Nose_Hoover.h"
 #include "Andersen.h"
+#include "Andersen_stochastic.h"
 #include "Hydrodynamics_None.h"
 #include "MPC.h"
 #include "Velocity_x.h"

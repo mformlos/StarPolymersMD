@@ -17,5 +17,8 @@ target_link_libraries(Lowe_Andersen Box Rand Thermostat)
 add_library(Andersen Andersen.cpp)
 target_link_libraries(Andersen Box Rand Thermostat) 
 
+add_library(AndersenStochastic Andersen_stochastic.cpp)
+target_link_libraries(AndersenStochastic Box Rand Thermostat) 
+
 add_library(Nose_Hoover Nose_Hoover.cpp)
 target_link_libraries(Nose_Hoover Box Thermostat)
