@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
 	signal_caught = 0;
 	signal(SIGINT, signal_handler);
 	signal(SIGSEGV, signal_handler);
-	int BoxX { }, BoxY { }, BoxZ { }, TypeA { }, TypeB { }, Arms { };
+	int BoxX { }, BoxY { }, BoxZ { }, TypeA { }, TypeB { }, Arms { }, Mass_mono{ };
 	long int Steps_Equil { }, Steps_Total { }, Steps_Output { }, Steps_Start { }; 
 	long int Steps_pdb { }, Steps_fluid { };
 	double Temperature { }, Lambda { }, Shear { }, StepSize { }, MPC_Step{ };
@@ -100,8 +100,8 @@ int main(int argc, char* argv[]) {
 	//Hydrodynamics *hydrodynamics{};
 
 
-	//defaults für: TypeA, TypeB, Arms, Lambda, Temperature, BoxSize(x, y, z), stepsize, step_aufwärm, step_total, step_output
-	long double a_para[]{3, 0, 3, 1.0, 0.5, 10, 10, 50, 0.001, 1E2, 1E10, 1E2};
+	//defaults für: TypeA, TypeB, Arms, Mass_mono, Lambda, Temperature, BoxSize(x, y, z), stepsize, step_aufwärm, step_total, step_output
+	long double a_para[]{3, 0, 3, 1.0, 10, 0.5, 10, 10, 50, 0.001, 1E2, 1E10, 1E2};
 	int a_para_size = sizeof(a_para) / sizeof(*a_para);
 	int i_para { }, start_i_para { };
 
@@ -140,15 +140,16 @@ int main(int argc, char* argv[]) {
 		TypeB = (int)a_para[1];
 		if (argc > 1 && strcmp(argv[1], "Chain") == 0) Arms = 0;
 		else Arms = (int)a_para[2];
-		Lambda = a_para[3];
-		Temperature = a_para[4];
-		BoxX = a_para[5];
-		BoxY = a_para[6];
-		BoxZ = a_para[7];
-		StepSize = a_para[8];
-		Steps_Equil = (long int)a_para[9];
-		Steps_Total = (long int)a_para[10];
-		Steps_Output = (long int)a_para[11];
+		Mass_mono = a_para[3];
+		Lambda = a_para[4];
+		Temperature = a_para[5];
+		BoxX = a_para[6];
+		BoxY = a_para[7];
+		BoxZ = a_para[8];
+		StepSize = a_para[9];
+		Steps_Equil = (long int)a_para[10];
+		Steps_Total = (long int)a_para[11];
+		Steps_Output = (long int)a_para[12];
 		while (i_para < argc) {
 			while (i_para < argc - 1 && is_number(argv[i_para])) ++i_para;
 			if (argc > 1 && i_para < argc) {
@@ -200,6 +201,7 @@ int main(int argc, char* argv[]) {
 		TypeA = stoi(find_parameter(s_para,"A"));
 		TypeB = stoi(find_parameter(s_para,"B"));
 		Arms = stoi(find_parameter(s_para,"Arms"));
+		Mass_mono = stoi(find_parameter(s_para,"Mass"));
 		Steps_Start = stol(find_parameter(s_para,"run"));
 		std::cout << "Steps Start: " << Steps_Start << std::endl;
 		if (Steps_Start == 0) set_zero = true;
@@ -269,6 +271,7 @@ int main(int argc, char* argv[]) {
 	ss_para << "_A" << TypeA;
 	ss_para << "_B" << TypeB;
 	if (!(argc > 1 && strcmp(argv[1], "Chain") == 0)) ss_para << "_Arms" << Arms;
+	ss_para << "_Mass" << Mass_mono;
 	ss_para << "_Lx" << BoxX;
 	ss_para << "_Ly" << BoxY;
 	ss_para << "_Lz" << BoxZ;
@@ -330,7 +333,7 @@ int main(int argc, char* argv[]) {
 	ofstream output_file { };
 	string output_file_name = "./results/output"+ss_para.str()+".dat";
 	output_file.open(output_file_name, ios::out | ios::trunc);
-	output_file << "Type A: " << TypeA << " Type B: " << TypeB << " Arms: " << Arms << " Lambda: " << Lambda << std::endl;
+	output_file << "Type A: " << TypeA << " Type B: " << TypeB << " Arms: " << Arms <<  " Mass: " << Mass_mono << " Lambda: " << Lambda << std::endl;
 	output_file << "Temperature: " << Temperature <<  std::endl;
 	output_file << "Box Size: " << BoxX << " " << BoxY << " " << BoxZ << std::endl;
 	output_file << "Step Size: " << StepSize << std::endl;
@@ -346,7 +349,7 @@ int main(int argc, char* argv[]) {
 	MPC_Step = 100.0*StepSize;
 	Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
 
-	MPC hydrodynamics{box, Temperature, 10, Shear, 100};
+	MPC hydrodynamics{box, Temperature, Mass_mono, Shear, 100};
 	VelocityX velocity_average_x{box, hydrodynamics,0.2};
 
 	if (argc > 1 && strcmp(argv[1], "Chain") == 0) {
@@ -355,10 +358,10 @@ int main(int argc, char* argv[]) {
     }
 	else {
 		if (continue_run) {
-			box.add_star(std::string(argv[1]), TypeA, TypeB, Arms, 5., set_zero);
+			box.add_star(std::string(argv[1]), TypeA, TypeB, Arms, double(Mass_mono), set_zero);
 			box.print_molecules(output_file);
 		}
-		else box.add_star(TypeA, TypeB, Arms, 5.);
+		else box.add_star(TypeA, TypeB, Arms, double(Mass_mono));
 		output_file << "building a star" << std::endl;
 	}
 
