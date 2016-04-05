@@ -102,7 +102,7 @@ int main(int argc, char* argv[]) {
 
 
 	//defaults für: TypeA, TypeB, Arms, Mass_mono, Lambda, Temperature, BoxSize(x, y, z), stepsize, step_aufwärm, step_total, step_output
-	long double a_para[]{3, 0, 3, 1.0, 10, 0.5, 10, 10, 50, 0.001, 1E2, 1E10, 1E2};
+	long double a_para[]{3, 0, 3, 10, 1.0, 0.5, 10, 10, 50, 0.001, 1E2, 1E10, 1E2};
 	int a_para_size = sizeof(a_para) / sizeof(*a_para);
 	int i_para { }, start_i_para { };
 
@@ -380,7 +380,8 @@ int main(int argc, char* argv[]) {
 		//hydrodynamics = new MPC{box, Temperature, Shear};
     }
 	else {
-		thermostat = new Andersen{box, StepSize, Temperature, 1999};
+		//thermostat = new Andersen{box, StepSize, Temperature, 1999};
+		thermostat = new AndersenStochastic{box, StepSize, Temperature, 0.1};
 		//thermostat = new Lowe_Andersen{box, StepSize, Temperature, 20., 1.5};
 		//hydrodynamics = new Hydrodynamics_None{box};
     }
@@ -471,8 +472,8 @@ int main(int argc, char* argv[]) {
 			output_file << '\n';
 			output_file.flush();
 			//std::cout << '\n';
-			std::cout.flush();
-			/*box.print_Temperature(std::cout);
+			/*std::cout.flush();
+			box.print_Temperature(std::cout);
 			std::cout << std::endl;
 			output_file << n << " ";
 			box.print_Epot(std::cout);
