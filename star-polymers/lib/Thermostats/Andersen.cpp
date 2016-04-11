@@ -53,6 +53,37 @@ void Andersen::propagate(bool calc_epot) {
 	}
 }
 
+void Andersen::propagate_gaussian(bool calc_epot) {
+	Step++;
+	for (auto& mol : SimBox.Molecules) {
+		for (auto& mono : mol.Monomers) {
+			if (mono.Mass == 1.0) mono.Velocity += mono.Force*DeltaTHalf;
+			else mono.Velocity += mono.Force*(DeltaTHalf/mono.Mass);
+			mono.Position += mono.Velocity*DeltaT;
+		}
+	}
+	//SimBox.wrap();
+ 	SimBox.check_VerletLists();
+ 	//SimBox.calculate_forces(calc_epot);
+	SimBox.calculate_forces_gaussian(calc_epot);
+
+	for (auto& mol : SimBox.Molecules) {
+		for (auto& mono : mol.Monomers) {
+			if (mono.Mass == 1.0) mono.Velocity += mono.Force*DeltaTHalf;
+			else mono.Velocity += mono.Force*(DeltaTHalf/mono.Mass);
+		}
+	}
+	if (!(Step%UpdateStep)) {
+		for (auto& mol : SimBox.Molecules) {
+			for (auto& mono : mol.Monomers) {
+				for (unsigned i = 0; i < 3; i++) {
+					if (mono.Mass == 1.0) mono.Velocity(i) = Rand::real_normal(0.0, sqrt(TargetTemperature));
+					else mono.Velocity(i) = Rand::real_normal(0.0, sqrt(TargetTemperature/mono.Mass));
+				}
+			}
+		}
+	}
+}
 
 std::string Andersen::name() const {return Name;}
 

@@ -61,6 +61,8 @@ public:
 	void add_chain(unsigned A, unsigned B, double Mass, double Bond = 1.01);
 	void add_star(unsigned A, unsigned B, unsigned Arms, double Mass, double Bond = 1.01, double AnchorBond = 2.0);
 	void add_star(string filename, unsigned A, unsigned B, unsigned Arms, double Mass, bool set_zero = false);
+	void add_gaussian(unsigned N, double Mass);
+	void add_gaussian(string filename, unsigned N, double Mass, bool set_zero = false);
 
 	void resize(double Lx, double Ly, double Lz);
 	void set_center_of_mass_to_zero(Molecule&);
@@ -72,6 +74,8 @@ public:
 
 	void calculate_forces(bool calc_epot = false);
 	void calculate_forces_verlet(bool calc_epot = false);
+	void calculate_forces_gaussian(bool calc_epot = false);
+
 
 	double calculate_ekin();
 	double calculate_epot(MDParticle&, MDParticle&);

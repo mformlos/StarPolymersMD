@@ -8,7 +8,7 @@
 #include "Andersen_stochastic.h"
 
 const std::string AndersenStochastic::Name = "Andersen stochastic";
-AndersenStochastic::AndersenStochastic(Box& box, double dt, double T, double nu):
+AndersenStochastic::AndersenStochastic(Box& box, double dt, double T, double nu, bool gaussian):
 		Thermostat(box, dt),
 		TargetTemperature(T),
 		Nu(nu),
@@ -16,8 +16,8 @@ AndersenStochastic::AndersenStochastic(Box& box, double dt, double T, double nu)
 		update_temp();
 		dtime(dt);
 		SimBox.update_VerletLists();
-		SimBox.calculate_forces_verlet();
-
+		if (gaussian) SimBox.calculate_forces_gaussian(0);
+		else SimBox.calculate_forces_verlet();
 	}
 
 void AndersenStochastic::update_temp() {}
@@ -39,6 +39,37 @@ void AndersenStochastic::propagate(bool calc_epot) {
  	SimBox.check_VerletLists();
  	//SimBox.calculate_forces(calc_epot);
 	SimBox.calculate_forces_verlet(calc_epot);
+
+	for (auto& mol : SimBox.Molecules) {
+		for (auto& mono : mol.Monomers) {
+			if (mono.Mass == 1.0) mono.Velocity += mono.Force*DeltaTHalf;
+			else mono.Velocity += mono.Force*(DeltaTHalf/mono.Mass);
+		}
+	}
+	for (auto& mol : SimBox.Molecules) {
+		for (auto& mono : mol.Monomers) {
+			if (Rand::real_uniform() < Nu*DeltaT){
+				for (unsigned i = 0; i < 3; i++) {
+					if (mono.Mass == 1.0) mono.Velocity(i) = Rand::real_normal(0.0, Sigma);
+					else mono.Velocity(i) = Rand::real_normal(0.0, Sigma/sqrt(mono.Mass));
+				}
+			}
+		}
+	}
+}
+
+void AndersenStochastic::propagate_gaussian(bool calc_epot) {
+	for (auto& mol : SimBox.Molecules) {
+		for (auto& mono : mol.Monomers) {
+			if (mono.Mass == 1.0) mono.Velocity += mono.Force*DeltaTHalf;
+			else mono.Velocity += mono.Force*(DeltaTHalf/mono.Mass);
+			mono.Position += mono.Velocity*DeltaT;
+		}
+	}
+	//SimBox.wrap();
+ 	SimBox.check_VerletLists();
+ 	//SimBox.calculate_forces(calc_epot);
+	SimBox.calculate_forces_gaussian(calc_epot);
 
 	for (auto& mol : SimBox.Molecules) {
 		for (auto& mono : mol.Monomers) {

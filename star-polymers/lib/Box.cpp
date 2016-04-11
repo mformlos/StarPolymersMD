@@ -53,6 +53,17 @@ void Box::add_star(string filename, unsigned A, unsigned B, unsigned Arms, doubl
 	center_of_mass_reference_frame();
 }
 
+void Box::add_gaussian(unsigned N, double Mass){
+	Molecules.push_back(Molecule{N, Mass});
+	Molecules.back().initialize_gaussian_chain(N, Temperature);
+	NumberOfMonomers += N;
+	Molecules_com_reference_frame.push_back(Molecule{Molecules.back()});
+}
+
+void Box::add_gaussian(string filename, unsigned N, double Mass, bool set_zero) {
+
+}
+
 
 void Box::resize(double Lx, double Ly, double Lz) {
 	BoxSize[0] = Lx;
@@ -656,6 +667,39 @@ void Box::operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const {
 	auto first = Molecules.cbegin(), last = Molecules.cend();
 	for(; first != last; ++first) {
 		*first(ufunc, bfunc);
+	}
+}
+
+void Box::calculate_forces_gaussian(bool calc_epot) {
+	double force_abs { };
+	Vector3d force { };
+	for (auto& mol : Molecules) {
+		mol.Epot = 0.0;
+		for (auto& mono : mol.Monomers) mono.Force *= 0.0;
+	}
+	for (auto& mol : Molecules) {
+		for (auto& mono : mol.Monomers) {
+
+			for (auto& other : mono.VerletList) {
+				Vector3d distance {other -> Position - mono.Position};
+				double radius2 {distance.dot(distance)};
+				if (calc_epot) mol.Epot += 0.5*LJ_Potential(radius2);
+				force_abs = LJ_Force(radius2);
+				force = distance*force_abs;
+				mono.Force -= force;
+
+			}
+			for (auto& neighbor : mono.Neighbors) { //Fene bonds
+				Vector3d distance {neighbor -> Position - mono.Position};//{relative_position(mono, *neighbor)};
+				double radius2 {distance.dot(distance)};
+
+				if (calc_epot) mol.Epot += Harmonic_Potential(radius2, Temperature);
+				force_abs = Harmonic_Force(Temperature);
+				force = distance*force_abs;
+				mono.Force += force;
+				neighbor -> Force -= force;
+			}
+		}
 	}
 }
 

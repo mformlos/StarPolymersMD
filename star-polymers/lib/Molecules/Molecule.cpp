@@ -250,3 +250,34 @@ void Molecule::operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const {
 			bfunc( *first, *second );
 	}
 }
+
+
+void Molecule::initialize_gaussian_chain(unsigned N, double temperature) {
+	Vector3d tempPos{Vector3d::Zero()};
+	Vector3d average_vel{Vector3d::Zero()};
+	AType = N;
+	BType = 0;
+	for (unsigned i = 0; i < NumberOfMonomers; i++) {
+		Monomers[i].Position = tempPos;
+		for (unsigned j = 0; j < 3; j++) {
+			Monomers[i].Velocity(j) = Rand::real_uniform() -0.5;
+		}
+		average_vel += Monomers[i].Velocity;
+		if (i != (NumberOfMonomers - 1)) {
+ 			Monomers[i].set_neighbor(Monomers[i+1]);
+		}
+		tempPos(0) += 1.0;
+	}
+	average_vel /= NumberOfMonomers;
+	for (auto& mono : Monomers) {
+		mono.Velocity -= average_vel;
+	}
+	calculate_Ekin();
+	std::cout<< "ekin before: " << Ekin;
+	double vel_scale = sqrt(3.*(double)NumberOfMonomers*temperature/(Ekin*2.0));
+	std::cout << " vel scale: " << vel_scale;
+	for (auto& mono : Monomers) {
+		mono.Velocity *= vel_scale;
+	}
+	std::cout << " ekin after: " << calculate_Ekin() << std::endl;
+}

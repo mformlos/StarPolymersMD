@@ -20,6 +20,7 @@ private:
 public:
 	Nose_Hoover(Box& box, double dt, double temp, double a_q1, double a_q2);
 	void propagate(bool calc_epot = false);
+	void propagate_gaussian(bool calc_epot = false);
 	void update_temp();
 	std::string name() const;
 	std::string info() const;

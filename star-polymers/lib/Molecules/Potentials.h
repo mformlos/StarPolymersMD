@@ -119,4 +119,40 @@ inline double TypeBB_Force(double r2, double lambda) {
 	return force;
 }
 
+inline double Harmonic_Potential(double r2, double T) {
+	double potential{};
+	potential = 3.*T*r2/(2.);
+	return potential;
+}
+
+inline double Harmonic_Force(double T) {
+	double potential{};
+	potential = 3.*T;
+	return potential;
+}
+
+inline double LJ_Potential (double r2) {
+	double potential{};
+	if (r2 < 1.122462) {
+		double rm6 { 1.0 / r2 };
+		rm6 *= rm6*rm6;
+		potential = 4.0*rm6*(rm6 - 1.0) + 1.0;
+	}
+	return potential;
+}
+
+inline double LJ_Force (double r2) {
+	double force{};
+	if (r2 < 1.1224620483) {
+		double rm2 { 1.0 / r2 };
+		double rm6 { rm2*rm2*rm2 };
+		force = 48.0*rm2*rm6*(rm6 - 0.5);
+		if (fabs(force) > 1e4 ) std::cout << "LJ!" << std::endl;
+	}
+	return force;
+}
+
+
+
+
 #endif /* LIB_POTENTIALS_H_ */

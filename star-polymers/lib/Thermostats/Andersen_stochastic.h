@@ -22,10 +22,11 @@ private:
 	double Sigma;
 	static const std::string Name;
 public:
-	AndersenStochastic(Box& box, double dt, double T, double Nu);
+	AndersenStochastic(Box& box, double dt, double T, double Nu, bool gaussian = false);
 	void update_temp();
 	void dtime(double& delta_time);
 	void propagate(bool calc_epot = false);
+	void propagate_gaussian(bool calc_epot = false);
 	std::string name() const;
 	std::string info() const;
 };

@@ -22,6 +22,7 @@ public:
 	void update_temp();
 	void collide(Particle& one, Particle& two);
 	void propagate(bool calc_epot = false);
+	void propagate_gaussian(bool calc_epot = false);
 	std::string name() const;
 	std::string info() const;
 };
