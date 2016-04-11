@@ -121,7 +121,6 @@ void Box::update_VerletLists() {
 	}
 
 	//sort into CellLists
-	for (auto& mol : Molecules) set_center_of_mass_to_zero(mol);
 	center_of_mass_reference_frame();
 
 	for (auto& mol: Molecules) {
@@ -191,13 +190,6 @@ void Box::check_VerletLists() {
 			if (displacement.norm() > (VerletRadius - Cutoff)*0.5) {
 				update_VerletLists();
 				return;
-			}
-			for (unsigned i=0 ; i < 3; i++) {
-				if (fabs(mono.Position(i)) >= (BoxSize[i]*0.5 -0.5)){
-					update_VerletLists();
-					//std::cout << "out of box" << std::endl;
-					return;
-				}
 			}
 		}
 	}
@@ -688,7 +680,7 @@ void Box::calculate_forces_gaussian(bool calc_epot) {
 	for (auto& mol : Molecules) {
 		for (auto& mono : mol.Monomers) {
 
-			for (auto& other : mono.VerletList) {
+			/*for (auto& other : mono.VerletList) {
 				Vector3d distance {other -> Position - mono.Position};
 				double radius2 {distance.dot(distance)};
 				if (calc_epot) mol.Epot += 0.5*LJ_Potential(radius2);
@@ -696,7 +688,7 @@ void Box::calculate_forces_gaussian(bool calc_epot) {
 				force = distance*force_abs;
 				mono.Force -= force;
 
-			}
+			}*/
 			for (auto& neighbor : mono.Neighbors) { //Fene bonds
 				Vector3d distance {neighbor -> Position - mono.Position};//{relative_position(mono, *neighbor)};
 				double radius2 {distance.dot(distance)};
