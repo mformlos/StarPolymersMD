@@ -323,24 +323,39 @@ inline void MPC::calculateFluidVelocity(unsigned Index, Vector3d& FluidVelocity)
 inline void MPC::calculateAngular(unsigned Index, Vector3d& Angular, const Vector3d& CMV, const Vector3d& CMP, const Matrix3d& Rotation) {
 	Vector3d Cvec(0., 0., 0.);
 	Matrix3d InertiaTensor = Matrix3d::Zero();
+	Vector3d PosCM(0.,0.,0.);
+	Vector3d VelCM(0.,0.,0.);
 	for (auto& part : MPCCellList[Index]) {
-		Cvec += (part -> Position - CMP).cross(Rotation*(part -> Velocity - CMV) - part -> Velocity);
-		InertiaTensor(0,0) += pow(part -> Position(1) - CMP(1), 2) + pow(part -> Position(2) - CMP(2), 2);
-		InertiaTensor(1,1) += pow(part -> Position(0)-CMP(0), 2) + pow(part -> Position(2)-CMP(2), 2);
-		InertiaTensor(2,2) += pow(part -> Position(0)-CMP(0), 2) + pow(part -> Position(1)-CMP(1), 2);
-		InertiaTensor(0,1) -= (part -> Position(0) - CMP(0))*(part -> Position(1)-CMP(1));
-		InertiaTensor(0,2) -= (part -> Position(0) - CMP(0))*(part -> Position(2)-CMP(2));
-		InertiaTensor(1,2) -= (part -> Position(1) - CMP(1))*(part -> Position(2)-CMP(2));
+		PosCM = part -> Position - CMP;
+		VelCM = part -> Velocity - CMV;
+		Cvec += part -> Mass*PosCM.cross(VelCM - Rotation*(VelCM));
+		InertiaTensor(0,0) += part -> Mass*(pow(PosCM(1),2) + pow(PosCM(2),2));
+		InertiaTensor(1,1) += part -> Mass*(pow(PosCM(0),2) + pow(PosCM(2),2));
+		InertiaTensor(2,2) += part -> Mass*(pow(PosCM(1),2) + pow(PosCM(0),2));
+        InertiaTensor(0,1) -= part -> Mass*PosCM(0)*PosCM(1);
+        InertiaTensor(0,2) -= part -> Mass*PosCM(0)*PosCM(2);
+        InertiaTensor(1,2) -= part -> Mass*PosCM(1)*PosCM(2);
+
+		//Cvec += part -> Mass*(part -> Position - CMP).cross(Rotation*(part -> Velocity - CMV) - (part -> Velocity - CMV));
+		/*Cvec += part -> Mass*(part -> Position - CMP).cross(Rotation*(part -> Velocity - CMV) - part -> Velocity);
+		InertiaTensor(0,0) += part -> Mass*pow(part -> Position(1) - CMP(1), 2) + pow(part -> Position(2) - CMP(2), 2);
+		InertiaTensor(1,1) += part -> Mass*pow(part -> Position(0)-CMP(0), 2) + pow(part -> Position(2)-CMP(2), 2);
+		InertiaTensor(2,2) += part -> Mass*pow(part -> Position(0)-CMP(0), 2) + pow(part -> Position(1)-CMP(1), 2);
+		InertiaTensor(0,1) -= part -> Mass*(part -> Position(0) - CMP(0))*(part -> Position(1)-CMP(1));
+		InertiaTensor(0,2) -= part -> Mass*(part -> Position(0) - CMP(0))*(part -> Position(2)-CMP(2));
+		InertiaTensor(1,2) -= part -> Mass*(part -> Position(1) - CMP(1))*(part -> Position(2)-CMP(2));*/
 	}
 	InertiaTensor(1,0) = InertiaTensor(0,1);
 	InertiaTensor(2,0) = InertiaTensor(0,2);
-	InertiaTensor(2,1) -= InertiaTensor(1,2);
-	Angular = InertiaTensor.llt().solve(-Cvec);
+	InertiaTensor(2,1) = InertiaTensor(1,2);
+
+	Angular = InertiaTensor.llt().solve(Cvec);
 }
 
-inline void MPC::calculateAngularMomentum(unsigned Index, Vector3d& AngularMomentum, const Vector3d& CMP) {
+inline void MPC::calculateAngularMomentum(unsigned Index, Vector3d& AngularMomentum, const Vector3d& CMV, const Vector3d& CMP) {
+	AngularMomentum(0)= AngularMomentum(1)=AngularMomentum(2) = 0.;
 	for (auto& part : MPCCellList[Index]) {
-		AngularMomentum += (part -> Position - CMP).cross(part -> Velocity);
+		AngularMomentum += part -> Mass*(part -> Position - CMP).cross(part -> Velocity - CMV);
 	}
 }
 

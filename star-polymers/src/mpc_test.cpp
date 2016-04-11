@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
 	stringstream ss_para { };
 
 
-	//defaults für: Temperature, BoxSize(x, y, z), Shear rate, stepsize, step_aufwärm, step_total, step_output
+	//defaults für: Temperature, BoxSize(x, y, z), Shear rate, stepsize, step_aufwärm, step_total, step_output, AMC
 	double a_para[]{0.5, 5, 5, 5, 0.5, 0.1, 1E3, 1E4, 100, 0};
 	int a_para_size = sizeof(a_para) / sizeof(*a_para);
 	int i_para{1};

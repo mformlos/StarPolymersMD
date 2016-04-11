@@ -83,7 +83,7 @@ public:
 	inline void calculateFluidVelocity(unsigned Index, Vector3d&);
 	inline void calculateCMP(unsigned Index, Vector3d&);
 	inline void calculateAngular(unsigned Index, Vector3d& Angular, const Vector3d& CMV, const Vector3d& CMP, const Matrix3d& Rotation);
-	inline void calculateAngularMomentum(unsigned Index, Vector3d&, const Vector3d& CMP);
+	inline void calculateAngularMomentum(unsigned Index, Vector3d&, const Vector3d& CMV, const Vector3d& CMP);
 	double calculateEkinInCell(unsigned Index);
 	double calculateEkinTotal();
 	double calculateCurrentTemperature();
