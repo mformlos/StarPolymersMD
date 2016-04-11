@@ -121,6 +121,7 @@ void Box::update_VerletLists() {
 	}
 
 	//sort into CellLists
+	for (auto& mol : Molecules) set_center_of_mass_to_zero(mol);
 	center_of_mass_reference_frame();
 
 	for (auto& mol: Molecules) {
@@ -190,6 +191,13 @@ void Box::check_VerletLists() {
 			if (displacement.norm() > (VerletRadius - Cutoff)*0.5) {
 				update_VerletLists();
 				return;
+			}
+			for (unsigned i=0 ; i < 3; i++) {
+				if (fabs(mono.Position(i)) >= (BoxSize[i]*0.5 -0.5)){
+					update_VerletLists();
+					//std::cout << "out of box" << std::endl;
+					return;
+				}
 			}
 		}
 	}
