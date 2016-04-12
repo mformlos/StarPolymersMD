@@ -43,8 +43,8 @@ public:
 	void star_from_file(string filename, unsigned A, unsigned B, unsigned Arms, bool set_zero = false);
 	void initialize_gaussian_chain(unsigned N, double Temperature);
 	double calculate_Ekin();
-	Vector3d calculate_center_of_mass();
-	Vector3d calculate_center_of_mass_velocity();
+	Vector3d calculate_center_of_mass() const;
+	Vector3d calculate_center_of_mass_velocity() const;
 
 	std::ostream& print(std::ostream& os) const;
 	template<class UnitaryFunc>

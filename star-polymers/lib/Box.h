@@ -19,6 +19,8 @@
 #include "Potentials.h"
 #include "Functions.h"
 #include <csignal>
+#include "Analysis.h"
+#include "Vel_Autocorr.h"
 
 
 //class Thermostat;
@@ -106,6 +108,16 @@ public:
 
 	template<class UnaryFunc, class BinaryFunc>
 	void operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const;
+
+
+	template<class UnaryFunc>
+	void operator() (UnaryFunc& ufunc) const {
+		auto first = Molecules.cbegin(), last = Molecules.cend();
+		for(; first != last; ++first) {
+			ufunc(*first);
+		}
+	}
+
 };
 
 

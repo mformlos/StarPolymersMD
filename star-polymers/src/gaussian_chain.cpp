@@ -24,6 +24,7 @@
 #include "Hydrodynamics_None.h"
 #include "MPC.h"
 #include "Velocity_x.h"
+#include "Vel_Autocorr.h"
 
 
 int signal_caught { };
@@ -279,6 +280,7 @@ int main(int argc, char* argv[]) {
 	FILE* fluid_file { };
 	FILE* end_fluid_file { };
 	ofstream fluid_profile { };
+	ofstream autocorrelation_file { };
 	string end_fluid_file_name {"./results/end_fluid"+ss_para.str()+".dat"};
 	string oldname = "./results/statistics"+ss_para_old.str()+".dat";
 	string newname = "./results/statistics"+ss_para.str()+".dat";
@@ -315,6 +317,13 @@ int main(int argc, char* argv[]) {
 		fluid_profile.open(fluid_profile_name, ios::out | ios::trunc);
 	}
 
+	if(MPC_on) {
+		oldname = "./results/vel_autocorr"+ss_para_old.str()+".dat";
+		newname = "./results/vel_autocorr"+ss_para.str()+".dat";
+		if (continue_run && overwrite) rename(oldname.c_str(), newname.c_str());
+		string autocorrelation_name = newname;
+		autocorrelation_file.open(autocorrelation_name, ios::out | ios::trunc);
+	}
 
 	FILE* end_config_file { };
 	string end_config_file_name = "./results/end_config"+ss_para.str()+".pdb";
@@ -335,11 +344,12 @@ int main(int argc, char* argv[]) {
 	output_file << "fluid file generated: " << (fluid_print ? "yes" : "no") << std::endl;
 
 
-	MPC_Step = 100.0*StepSize;
+	MPC_Step = 0.1;
 	Box box(BoxX, BoxY, BoxZ, Temperature, 1.);
 
 	MPC hydrodynamics{box, Temperature, Mass_mono, Shear, 100, false};
 	VelocityX velocity_average_x{box, hydrodynamics,0.2};
+	Vel_Autocorr autocorrelation{100,MPC_Step};
 
 	if (continue_run) {
 			box.add_gaussian(std::string(argv[1]), N, double(Mass_mono), set_zero);
@@ -407,7 +417,8 @@ int main(int argc, char* argv[]) {
             	file_handling(config_file, ss_para.str()+".pdb", "config", Step_total, new_total_str);
             }
             if (fluid_print) file_handling(fluid_file, ss_para.str()+".dat", "fluid", Step_total, new_total_str);
-
+            file_handling(autocorrelation_file, ss_para.str()+".dat", "vel_autocorr", Step_total, new_total_str);
+            autocorrelation.print_result(autocorrelation_file);
 
 			newname = "./results/end_config"+ss_para.str()+".pdb";
 			newname.replace(newname.find(Step_total), Step_total.length(),new_total.str());
@@ -469,6 +480,7 @@ int main(int argc, char* argv[]) {
 
 		if (MPC_on) {
 			hydrodynamics.step(n, MPC_Step); //hydrodynamics -> step(1.0);
+			if (n > Steps_Equil) box(autocorrelation);
 		}
 	}
 
@@ -478,6 +490,7 @@ int main(int argc, char* argv[]) {
     if(continue_run && overwrite) remove(argv[1]);
 
     if (MPC_on) {
+    	autocorrelation.print_result(autocorrelation_file);
     	end_fluid_file = fopen(end_fluid_file_name.c_str(), "w");
     	hydrodynamics.print_fluid_complete(end_fluid_file);
     	fclose(end_fluid_file);

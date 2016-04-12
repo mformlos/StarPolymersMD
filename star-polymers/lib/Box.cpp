@@ -662,6 +662,7 @@ UnitaryFunc Box::unitary(UnitaryFunc&& func) const {
 	return for_each(Molecules.cbegin(), Molecules.cend(), func);
 }
 
+
 template<class UnaryFunc, class BinaryFunc>
 void Box::operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const {
 	auto first = Molecules.cbegin(), last = Molecules.cend();
@@ -669,6 +670,9 @@ void Box::operator() (UnaryFunc& ufunc, BinaryFunc& bfunc) const {
 		*first(ufunc, bfunc);
 	}
 }
+
+
+
 
 void Box::calculate_forces_gaussian(bool calc_epot) {
 	double force_abs { };

@@ -73,7 +73,7 @@ double Molecule::calculate_Ekin() {
 	return Ekin;
 }
 
-Vector3d Molecule::calculate_center_of_mass() {
+Vector3d Molecule::calculate_center_of_mass() const {
 	Vector3d com {Vector3d::Zero()};
 	for (auto& mono : Monomers) {
 		com += mono.Position;
@@ -82,7 +82,7 @@ Vector3d Molecule::calculate_center_of_mass() {
 	return com;
 }
 
-Vector3d Molecule::calculate_center_of_mass_velocity() {
+Vector3d Molecule::calculate_center_of_mass_velocity() const {
 	Vector3d com {Vector3d::Zero()};
 	for (auto& mono : Monomers) {
 		com += mono.Velocity;
@@ -266,7 +266,7 @@ void Molecule::initialize_gaussian_chain(unsigned N, double temperature) {
 		if (i != (NumberOfMonomers - 1)) {
  			Monomers[i].set_neighbor(Monomers[i+1]);
 		}
-		tempPos(0) += 1.0;
+		tempPos(0) += 0.3;
 	}
 	average_vel /= NumberOfMonomers;
 	for (auto& mono : Monomers) {
