@@ -145,7 +145,7 @@ int main(int argc, char* argv[]) {
 		BoxY = a_para[4];
 		BoxZ = a_para[5];
 		StepSize = a_para[6];
-		Steps_Equil = (long int)a_para[6];
+		Steps_Equil = (long int)a_para[7];
 		Steps_Total = (long int)a_para[8];
 		Steps_Output = (long int)a_para[9];
 		while (i_para < argc) {
@@ -345,9 +345,10 @@ int main(int argc, char* argv[]) {
 
 
 	MPC_Step = 0.1;
+	unsigned mpc_update {(unsigned)(MPC_Step/StepSize)};
 	Box box(BoxX, BoxY, BoxZ, Temperature, 1.);
 
-	MPC hydrodynamics{box, Temperature, Mass_mono, Shear, 100, false};
+	MPC hydrodynamics{box, Temperature, Mass_mono, Shear, mpc_update, false};
 	VelocityX velocity_average_x{box, hydrodynamics,0.2};
 	Vel_Autocorr autocorrelation{100,MPC_Step};
 
@@ -480,7 +481,7 @@ int main(int argc, char* argv[]) {
 
 		if (MPC_on) {
 			hydrodynamics.step(n, MPC_Step); //hydrodynamics -> step(1.0);
-			if (n > Steps_Equil) box(autocorrelation);
+			if (n > Steps_Equil && !(n%mpc_update)) box(autocorrelation);
 		}
 	}
 

@@ -638,7 +638,7 @@ std::ostream& Box::print_Ekin_and_Temperature(std::ostream& os) {
 		Ekin += mol.calculate_Ekin();
 		NumberOfMonomers += mol.NumberOfMonomers;
 	}
-	Temperature = Ekin*2./(3.*NumberOfMonomers);
+	Temperature = Ekin*2./(3.*(NumberOfMonomers-1));
 	os << Ekin << " " << Temperature << " ";
 	return os;
 }

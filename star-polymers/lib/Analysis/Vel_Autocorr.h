@@ -24,7 +24,6 @@ protected:
 	double DeltaT;
 	unsigned EntryCounter;
 	unsigned Counter;
-	long double MeanSqVel;
 	std::vector<Vector3d> Velocities;
 	std::vector<long double> Autocorrelation;
 
@@ -35,7 +34,6 @@ public:
 		DeltaT {dt},
 		EntryCounter{ },
 		Counter { },
-		MeanSqVel { },
 		Velocities{},
 		Autocorrelation(N, 0.) {}
 
@@ -47,12 +45,11 @@ public:
 			for (unsigned i = 0; i < Entries; i++) {
 				Autocorrelation[i] += Velocities[0].dot(Velocities[i]);
 			}
-			MeanSqVel += Velocity.dot(Velocity);
 			Counter++;
 		}
 		else {
 			Velocities.push_back(Velocity);
-			Counter++;
+			EntryCounter++;
 		}
 	}
 
@@ -67,9 +64,8 @@ public:
 
 	std::ostream& print_result(std::ostream& os) {
 		os << "#Diffusion coefficient = " << value() << "\n";
-		double MeanSqVel_result = MeanSqVel / Counter;
 		for (unsigned i = 0; i < Entries; i++) {
-			os << i*DeltaT << " " << Autocorrelation[i]/Counter << " " << MeanSqVel_result << "\n";
+			os << i*DeltaT << " " << Autocorrelation[i]/Counter << "\n";
 		}
 		return os;
 	}
