@@ -302,7 +302,7 @@ int main(int argc, char* argv[]) {
 	if (file_is_empty(statistic_file_check)) add_stat_descriptor = true;
 	statistic_file_check.close();
 	statistic_file.open(statistic_file_name, ios::out | ios::app);
-	if (add_stat_descriptor) statistic_file << "Step   Epot     Ekin     Temp   n_p s_p  R_gyr   G_xx      G_xy      G_xz       G_yx       G_yy      G_yz      G_zx     Gzy     Gzz      wx      wy     wz\n";
+	if (add_stat_descriptor) statistic_file << "Step   Epot     Ekin     Temp   n_p s_p   d_p  cos_p   R_gyr   G_xx      G_xy      G_xz       G_yx       G_yy      G_yz      G_zx     Gzy     Gzz      wx      wy     wz\n";
 
 	if(pdb_print) {
 		oldname = "./results/config"+ss_para_old.str()+".pdb";
@@ -449,12 +449,12 @@ int main(int argc, char* argv[]) {
 		if (n > Steps_Equil && !(n%Steps_Output)) {
 			thermostat -> propagate(true);
 			box.center_of_mass_reference_frame();
-			std::tuple<double,double> patches= box.calculate_patches_new();
+			std::vector<double> patch_char= box.calculate_patches_new();
 			std::tuple<double,Matrix3d> gyration = box.calculate_gyration_tensor();
 			statistic_file << n << " ";
 			box.print_Epot(statistic_file);
 			box.print_Ekin_and_Temperature(statistic_file);
-			statistic_file << std::get<0>(patches) << " " << std::get<1>(patches) << " ";
+			statistic_file << patch_char[0] << " " << patch_char[1] << " " << patch_char[2] << " " << patch_char[3] << " ";
 			statistic_file << std::get<0>(gyration) << " ";
 			Matrix3d gyr_tensor {std::get<1>(gyration)};
 			for (int i = 0; i < gyr_tensor.size(); i++) {

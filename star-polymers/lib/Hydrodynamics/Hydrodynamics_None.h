@@ -14,7 +14,7 @@ class Hydrodynamics_None : public Hydrodynamics {
 public:
 	Hydrodynamics_None(Box&);
 	void initialize();
-	void step(const double& dt);
+	void step(const long int& t, const double& dt);
 	double calculateCurrentTemperature();
 	void print_fluid(FILE*, int, int, int);
 	void print_fluid_with_coordinates(FILE*, int, int, int);
@@ -22,7 +22,7 @@ public:
 
 Hydrodynamics_None::Hydrodynamics_None(Box& box) : Hydrodynamics(box) {}
 void Hydrodynamics_None::initialize() {}
-void Hydrodynamics_None::step(const double& dt) {}
+void Hydrodynamics_None::step(const long int& t, const double& dt) {}
 double Hydrodynamics_None::calculateCurrentTemperature() {return 0.0;}
 void Hydrodynamics_None::print_fluid(FILE*, int, int, int) {}
 void Hydrodynamics_None::print_fluid_with_coordinates(FILE*, int, int, int) {}

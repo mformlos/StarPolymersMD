@@ -188,7 +188,7 @@ void MPC::sort() {
 		part.CellIndex = (int)(part.Position(0)+BoxSize[0]*0.5) + BoxSize[0]*(int)(part.Position(1)+BoxSize[1]*0.5)+BoxSize[0]*BoxSize[1]*(int)(part.Position(2)+BoxSize[2]*0.5);
 		//std::cout << part.CellIndex << std::endl;
 		try {
-			if (part.CellIndex < 0 || part.CellIndex > NumberOfCells) throw 20;
+			if (part.CellIndex > NumberOfCells) throw 20;
 			MPCCellList[part.CellIndex].push_back(&part);
 			MPCCellListFluidParticles[part.CellIndex]++;
 		}
@@ -204,7 +204,7 @@ void MPC::sort() {
 			mono.CellIndex = (int)(WrappedMonomer.Position(0) + BoxSize[0]*0.5) + BoxSize[0]*(int)(WrappedMonomer.Position(1)+BoxSize[1]*0.5) + BoxSize[0]*BoxSize[1]*(int)(WrappedMonomer.Position(2) + BoxSize[2]*0.5);
 			//std::cout << mono.CellIndex << std::endl;
 			try {
-				if (mono.CellIndex < 0 || mono.CellIndex > NumberOfCells) throw 20;
+				if (mono.CellIndex > NumberOfCells) throw 20;
 				MPCCellList[mono.CellIndex].push_back(&mono);
 			}
 			catch(...) {

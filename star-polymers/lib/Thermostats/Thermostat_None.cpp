@@ -13,7 +13,7 @@ Thermostat_None::Thermostat_None(Box& box, double dt, bool gaussian):
 
 void Thermostat_None::update_temp() { }
 
-void Thermostat_None::dtime(double dt) {
+void Thermostat_None::dtime(double& dt) {
 	Thermostat::dtime(dt);
 	DeltaTHalf = DeltaT * 0.50;
 }

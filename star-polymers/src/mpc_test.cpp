@@ -97,7 +97,6 @@ int main(int argc, char* argv[]) {
 	MPCroutine.initialize();
 
 	VelocityX velocity_average {box, MPCroutine, 0.2};
-	nothing no_function { };
 	clock_t begin = clock();
 
 	for (int n = 0; n < Steps_Total; ++n) {
@@ -107,7 +106,6 @@ int main(int argc, char* argv[]) {
 			/*for (auto& part : MPCroutine.Fluid) {
 				std::cout << part.Position.transpose() << " ; " << part.Velocity.transpose() << std::endl;
 			}*/
-			//MPCroutine(velocity_average, no_function);
 			MPCroutine(velocity_average);
 			temperature_file << n << " " << MPCroutine.calculateCurrentTemperature() << std::endl;
 			//MPCroutine.unitary(velocity_average);

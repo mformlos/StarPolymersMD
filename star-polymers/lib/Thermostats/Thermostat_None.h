@@ -13,7 +13,7 @@ private:
 public:
 	Thermostat_None(Box& box, double dt, bool gaussian = false);
 	void update_temp();
-	void dtime(double delta_time);
+	void dtime(double& delta_time);
 	void propagate(bool calc_epot = false);
 	void propagate_gaussian(bool calc_epot = false);
 	std::string name() const;

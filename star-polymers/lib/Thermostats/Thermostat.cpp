@@ -8,7 +8,7 @@ double Thermostat::dtime() const {
 	return DeltaT;
 }
 
-void Thermostat::dtime(double new_dtime) {
+void Thermostat::dtime(double& new_dtime) {
 	DeltaT = new_dtime;
 }
 

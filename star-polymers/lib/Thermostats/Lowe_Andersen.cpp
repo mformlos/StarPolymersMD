@@ -19,7 +19,7 @@ Lowe_Andersen::Lowe_Andersen(Box &box, double dt, double temp, double nu, double
 void Lowe_Andersen::update_temp() {  // for all masses equal
 }
 
-void Lowe_Andersen::dtime(double dt) {
+void Lowe_Andersen::dtime(double& dt) {
 	Thermostat::dtime(dt);
 	DeltaTHalf = DeltaT * 0.5;
 	NuDt = Nu*DeltaT*exp(-DeltaT*Nu);

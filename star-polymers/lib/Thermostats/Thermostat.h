@@ -13,7 +13,7 @@ public:
 	Thermostat() = default;
 	Thermostat(Box& box, double dt);
 	double dtime() const;
-	virtual void dtime(double new_dtime);
+	virtual void dtime(double& new_dtime);
 	virtual void update_temp() = 0; // für mögliche Erwärmung
 	virtual void propagate(bool calc_epot = false) = 0;
 	virtual void propagate_gaussian(bool calc_epot = false) = 0;

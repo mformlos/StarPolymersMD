@@ -18,7 +18,7 @@ public:
 
 	Lowe_Andersen(Box& box, double dt, double temp, double nu, double r);
 
-	void dtime(double dt);
+	void dtime(double& dt);
 	void update_temp();
 	void collide(Particle& one, Particle& two);
 	void propagate(bool calc_epot = false);
