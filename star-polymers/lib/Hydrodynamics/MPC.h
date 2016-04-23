@@ -88,6 +88,7 @@ public:
 	double calculateEkinTotal();
 	double calculateCurrentTemperature();
 	unsigned filledCells();
+	unsigned NumberOfParticles() const {return NumberOfMPCParticles;};
 
 	template<class UnitaryFunc>
 	UnitaryFunc unitary(UnitaryFunc& func) const {

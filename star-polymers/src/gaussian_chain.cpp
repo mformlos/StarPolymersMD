@@ -317,13 +317,13 @@ int main(int argc, char* argv[]) {
 		fluid_profile.open(fluid_profile_name, ios::out | ios::trunc);
 	}
 
-	if(MPC_on) {
-		oldname = "./results/vel_autocorr"+ss_para_old.str()+".dat";
-		newname = "./results/vel_autocorr"+ss_para.str()+".dat";
-		if (continue_run && overwrite) rename(oldname.c_str(), newname.c_str());
-		string autocorrelation_name = newname;
-		autocorrelation_file.open(autocorrelation_name, ios::out | ios::trunc);
-	}
+
+	oldname = "./results/vel_autocorr"+ss_para_old.str()+".dat";
+	newname = "./results/vel_autocorr"+ss_para.str()+".dat";
+	if (continue_run && overwrite) rename(oldname.c_str(), newname.c_str());
+	string autocorrelation_name = newname;
+	autocorrelation_file.open(autocorrelation_name, ios::out | ios::trunc);
+
 
 	FILE* end_config_file { };
 	string end_config_file_name = "./results/end_config"+ss_para.str()+".pdb";
@@ -346,6 +346,7 @@ int main(int argc, char* argv[]) {
 
 	MPC_Step = 0.1;
 	unsigned mpc_update {(unsigned)(MPC_Step/StepSize)};
+	std::cout << "mpc step every " << mpc_update << " steps" << std::endl;
 	Box box(BoxX, BoxY, BoxZ, Temperature, 1.);
 
 	MPC hydrodynamics{box, Temperature, Mass_mono, Shear, mpc_update, false};
@@ -481,8 +482,9 @@ int main(int argc, char* argv[]) {
 
 		if (MPC_on) {
 			hydrodynamics.step(n, MPC_Step); //hydrodynamics -> step(1.0);
-			if (n > Steps_Equil && !(n%mpc_update)) box(autocorrelation);
+
 		}
+		if (n > Steps_Equil && !(n%mpc_update)) box(autocorrelation);
 	}
 
     if (MPC_on && fluid_profile_print) velocity_average_x.print_result(fluid_profile);
@@ -490,8 +492,9 @@ int main(int argc, char* argv[]) {
 	box.print_PDB_with_velocity(end_config_file, Steps_Total);
     if(continue_run && overwrite) remove(argv[1]);
 
+	autocorrelation.print_result(autocorrelation_file);
     if (MPC_on) {
-    	autocorrelation.print_result(autocorrelation_file);
+
     	end_fluid_file = fopen(end_fluid_file_name.c_str(), "w");
     	hydrodynamics.print_fluid_complete(end_fluid_file);
     	fclose(end_fluid_file);
