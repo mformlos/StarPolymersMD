@@ -34,7 +34,7 @@ for i in range(3):
         Shear_temp[j] = Shear[counter]
         E_pot_temp[j] = E_pot[counter]
         counter += 1
-    labellam = "$\Lambda = " + Lambdas[i]
+    labellam = str(Lambdas[i])
     plt.plot(Shear_temp, E_pot_temp, label = labellam)
 
 
