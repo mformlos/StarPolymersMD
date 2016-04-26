@@ -437,9 +437,6 @@ std::list<unsigned> Box::calculate_patches() {
 std::vector<double> Box::calculate_patches_new() {
 	double patch_number { };
 	double patch_size { };
-	double distances {};
-	double cosines {};
-	unsigned counts {};
 	for (auto& mol : Molecules) {
 		std::vector<Vector3d> patch_vectors {};
 		std::vector<double> patch_distances {};
@@ -497,39 +494,18 @@ std::vector<double> Box::calculate_patches_new() {
 				patch_number_mol++;
 				for (auto& arm : cluster) {
 					patch_size_mol += 1.0;
-					Vector3d patch_com {Vector3d::Zero()};
-					unsigned part_start {arm*(mol.AType + mol.BType) + mol.AType};
-					unsigned part_stop {part_start + mol.BType};
-					for (unsigned i = part_start; i < part_stop; i++) {
-						patch_com += mol.Monomers[i].Position;
-					}
-					patch_com /= mol.BType;
-					patch_com -= COM_Pos;
-					patch_vectors.push_back(patch_com);
-					patch_distances.push_back(patch_com.norm());
-					distances += patch_com.norm();
 				}
 			}
 		}
-		if (patch_number_mol > 1) patch_size_mol /= patch_number_mol;
+		if (patch_number_mol > 1) patch_size_mol /= (double)patch_number_mol;
 		patch_number += patch_number_mol;
 		patch_size += patch_size_mol;
-		for (unsigned i = 0; i < patch_vectors.size() - 1; i++) {
-			for (unsigned j = i+1; j < patch_vectors.size(); j++) {
-				cosines += {patch_vectors[i].dot(patch_vectors[j])/(patch_distances[i]*patch_distances[j])};
-				counts++;
-			}
-		}
 	}
-	distances /= patch_number;
-	cosines /= counts;
 	patch_number /= Molecules.size();
 	patch_size /= Molecules.size();
-	std::vector<double> results(4, 0.);
+	std::vector<double> results(2, 0.);
 	results[0] = patch_number;
 	results[1] = patch_size;
-	results[2] = distances;
-	results[3] = cosines;
 	return results;
 }
 

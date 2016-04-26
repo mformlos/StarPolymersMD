@@ -454,7 +454,7 @@ int main(int argc, char* argv[]) {
 			statistic_file << n << " ";
 			box.print_Epot(statistic_file);
 			box.print_Ekin_and_Temperature(statistic_file);
-			statistic_file << patch_char[0] << " " << patch_char[1] << " " << patch_char[2] << " " << patch_char[3] << " ";
+			statistic_file << patch_char[0] << " " << patch_char[1] << " ";
 			statistic_file << std::get<0>(gyration) << " ";
 			Matrix3d gyr_tensor {std::get<1>(gyration)};
 			for (int i = 0; i < gyr_tensor.size(); i++) {

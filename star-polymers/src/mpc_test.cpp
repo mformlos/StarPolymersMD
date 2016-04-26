@@ -21,6 +21,7 @@
 #include "Velocity_x.h"
 #include "Vel_Autocorr_Fluid.h"
 #include "Fourier_Autocorr.h"
+#include "Vel_distribution.h"
 
 bool is_number(const std::string &str)
 {
@@ -84,16 +85,20 @@ int main(int argc, char* argv[]) {
 	ofstream temperature_file { };
 	ofstream autocorr_file { };
 	ofstream fourier_file { };
+	ofstream maxwell_file { };
 
 	string fluid_file_name = "fluid" + ss_para.str() +".dat";
 	string temperature_file_name = "temperature" + ss_para.str() + ".dat";
 	string autocorr_file_name = "velocity" + ss_para.str() + ".dat";
 	string fourier_file_name = "fourier" + ss_para.str() + ".dat";
+	string maxwell_file_name = "maxwell" + ss_para.str() + ".dat";
 
 	fluid_file.open(fluid_file_name, ios::out | ios::trunc);
 	temperature_file.open(temperature_file_name, ios::out | ios::trunc);
 	autocorr_file.open(autocorr_file_name, ios::out | ios::trunc);
 	fourier_file.open(fourier_file_name, ios::out | ios::trunc);
+	maxwell_file.open(maxwell_file_name, ios::out | ios::trunc);
+
 
 	std::cout << "Temperature: " << Temperature <<  std::endl;
 	std::cout << "MPC is turned ON with shear rate: " << Shear << std::endl;
@@ -106,6 +111,7 @@ int main(int argc, char* argv[]) {
 
 	VelocityX velocity_average {box, MPCroutine, 0.2};
 	Vel_Autocorr_Fluid autocorr {MPCroutine.NumberOfParticles(), 50, 1.0};
+	VelocityDistribution maxwell {0.01};
 	Fourier_Autocorr fourier {MPCroutine.NumberOfParticles(), 50, 1.0, (double)BoxX};
 	clock_t begin = clock();
 
@@ -117,6 +123,7 @@ int main(int argc, char* argv[]) {
 				std::cout << part.Position.transpose() << " ; " << part.Velocity.transpose() << std::endl;
 			}*/
 			MPCroutine(velocity_average);
+			MPCroutine(maxwell);
 			//std::cout << "autocorrelation start" << std::endl;
 			//std::cout << "autocorrelation end" << std::endl;
 			temperature_file << n << " " << MPCroutine.calculateCurrentTemperature() << std::endl;
@@ -129,8 +136,10 @@ int main(int argc, char* argv[]) {
 
 	}
 	velocity_average.print_result(fluid_file);
+	maxwell.print_result(maxwell_file);
 	autocorr.print_result(autocorr_file);
 	fourier.print_result(fourier_file);
+
 
 	clock_t end = clock();
 	std::cout << "time: " << double(end-begin)/CLOCKS_PER_SEC << std::endl;
