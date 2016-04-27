@@ -35,10 +35,10 @@ Size = namedtuple("Size", ["Lx", "Ly", "Lz"])
 ParamSetContinue = namedtuple("ParamSetContinue", "File, step_size, step_total, step_output, Lx, Ly, Lz, MPC, Shear, pdb, pdb_out, fluid, fluid_out")
 
 #paramSets=[ParamSetMixed([Type(3,3)],[3],10,[1.1],0.5, 50, 50, 50, 0.01, 1E3, 1E4, 1E3, [MPC("MPC", [0.3])], "pdb", 1E6, "No",1E6)]
-#paramSets=[ParamSetMixed([Type(21,9)],[6,9,15],10,[0.5,0.8,1.05,1.15],0.5, 120, 120, 120, 0.001, 1E6, 5E8, 1E4,[MPC("No", [0.0])],"pdb", 1E5, "No",1E6)] 
-#paramSets=[ParamSetMixed([Type(21,9)],[6,9,15],10,[0.5, 0.8, 1.05, 1.15],0.5, [Size(50, 50, 50)], 0.001, 1E5, 5E8, 1E3, [MPC("MPC", [0.0])],"pdb", 1E5, "No",1E6)] 
+#paramSets=[ParamSetMixed([Type(21,9)],[6,9,15],10,[0.5,0.8,1.05,1.15],0.5,[Size(120, 120, 120)], 0.001, 1E6, 5E8, 1E4,[MPC("No", [0.0])],"pdb", 1E5, "No",1E6)] 
+paramSets=[ParamSetMixed([Type(21,9)],[6,9,15],10,[0.5, 0.8, 1.05, 1.15],0.5, [Size(50, 50, 50)], 0.001, 1E5, 5E8, 1E4, [MPC("MPC", [0.0])],"pdb", 1E5, "No",1E6)] 
 #paramSets=[ParamSetMixed([Type(21,9)],[6],10,[0.5, 0.8, 1.05, 1.15],0.5, [Size(50, 50, 50)], 0.001, 1E5, 5E8, 1E3, [MPC("MPC", [0.0001, 0.0002, 0.0005])],"pdb", 1E5, "No",1E6)]
-paramSets=[ParamSetMixed([Type(21,9)],[6],10,[0.5, 0.8, 1.05, 1.15],0.5, [Size(80, 50, 50)], 0.001, 1E5, 5E8, 1E3, [MPC("MPC", [0.001, 0.002, 0.005])],"pdb", 1E5, "No",1E6)]
+#paramSets=[ParamSetMixed([Type(21,9)],[6],10,[0.5, 0.8, 1.05, 1.15],0.5, [Size(80, 50, 50)], 0.001, 1E5, 5E8, 1E3, [MPC("MPC", [0.001, 0.002, 0.005])],"pdb", 1E5, "No",1E6)]
 
 #paramSets=[ParamSetMixed([Type(21,9)],[15],10,[1.05],0.5, [Size(60,60,60), Size(70,70,70),Size(80,80,80),Size(90,90,90),Size(100,100,100)], 0.001, 1E5, 5E8, 1E3, [MPC("MPC", [0.005])],"pdb", 1E5, "No",1E6)] 
 
