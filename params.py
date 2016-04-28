@@ -36,8 +36,8 @@ ParamSetContinue = namedtuple("ParamSetContinue", "File, step_size, step_total, 
 
 #paramSets=[ParamSetMixed([Type(3,3)],[3],10,[1.1],0.5, 50, 50, 50, 0.01, 1E3, 1E4, 1E3, [MPC("MPC", [0.3])], "pdb", 1E6, "No",1E6)]
 #paramSets=[ParamSetMixed([Type(28,12)],[6,9,15],5,[0.5,0.8,1.05,1.15],0.5, 160, 160, 160, 0.001, 1E7, 5E8, 1E3,[MPC("No", [0.0])],"pdb", 1E5, "No",1E6)] 
-#paramSets=[ParamSetMixed([Type(28,12)],[6,9,15],5,[0.5, 0.8, 1.05, 1.15],0.5, [Size(50, 50, 50)], 0.001, 1E7, 5E8, 1E3, [MPC("MPC", [0.0])],"No", 1E5, "No",1E6)] 
-paramSets=[ParamSetMixed([Type(28,12)],[6,9,15],5,[0.5,0.8, 1.05, 1.15],0.5, [Size(50, 50, 50)], 0.001, 1E5, 5E8, 1E3, [MPC("MPC", [0.00001,0.00002, 0.0001, 0.0002])],"pdb", 1E5, "No",1E6)]
+paramSets=[ParamSetMixed([Type(28,12)],[6,9,15],5,[0.5, 0.8, 1.05, 1.15],0.5, [Size(50, 50, 50)], 0.001, 1E7, 5E8, 1E3, [MPC("MPC", [0.0])],"No", 1E5, "No",1E6)] 
+#paramSets=[ParamSetMixed([Type(28,12)],[6,9,15],5,[0.5,0.8, 1.05, 1.15],0.5, [Size(50, 50, 50)], 0.001, 1E5, 5E8, 1E3, [MPC("MPC", [0.00001,0.00002, 0.0001, 0.0002])],"pdb", 1E5, "No",1E6)]
 #paramSets=[ParamSetMixed([Type(21,9)],[6],10,[0.5, 0.8, 1.05, 1.15],0.5, [Size(80, 50, 50)], 0.001, 1E5, 5E8, 1E3, [MPC("MPC", [0.001, 0.002, 0.005])],"pdb", 1E5, "No",1E6)]
 
 #paramSets=[ParamSetMixed([Type(21,9)],[15],10,[1.05],0.5, [Size(60,60,60), Size(70,70,70),Size(80,80,80),Size(90,90,90),Size(100,100,100)], 0.001, 1E5, 5E8, 1E3, [MPC("MPC", [0.005])],"pdb", 1E5, "No",1E6)] 
@@ -47,7 +47,7 @@ paramSets=[ParamSetMixed([Type(28,12)],[6,9,15],5,[0.5,0.8, 1.05, 1.15],0.5, [Si
 
 coresPerJob=16
 coresPerRun=16
-tasksPerRun=48
+tasksPerRun=16
 
 
 
@@ -98,7 +98,7 @@ for paramSet in paramSets:
                             jobParam= ParamSet(TypeA, TypeB, Arms, Mass, Lambda, Temperature, Lx, Ly, Lz, step_size, step_warm, step_total, step_output, Hydrodynamic.Status, Shear, pdb, pdb_out, fluid, fluid_out)
                             mpc_string = ""
                             if (jobParam.MPC == "MPC"): 
-                                mpc_string = "MPCON_Shear%.4f.pdb" %jobParam.Shear
+                                mpc_string = "MPCON_Shear%.5f.pdb" %jobParam.Shear
                             else: 
                                 mpc_string = "MPCOFF.pdb"
                             file_name = "./results/end_config_Star_A%i_B%i_Arms%i_Mass%i_Lx%i_Ly%i_Lz%i_Lambda%.2f_T%.2f_run*_" %(jobParam.TypeA, jobParam.TypeB, jobParam.Arms, jobParam.Mass, jobParam.Lx, jobParam.Ly, jobParam.Lz, jobParam.Lambda, jobParam.Temperature)

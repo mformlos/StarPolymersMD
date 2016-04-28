@@ -52,7 +52,7 @@ for currJobParam in jobParamList:
     #jobsTodoList.append(params.nJobPerTask)
     jobsTodoList.append(1)
     nTask= nTask+1
-nFreeCores= params.coresPerRun
+nFreeCores= params.tasksPerRun
 
 while True:
     noRun= True
