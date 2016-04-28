@@ -1,5 +1,3 @@
-
-
 __author__ = 'adminuser'
 import subprocess
 import params
@@ -21,6 +19,8 @@ for jobParametersPart in params.jobParametersParts:
         for currLine in lines:
             if lineInd== 13:
                 outF.write("jobInd="+  str(currJobInd)+"\n")
+            elif lineInd==4: 
+                outF.write("#$ -pe mpich " + str(params.tasksPerRun)+"\n")
             else:
                 outF.write(currLine)
             lineInd += 1
@@ -32,3 +32,4 @@ for jobParametersPart in params.jobParametersParts:
     currJobInd+=1
 
 sys.exit(0)
+
