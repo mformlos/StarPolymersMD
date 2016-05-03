@@ -72,7 +72,9 @@ v_abs, prob = np.genfromtxt(maxwell_filename, unpack=True)
 plt.xlabel(r"$\vert \mathbf{v} \vert$")
 plt.ylabel(r"$P(\vert \mathbf{v} \vert)$")
 
-plt.plot(v_abs, prob, marker="o", markersize=3, color=tableau20[16], linestyle="None")
+plt.xlim(0,5)
+
+plt.plot(v_abs, prob, marker="o", markersize=4, color=tableau20[16], linestyle="None")
 plt.plot(v_abs, ((1./(2.*np.pi))**(3./2.))*4.*np.pi*(v_abs**2)*np.exp(-v_abs**2/2), color="black")
 
 fig.savefig("maxwell_distribution_"+param_string+".pdf")
@@ -98,7 +100,7 @@ plt.ylabel(r"$C_v^T (k,t)$")
 plt.semilogy(time, ck1, marker='o', color=tableau20[12], linestyle="None", label=r"$\mathbf{k} = (1,0,0)$" )
 plt.semilogy(time, ck2, marker='o', color=tableau20[16], linestyle="None", label=r"$\mathbf{k} = (0,1,0)$")
 plt.semilogy(time, ck3, marker='o', color=tableau20[18], linestyle="None", label=r"$\mathbf{k} = (0,0,1)$")
-plt.semilogy(time, np.exp(-(2.*np.pi/10.)**2*0.8705*time), color="black")
+plt.semilogy(time, np.exp(-(2.*np.pi/30.)**2*0.8705*time), color="black")
 fig.savefig("transverse_autocorr_"+param_string+".pdf")
 plt.show()
 
@@ -116,6 +118,7 @@ plt.xlabel(r"$t/\sqrt{ma^2/k_BT}$")
 plt.ylabel(r"$C_v(t)$")
 
 plt.loglog(time, cv, marker='o', color=tableau20[16], linestyle="None")
+
 
 fig.savefig("velocity_autocorr_"+param_string+".pdf")
 plt.show()

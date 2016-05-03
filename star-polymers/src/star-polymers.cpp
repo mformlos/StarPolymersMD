@@ -302,7 +302,7 @@ int main(int argc, char* argv[]) {
 	if (file_is_empty(statistic_file_check)) add_stat_descriptor = true;
 	statistic_file_check.close();
 	statistic_file.open(statistic_file_name, ios::out | ios::app);
-	if (add_stat_descriptor) statistic_file << "Step   Epot     Ekin     Temp   n_p s_p   d_p  cos_p   R_gyr   G_xx      G_xy      G_xz       G_yx       G_yy      G_yz      G_zx     Gzy     Gzz      wx      wy     wz\n";
+	if (add_stat_descriptor) statistic_file << "Step   Epot     Ekin     Temp   n_p s_p  R_gyr   G_xx      G_xy      G_xz       G_yx       G_yy      G_yz      G_zx     Gzy     Gzz      wx      wy     wz\n";
 
 	if(pdb_print) {
 		oldname = "./results/config"+ss_para_old.str()+".pdb";

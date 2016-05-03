@@ -7,7 +7,7 @@ import sys
 directory = str(sys.argv[1])
 directory = directory.replace('/', '')
 f_output = open("./averages_" + directory+".dat", "w") 
-f_output.write("#1Arms  2Lambda  3Shear  4Epot  6Ekin  8Temp  10N_patch  12S_patch 14D_patch 16COS_patch 18R_gyr  20G_xx  22G_xy  24G_xz  26G_yx  28G_yy  30G_yz  32G_zx  34Gzy  36Gzz  38wx  40wy  42wz \n")
+f_output.write("#1Arms  2Lambda  3Shear  4Epot  6Ekin  8Temp  10N_patch  12S_patch 18R_gyr  20G_xx  22G_xy  24G_xz  26G_yx  28G_yy  30G_yz  32G_zx  34Gzy  36Gzz  38wx  40wy  42wz \n")
 filenames = "./"+str(sys.argv[1])+"statistics*"
 equil = 100000000
 
@@ -17,8 +17,8 @@ if len(sys.argv) > 2:
     equil = float(sys.argv[2])
 
 for file in sorted(glob.glob(filenames)): 
-    averages = np.zeros(21)
-    stdev = np.zeros(21)
+    averages = np.zeros(19)
+    stdev = np.zeros(19)
     gyration = np.zeros((3,3))
     N = 0
     N_patch = 0
@@ -30,35 +30,34 @@ for file in sorted(glob.glob(filenames)):
             continue
         data = line.split(" ")
         if float(data[0])>equil:   
-            for j in range(20):
-                if j == 4 and float(data[j+1]) > 0.0: 
+            for j in range(18):
+                if j == 3 and float(data[j+1]) > 0.0: 
                     N_patch += 1   
                 averages[j] += float(data[j+1])
                 #stdev[j] += np.power(float(data[j+1]),2)
             N += 1
-            gyration[0,0] = float(data[9])
-            gyration[0,1] = float(data[10])
-            gyration[0,2] = float(data[11])
+            gyration[0,0] = float(data[7])
+            gyration[0,1] = float(data[8])
+            gyration[0,2] = float(data[9])
             gyration[1,0] = gyration[0,1]
-            gyration[1,1] = float(data[11])
-            gyration[1,2] = float(data[12])
+            gyration[1,1] = float(data[10])
+            gyration[1,2] = float(data[11])
             gyration[2,0] = gyration[0,2]
             gyration[2,1] = gyration[1,2]
-            gyration[2,2] = float(data[17])
+            gyration[2,2] = float(data[15])
             eigenvalues, eigenvectors = np.linalg.eig(gyration)
             eigenvalues = np.sort(eigenvalues) 
             ev = eigenvalues[::-1]
             I = ev[0]+ev[1]+ev[2]
             temp = (3.*ev[0]-I)*(3.*ev[1]-I)*(3.*ev[2]-I)/pow(I,3)
-            averages[20] += temp
+            averages[18] += temp
             #stdev[18] += np.power(temp, 2)
-    N_patch_single = averages[4]
-    for j in range(21):
+
+    for j in range(19):
         if j == 4: 
             #stdev[j] = np.sqrt((1/(N_patch-1))*(stdev[j] - (1/N_patch)*np.power(averages[j],2)))
             averages[j] /= float(N_patch)
-        if j >= 5 and j <= 7:
-            averages[j] /= N_patch_single
+
 
         else:
             #print stdev[j], np.power(averages[j], 2)/N 
@@ -72,15 +71,13 @@ for file in sorted(glob.glob(filenames)):
             continue
         data = line.split(" ")
         if float(data[0])>equil:   
-            for j in range(20):
-                if j != 4 or float(data[j+1]) > 0.0:  
+            for j in range(18):
+                if (j < 4 and j > 5) or float(data[j+1]) > 0.0:  
                     stdev[j] += np.power(float(data[j+1]) - averages[j],2)
   
-    for j in range(21):
-        if j == 4: 
+    for j in range(19):
+        if j == 4:
             stdev[j] = np.sqrt(stdev[j]/((N_patch-1)*N_patch))
-        if j >= 5 and j <= 7:
-            stdev[j] = np.sqrt(stdev[j]/((N_patch_single-1)*N_patch_single))
 
         else:
             #print stdev[j]
