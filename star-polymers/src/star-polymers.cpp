@@ -89,7 +89,7 @@ inline bool file_exists (const std::string& name) {
 int main(int argc, char* argv[]) {
 	signal_caught = 0;
 	signal(SIGTERM, signal_handler);
-	signal(SIGINT, signal_handler);
+    //signal(SIGINT, signal_handler);
 	signal(SIGSEGV, signal_handler);
 	int BoxX { }, BoxY { }, BoxZ { }, TypeA { }, TypeB { }, Arms { }, Mass_mono{ };
 	long int Steps_Equil { }, Steps_Total { }, Steps_Output { }, Steps_Start { }; 
