@@ -18,8 +18,10 @@ for i in range(len(tableau20)):
 
 #setting up the figure
 plt.rcParams.update({'font.size':20})
+plt.rcParams.update({'text.latex.preamble': ['\usepackage{amssymb}', '\usepackage{amsmath}']})
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
+
 
 fig = plt.figure(0, figsize=(10,8), dpi =80)
 plt.subplot(1,1,1)
@@ -38,6 +40,8 @@ for i, line in enumerate(checkfile):
 checkfile.close()  
 param_string = profile_filename.split("fluid_")[1]
 param_string = param_string.split(".dat")[0]
+L=30
+T=1.0
 
 
 
@@ -69,13 +73,13 @@ maxwell_filename = profile_filename.replace("fluid", "maxwell")
 
 v_abs, prob = np.genfromtxt(maxwell_filename, unpack=True)
 
-plt.xlabel(r"$\vert \mathbf{v} \vert$")
-plt.ylabel(r"$P(\vert \mathbf{v} \vert)$")
+plt.xlabel(r"$\vert \boldsymbol{v} \vert$")
+plt.ylabel(r"$P(\vert \boldsymbol{v} \vert)$")
 
 plt.xlim(0,5)
 
-plt.plot(v_abs, prob, marker="o", markersize=4, color=tableau20[16], linestyle="None")
-plt.plot(v_abs, ((1./(2.*np.pi))**(3./2.))*4.*np.pi*(v_abs**2)*np.exp(-v_abs**2/2), color="black")
+plt.plot(v_abs, prob, marker="o", markersize=7, mew = 1, fillstyle = 'none', color=tableau20[16], linestyle="None")
+plt.plot(v_abs, ((1./(2.*np.pi))**(3./2.))*4.*np.pi*(v_abs**2)*np.exp(-v_abs**2/2), color=tableau20[8], linewidth = 2)
 
 fig.savefig("maxwell_distribution_"+param_string+".pdf")
 plt.show()
@@ -83,7 +87,7 @@ plt.show()
 
 ###Transverse velocity autocorrelation###
 
-fig = plt.figure(2, figsize=(10,8), dpi=80)
+fig = plt.figure(2, figsize=(15,10), dpi=80)
 ax = fig.add_subplot(1,1,1)
 #ax.set_yscale('log')
 
@@ -95,12 +99,14 @@ ck2 /= ck2[0]
 ck3 /= ck3[0]
 
 plt.xlabel(r"$t/\sqrt{ma^2/k_BT}$")
-plt.ylabel(r"$C_v^T (k,t)$")
+plt.ylabel(r"$\frac{C_v^T (\boldsymbol{k},t)}{C_v^T (\boldsymbol{k},0)}$", fontsize=28)
 
-plt.semilogy(time, ck1, marker='o', color=tableau20[12], linestyle="None", label=r"$\mathbf{k} = (1,0,0)$" )
-plt.semilogy(time, ck2, marker='o', color=tableau20[16], linestyle="None", label=r"$\mathbf{k} = (0,1,0)$")
-plt.semilogy(time, ck3, marker='o', color=tableau20[18], linestyle="None", label=r"$\mathbf{k} = (0,0,1)$")
+plt.semilogy(time, ck1, marker='x', mew = 1.5,  markersize=12, fillstyle = 'none', color=tableau20[12], linestyle="None", label=r"$\boldsymbol{k} = (1,0,0)$" )
+plt.semilogy(time, ck2, marker='d', mew = 1.5, markersize=12, fillstyle = 'none',  color=tableau20[16], linestyle="None", label=r"$\boldsymbol{k} = (0,1,0)$")
+plt.semilogy(time, ck3, marker='o', mew = 1.5, markersize=9, fillstyle = 'none', color=tableau20[18], linestyle="None", label=r"$\boldsymbol{k} = (0,0,1)$")
 plt.semilogy(time, np.exp(-(2.*np.pi/30.)**2*0.8705*time), color="black")
+plt.legend(loc="best", numpoints = 1, prop={'size':20})
+
 fig.savefig("transverse_autocorr_"+param_string+".pdf")
 plt.show()
 
@@ -113,11 +119,13 @@ ax = fig.add_subplot(1,1,1)
 autocorr_filename = profile_filename.replace("fluid", "velocity")
 
 time, cv = np.genfromtxt(autocorr_filename, unpack=True)
+time_theory, cv_theory = np.genfromtxt("cv_T1.0_L"+str(L)+".dat", unpack=True)
 
 plt.xlabel(r"$t/\sqrt{ma^2/k_BT}$")
 plt.ylabel(r"$C_v(t)$")
 
 plt.loglog(time, cv, marker='o', color=tableau20[16], linestyle="None")
+plt.loglog(time_theory, cv_theory, color = "black")
 
 
 fig.savefig("velocity_autocorr_"+param_string+".pdf")

@@ -5,8 +5,14 @@ def q_transverse(k_sq, t):
     return q_t
 
 def q_longitudinal(k_sq, t):
-    omega = k_sq*nu_wave*np.sqrt(4.*c*c/(k_sq*nu_wave*nu_wave)-0.5)
-    q_l = (1./rho)*np.exp(-k_sq*nu_wave*t/2)*(np.cos(omega*t) - np.sqrt(k_sq*nu_wave*nu_wave/(4.*c*c-k_sq*nu_wave*nu_wave))*np.sin(omega*t))
+    factor = 4.*c*c/(k_sq*nu_wave*nu_wave)
+    q_l = 0.0
+    if factor > 1: 
+        omega = k_sq*nu_wave*np.sqrt(factor-1)/2
+        q_l = (1./rho)*np.exp(-k_sq*nu_wave*t/2.)*(np.cos(omega*t) - np.sqrt(k_sq*nu_wave*nu_wave/(4.*c*c-k_sq*nu_wave*nu_wave))*np.sin(omega*t))
+    else: 
+        omega = k_sq*nu_wave*np.sqrt(1.-factor)/2
+        q_l = (1./rho)*np.exp(-k_sq*nu_wave*t/2.)*(np.cosh(omega*t) - np.sqrt(k_sq*nu_wave*nu_wave/(k_sq*nu_wave*nu_wave - 4.*c*c))*np.sinh(omega*t))
     return q_l
 
 
@@ -15,20 +21,20 @@ def q_longitudinal(k_sq, t):
 rho = 10
 nu = 0.8705
 n_v = 0.3/rho
-nu_wave = (4./3.)*nu + n_v
+nu_wave = (4./3.)*nu # + n_v
 T = 1.0
 L = 30
 V = np.power(L,3)
 c = np.sqrt(T)
 k_const = 2.*np.pi/L
 k_const_sq = np.power(k_const,2)
-n_max = 50
+n_max = 14
 N_c = 10
 h = 0.1
 gamma = 2.*(1.-np.cos(130./180.))*(np.exp(-N_c)+N_c +1)/(3.*N_c)
 D = h*T*((1./gamma)-0.5)
 
-c_v = np.zeros(50)
+c_v = np.zeros(51)
 time = np.linspace(0,50)
 f = open("cv_T"+str(T)+"_L"+str(L)+".dat", "w")
 
