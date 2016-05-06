@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import pyplot as plt
 
 def q_transverse(k_sq, t):
     q_t = (1./rho)*np.exp(-nu*k_sq*t)
@@ -18,24 +19,30 @@ def q_longitudinal(k_sq, t):
 
 
 
-rho = 10
-nu = 0.8705
-n_v = 0.3/rho
-nu_wave = (4./3.)*nu # + n_v
+rho = 10.
+N_c = 10.
+h = 0.1
+alpha = 130./180.
 T = 1.0
 L = 30
 V = np.power(L,3)
 c = np.sqrt(T)
+nu_k = rho*h*(5.*N_c/((N_c - 1.)*(4. - 2.*np.cos(alpha) - 2.*np.cos(2.*alpha))) - 0.5)
+nu_c = (rho/(18.*h))*(1. - np.cos(alpha))*(1. - (1./N_c))
+nu_wave = nu_c +4.*nu_k/3.
+print "nu_k = ", nu_k, ", nu_c = ", nu_c, ", nu = ", nu_k+nu_c, ", nu_wave = ", nu_wave
+#nu = 0.8705
+#n_v = 0.3/rho
+nu_wave = 8.862
 k_const = 2.*np.pi/L
 k_const_sq = np.power(k_const,2)
-n_max = 14
-N_c = 10
-h = 0.1
+n_max = 16
+
 gamma = 2.*(1.-np.cos(130./180.))*(np.exp(-N_c)+N_c +1)/(3.*N_c)
 D = h*T*((1./gamma)-0.5)
 
-c_v = np.zeros(51)
-time = np.linspace(0,50)
+c_v = np.zeros(501)
+time = np.linspace(0,50,0.1)
 f = open("cv_T"+str(T)+"_L"+str(L)+".dat", "w")
 
 for t in time:
@@ -50,6 +57,12 @@ for t in time:
 
 for t in time:
     f.write("%f %f \n" %(t, c_v[t]))
+
+fig = plt.figure(0, figsize=(10,8), dpi =80)
+plt.subplot(1,1,1)
+
+plt.loglog(time, c_v)
+plt.show()
 
 
 
