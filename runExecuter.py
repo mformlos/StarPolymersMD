@@ -10,11 +10,11 @@ import signal
 
 
 def signal_handler(signum, frame): 
-    print("exiting with sigint")
+    print("exiting with signal %i" %signum)
     for i in range(len(procList)):
        print("killing child %i"%i)
        if procList[i].poll()==None: 
-           os.killpg(procList[i].pid, signal.SIGINT)
+           os.killpg(procList[i].pid, signal.SIGTERM)
            #time.sleep(5)
     time.sleep(30)
     #os.system("python submit.py")
