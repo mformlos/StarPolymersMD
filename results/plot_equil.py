@@ -25,8 +25,6 @@ plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 
 
-fig = plt.figure(0, figsize=(10,8), dpi =80)
-plt.subplot(1,1,1)
 
 filename = str(sys.argv[1])
 
@@ -54,7 +52,10 @@ for value in Arm:
 
 print Arms, Arms_datapoints
 
+figno = 0
 for key, value in characteristics.iteritems():
+    fig = plt.figure(figno, figsize=(15,10), dpi =80)
+    plt.subplot(1,1,1)
     counter = 0
     for i in range(3):
         Lambda_temp = np.zeros(Arms_datapoints[i])
@@ -66,11 +67,13 @@ for key, value in characteristics.iteritems():
             data_dev[j] = value[1][counter]
             counter += 1
         labelarm = str(Arms[i])
-        plt.errorbar(Lambda_temp, data, yerr=data_dev, marker=Arm_marker[i], mew=1.5, markersize=10, color=tableau20[Arm_color[i]], label =r"$f= "+labelarm+"$")
+        plt.errorbar(Lambda_temp, data, yerr=data_dev, marker=Arm_marker[i], mew=1.5, markersize=10, lw=1.5, color=tableau20[Arm_color[i]], mec=tableau20[Arm_color[i]], label =r"$f= "+labelarm+"$")
     plt.xlabel(r"$\lambda$")
     plt.ylabel(value[2])
-    plt.legend(loc='best', numpoints = 1, prop={'size':20})
+    plt.legend(loc='upper right', numpoints = 1, prop={'size':20})
+    fig.savefig(key+'_equil.pdf')
     plt.show()
+    figno += 1
 
 
 

@@ -4,6 +4,19 @@ import glob
 import numpy as np
 import sys 
 
+def sort_files(file_name):
+    f = file_name.split('Arms')
+    f = f[1].split('_')
+    f = f[0]
+    f = float(f)
+    lam = file_name.split('Lambda')
+    lam = lam[1].split('_')
+    lam = lam[0]
+    lam = float(lam)
+    return f+lam
+
+
+
 directory = str(sys.argv[1])
 directory = directory.replace('/', '')
 f_output = open("./averages_" + directory+".dat", "w") 
@@ -16,7 +29,7 @@ print filenames
 if len(sys.argv) > 2: 
     equil = float(sys.argv[2])
 
-for file in sorted(glob.glob(filenames)): 
+for file in sorted(glob.glob(filenames), key=sort_files):
     averages = np.zeros(21)
     stdev = np.zeros(21)
     gyration = np.zeros((3,3))
@@ -40,8 +53,8 @@ for file in sorted(glob.glob(filenames)):
             gyration[0,1] = float(data[8])
             gyration[0,2] = float(data[9])
             gyration[1,0] = gyration[0,1]
-            gyration[1,1] = float(data[10])
-            gyration[1,2] = float(data[11])
+            gyration[1,1] = float(data[11])
+            gyration[1,2] = float(data[12])
             gyration[2,0] = gyration[0,2]
             gyration[2,1] = gyration[1,2]
             gyration[2,2] = float(data[15])
