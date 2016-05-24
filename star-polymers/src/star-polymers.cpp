@@ -351,7 +351,7 @@ int main(int argc, char* argv[]) {
 	MPC_Step = 100.0*StepSize;
 	Box box(BoxX, BoxY, BoxZ, Temperature, Lambda);
 
-	MPC hydrodynamics{box, Temperature, Mass_mono, Shear, 100, true};
+	MPC hydrodynamics{box, Temperature, Mass_mono, Shear, 100, false};
 	VelocityX velocity_average_x{box, hydrodynamics,0.2};
 
 	if (argc > 1 && strcmp(argv[1], "Chain") == 0) {
