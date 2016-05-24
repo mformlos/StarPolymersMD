@@ -18,8 +18,10 @@ for i in range(len(tableau20)):
     tableau20[i] = (r / 255., g / 255., b / 255.)
 
 #setting up the figure
-plt.rcParams.update({'font.size':20})
+plt.rcParams.update({'font.size':36})
 plt.rcParams.update({'text.latex.preamble': ['\usepackage{amssymb}', '\usepackage{amsmath}']})
+plt.rcParams.update({'xtick.labelsize':24})
+plt.rcParams.update({'ytick.labelsize':24})
 plt.rc('text', usetex=True)
 plt.rc('font', family='serif')
 
@@ -68,7 +70,7 @@ for key, value in characteristics.iteritems():
         plt.plot(Shear_temp, data, marker=Lambda_marker[i], mew=1.5, markersize=10, lw=1.5, color=tableau20[Arm_color[i]], mec=tableau20[Arm_color[i]], label =r"$\lambda = "+labellam+"$")
     plt.xlabel(r"$W_i$")
     plt.ylabel(value[1])
-    plt.legend(loc='upper right', numpoints=1, prop={'size':20})
+    plt.legend(loc='upper right', numpoints=1, prop={'size':24}, frameon=False)
     fig.savefig(key+'_f'+Arms+'.pdf')
     figno += 1
 
