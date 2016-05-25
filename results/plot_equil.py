@@ -34,7 +34,7 @@ filename = str(sys.argv[1])
 Arm, Lambda, N_patch, N_patch_dev, S_patch, S_patch_dev, R_gyr, R_gyr_dev, S, S_dev, delta, delta_dev, c, c_dev = np.loadtxt(filename, unpack=True, usecols=(0,1, 9, 10, 11, 12, 13, 14, 39, 40, 41, 42, 43, 44))
 print Arm, Lambda
 
-characteristics = {'N_patch':[N_patch,N_patch_dev, r"$N_p$"],'S_patch':[S_patch, S_patch_dev, r"$S_p$"], 'R_gyr':[R_gyr, R_gyr_dev, r"$R_{gyr}$"], 'S':[S, S_dev, r"$S$"], 'delta':[delta, delta_dev, r"$\delta$"], 'c':[c, c_dev, r"$c$"]}
+characteristics = {'N_patch':[N_patch,N_patch_dev, r"$N_p$", 0, 2.0, 'upper left'],'S_patch':[S_patch, S_patch_dev, r"$S_p$", 2.00, 2.25, 'upper left'], 'R_gyr':[R_gyr, R_gyr_dev, r"$R_{gyr}$", 8.0, 10.0, 'upper right'], 'S':[S, S_dev, r"$S$", 0.0, 0.07, 'upper left'], 'delta':[delta, delta_dev, r"$\delta$", 0.0, 0.2, 'upper right'], 'c':[c, c_dev, r"$c$", 0.08, 0.2, 'upper right']}
 
 Arms_datapoints = np.zeros(3)
 Arms = np.zeros(3)
@@ -56,7 +56,7 @@ print Arms, Arms_datapoints
 
 figno = 0
 for key, value in characteristics.iteritems():
-    fig = plt.figure(figno, figsize=(15,10), dpi =80)
+    fig = plt.figure(figno, figsize=(15,10), dpi =100)
     plt.subplot(1,1,1)
     counter = 0
     for i in range(3):
@@ -69,11 +69,18 @@ for key, value in characteristics.iteritems():
             data_dev[j] = value[1][counter]
             counter += 1
         labelarm = str(Arms[i])
-        plt.errorbar(Lambda_temp, data, yerr=data_dev, marker=Arm_marker[i], mew=1.5, markersize=10, lw=1.5, color=tableau20[Arm_color[i]], mec=tableau20[Arm_color[i]], label =r"$f= "+labelarm+"$")
-    plt.xlabel(r"$\lambda$")
-    plt.ylabel(value[2])
-    plt.legend(loc='upper right', numpoints = 1, prop={'size':24}, frameon=False)
-    fig.savefig(key+'_equil.pdf')
+        plt.plot(Lambda_temp[1:], data[1:], marker=Arm_marker[i], mew=1.5, markersize=10, lw=1.5, color=tableau20[Arm_color[i]], mec=tableau20[Arm_color[i]], label =r"$f= "+labelarm+"$")
+#plt.errorbar(Lambda_temp, data, yerr=data_dev, marker=Arm_marker[i], mew=1.5, markersize=10, lw=1.5, color=tableau20[Arm_color[i]], mec=tableau20[Arm_color[i]], label =r"$f= "+labelarm+"$")
+    plt.xlabel(r"$\lambda$", labelpad=25)
+    plt.ylabel(value[2], labelpad=25)
+    plt.xlim([0.75,1.2])
+    plt.ylim(value[3:5])
+    plt.legend(loc=value[5], numpoints = 1, prop={'size':24}, frameon=False)
+    xticks = plt.gca().xaxis.get_major_ticks()
+    plt.gca().tick_params(width=1,length=10)
+    xticks[0].set_visible(False)
+    xticks[-1].set_visible(False)
+    fig.savefig(key+'_equil.pdf', dpi=300)
     plt.show()
     figno += 1
 
