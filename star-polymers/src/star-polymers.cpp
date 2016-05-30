@@ -412,7 +412,8 @@ int main(int argc, char* argv[]) {
 			new_total << scientific << n;
 			new_total_str = new_total.str();
 			file_handling(statistic_file, ss_para.str()+".dat", "statistics", Step_total, new_total_str);
-			file_handling(output_file, ss_para.str()+".dat", "output", Step_total, new_total_str);
+
+              
             if (MPC_on && fluid_profile_print) {
             	std::cout << "printing fluid profile..." << std::endl;
     		    velocity_average_x.print_result(fluid_profile);
@@ -423,8 +424,8 @@ int main(int argc, char* argv[]) {
             	file_handling(config_file, ss_para.str()+".pdb", "config", Step_total, new_total_str);
             }
             if (fluid_print) file_handling(fluid_file, ss_para.str()+".dat", "fluid", Step_total, new_total_str);
-
-
+                        string old_config_name = "./results/end_config" + ss_para_old.str() +".pdb";
+                        std::remove(old_config_name.c_str());                         
 			newname = "./results/end_config"+ss_para.str()+".pdb";
 			newname.replace(newname.find(Step_total), Step_total.length(),new_total.str());
 			end_config_file = fopen(newname.c_str(), "w"); 
@@ -442,6 +443,7 @@ int main(int argc, char* argv[]) {
 
 
 			output_file << "signal " << signal_caught << "caught, data saved" << std::endl;
+                        file_handling(output_file, ss_para.str()+".dat", "output", Step_total, new_total_str);
 
             if(continue_run && overwrite) remove(argv[1]);
 			exit(signal_caught);
