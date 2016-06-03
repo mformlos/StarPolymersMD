@@ -56,7 +56,7 @@ for value in Lambda:
 
 figno = 0
 for key, value in characteristics.iteritems():
-    fig = plt.figure(figno, figsize(15,10), dpi=80)
+    fig = plt.figure(figno, figsize(15,10), dpi=100)
     plt.subplot(1,1,1)
     counter = 0
     for i in range(3):
@@ -71,7 +71,7 @@ for key, value in characteristics.iteritems():
     plt.xlabel(r"$W_i$")
     plt.ylabel(value[1])
     plt.legend(loc='upper right', numpoints=1, prop={'size':24}, frameon=False)
-    fig.savefig(key+'_f'+Arms+'.pdf')
+    fig.savefig(key+'_f'+Arms+'.pdf', dpi=300)
     figno += 1
 
 
