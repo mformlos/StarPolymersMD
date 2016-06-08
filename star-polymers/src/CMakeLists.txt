@@ -23,3 +23,6 @@ target_link_libraries(mpc-test Particle Molecule Box MPC Function_Output stdc++)
 
 #add_executable(shear shear.cpp)
 #target_link_libraries(shear Particle Molecule Box Thermostat Hydrodynamics Thermostat_None Andersen AndersenStochastic MPC stdc++)
+
+add_executable(streamline_calculation streamline_calculation.cpp)
+target_link_libraries(streamline_calculation Streamlines stdc++)
