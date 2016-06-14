@@ -292,6 +292,7 @@ int main(int argc, char* argv[]) {
 	FILE* fluid_file { };
 	FILE* end_fluid_file { };
 	ofstream fluid_profile { };
+	string fluid_profile_name { };
 	string end_fluid_file_name {"./results/end_fluid"+ss_para.str()+".dat"};
 	string oldname = "./results/statistics"+ss_para_old.str()+".dat";
 	string newname = "./results/statistics"+ss_para.str()+".dat";
@@ -324,8 +325,7 @@ int main(int argc, char* argv[]) {
 		oldname = "./results/fluid_profile"+ss_para_old.str()+".dat";
 		newname = "./results/fluid_profile"+ss_para.str()+".dat";
 		if (continue_run && overwrite) rename(oldname.c_str(), newname.c_str());
-		string fluid_profile_name = newname;
-		fluid_profile.open(fluid_profile_name, ios::out | ios::trunc);
+		fluid_profile_name = newname;
 	}
 
 
@@ -372,8 +372,10 @@ int main(int argc, char* argv[]) {
 
 
     if (continue_run && MPC_on && fluid_profile_print) {
-      	velocity_average_x.initialize("./results/fluid_profile"+ss_para_old.str()+".dat");
-      	std::cout << "initialized" << std::endl;
+    	if (file_exists("./results/fluid_profile"+ss_para_old.str()+".dat")) {
+    		velocity_average_x.initialize("./results/fluid_profile"+ss_para_old.str()+".dat");
+    		std::cout << "initialized" << std::endl;
+    	}
     }
 
 	if (MPC_on) {
@@ -416,6 +418,7 @@ int main(int argc, char* argv[]) {
               
             if (MPC_on && fluid_profile_print) {
             	std::cout << "printing fluid profile..." << std::endl;
+        		fluid_profile.open(fluid_profile_name, ios::out | ios::trunc);
     		    velocity_average_x.print_result(fluid_profile);
             	file_handling(fluid_profile, ss_para.str()+".dat", "fluid_profile", Step_total, new_total_str);
             }
@@ -522,7 +525,10 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-    if (MPC_on && fluid_profile_print) velocity_average_x.print_result(fluid_profile);
+    if (MPC_on && fluid_profile_print) {
+		fluid_profile.open(fluid_profile_name, ios::out | ios::trunc);
+    	velocity_average_x.print_result(fluid_profile);
+    }
 	end_config_file = fopen(end_config_file_name.c_str(), "w");
 	box.print_PDB_with_velocity(end_config_file, Steps_Total);
     if(continue_run && overwrite) remove(argv[1]);
