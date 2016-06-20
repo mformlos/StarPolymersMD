@@ -27,22 +27,24 @@ plt.rc('font', family='serif')
 
 
 filename = str(sys.argv[1])
-Arms = filename.split("Arms")[1]
+Arms = filename.split("A")[1]
 Arms = Arms.split(".dat")[0]
 
 Lambda, Shear, N_patch, S_patch, R_gyr, S, delta, c = np.loadtxt(filename, unpack=True, usecols=(1, 2, 9, 11, 13, 39, 41, 43))
 
 characteristics = {'N_patch':[N_patch, r"$N_p$"], 'S_patch':[S_patch, r"$S_p$"], 'R_gyr':[R_gyr, r"R_{gyr}"], 'S':[S, r"$S$"], 'delta':[delta, r"$\delta$"], 'c':[c, r"$c$"]}
 
-Lamda_datapoints = np.zeros(3)
-Lambdas = np.zeros(3)
+Lamda_datapoints = np.zeros(4)
+Lambdas = np.zeros(4)
 
-Lambda_color = [12, 16, 18]
-Lambda_marker = ['s', 'D', 'o']
+Lambda_color = [12, 16, 18, 10]
+Lambda_marker = ['s', 'D', 'o', 'd']
 
 current_lambda = Lambda[0]
 Lambdas[0] = current_lambda
 i = 0
+
+print Lambda
 
 for value in Lambda:
     if value == current_lambda:
@@ -56,10 +58,10 @@ for value in Lambda:
 
 figno = 0
 for key, value in characteristics.iteritems():
-    fig = plt.figure(figno, figsize(15,10), dpi=100)
+    fig = plt.figure(figno, figsize=(15,10), dpi=100)
     plt.subplot(1,1,1)
     counter = 0
-    for i in range(3):
+    for i in range(4):
         Shear_temp = np.zeros(Lamda_datapoints[i])
         data = np.zeros(Lamda_datapoints[i])
         for j in range(int(Lamda_datapoints[i])):
@@ -67,11 +69,13 @@ for key, value in characteristics.iteritems():
             data[j] = value[0][counter]
             counter += 1
         labellam = str(Lambdas[i])
-        plt.plot(Shear_temp, data, marker=Lambda_marker[i], mew=1.5, markersize=10, lw=1.5, color=tableau20[Arm_color[i]], mec=tableau20[Arm_color[i]], label =r"$\lambda = "+labellam+"$")
+        plt.plot(Shear_temp, data, marker=Lambda_marker[i], mew=1.5, markersize=10, lw=1.5, color=tableau20[Lambda_color[i]], mec=tableau20[Lambda_color[i]], label =r"$\lambda = "+labellam+"$")
     plt.xlabel(r"$W_i$")
     plt.ylabel(value[1])
+    plt.xscale('log')
     plt.legend(loc='upper right', numpoints=1, prop={'size':24}, frameon=False)
     fig.savefig(key+'_f'+Arms+'.pdf', dpi=300)
+    plt.show()
     figno += 1
 
 

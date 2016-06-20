@@ -132,9 +132,6 @@ void Box::update_VerletLists() {
 			try  {
 				if (CellNumber[0] < 0 || CellNumber[0] >= CellSize[0] || CellNumber[1] < 0 || CellNumber[1] >= CellSize[1] || CellNumber[2] < 0 || CellNumber[2] >= CellSize[2]) {
 					std::cout << "CellNumber at update_verlet_lists out of bounds " << CellNumber[0] << " "  << CellNumber[1] << " " << CellNumber[2] << " " << mono.Position.transpose() << " " << COM_Pos.transpose() << std::endl;
-					FILE* dump_file { };
-					dump_file = fopen("core_dump.pdb", "a");
-					print_PDB_with_velocity(dump_file,0);
 					throw 1;
 				}
 				CellList[CellNumber[0]][CellNumber[1]][CellNumber[2]].push_front(&mono);

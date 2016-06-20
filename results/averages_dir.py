@@ -13,7 +13,13 @@ def sort_files(file_name):
     lam = lam[1].split('_')
     lam = lam[0]
     lam = float(lam)
-    return f+lam
+    s = file_name.split('Shear')
+    s = s[1].split('.dat')
+    s = s[0]
+    s = float(s)
+    print s
+
+    return f+lam+s
 
 
 
