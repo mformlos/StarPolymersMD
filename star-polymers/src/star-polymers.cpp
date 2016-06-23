@@ -410,7 +410,7 @@ int main(int argc, char* argv[]) {
 			if (signal_caught == 11) {
 				FILE* dump_file { };
 				dump_file = fopen("core_dump.pdb", "a");
-				fprintf(dump_file, "A %i B %i f %i Lambda %f Shear %f", TypeA, TypeB, Arms, Lambda, Shear);
+				fprintf(dump_file, "# A %i B %i f %i Lambda %f Shear %f \n", TypeA, TypeB, Arms, Lambda, Shear);
 				box.print_PDB_with_velocity(dump_file, n);
 			}
 			string Step_total = find_parameter(ss_para.str(),"run");

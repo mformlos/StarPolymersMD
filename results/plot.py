@@ -30,9 +30,9 @@ filename = str(sys.argv[1])
 Arms = filename.split("A")[1]
 Arms = Arms.split(".dat")[0]
 
-Lambda, Shear, N_patch, S_patch, R_gyr, S, delta, c = np.loadtxt(filename, unpack=True, usecols=(1, 2, 9, 11, 13, 39, 41, 43))
+Lambda, Shear, N_patch, S_patch, R_gyr, S, delta, c, m_g = np.loadtxt(filename, unpack=True, usecols=(1, 2, 9, 11, 13, 39, 41, 43, 45))
 
-characteristics = {'N_patch':[N_patch, r"$N_p$"], 'S_patch':[S_patch, r"$S_p$"], 'R_gyr':[R_gyr, r"R_{gyr}"], 'S':[S, r"$S$"], 'delta':[delta, r"$\delta$"], 'c':[c, r"$c$"]}
+characteristics = {'N_patch':[N_patch, r"$N_p$"], 'S_patch':[S_patch, r"$S_p$"], 'R_gyr':[R_gyr, r"R_{gyr}"], 'S':[S, r"$S$"], 'delta':[delta, r"$\delta$"], 'c':[c, r"$c$"], 'm_g':[m_g, r"$m_g$"]}
 
 Lamda_datapoints = np.zeros(4)
 Lambdas = np.zeros(4)
@@ -69,7 +69,7 @@ for key, value in characteristics.iteritems():
             data[j] = value[0][counter]
             counter += 1
         labellam = str(Lambdas[i])
-        plt.plot(Shear_temp, data, marker=Lambda_marker[i], mew=1.5, markersize=10, lw=1.5, color=tableau20[Lambda_color[i]], mec=tableau20[Lambda_color[i]], label =r"$\lambda = "+labellam+"$")
+        plt.plot(27856*Shear_temp, data, marker=Lambda_marker[i], mew=1.5, markersize=10, lw=1.5, color=tableau20[Lambda_color[i]], mec=tableau20[Lambda_color[i]], label =r"$\lambda = "+labellam+"$")
     plt.xlabel(r"$W_i$")
     plt.ylabel(value[1])
     plt.xscale('log')

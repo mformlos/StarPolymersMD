@@ -26,7 +26,7 @@ def sort_files(file_name):
 directory = str(sys.argv[1])
 directory = directory.replace('/', '')
 f_output = open("./averages_" + directory+".dat", "w") 
-f_output.write("#1Arms  2Lambda  3Shear  4Epot  6Ekin  8Temp  10N_patch  12S_patch 14R_gyr  16G_xx  18G_xy  20G_xz  22G_yx  24G_yy  26G_yz  28G_zx  30Gzy  32Gzz  34wx  36wy  38wz 40S 42delta 44c 46ev1 48ev2 50ev3 \n")
+f_output.write("#1Arms  2Lambda  3Shear  4Epot  6Ekin  8Temp  10N_patch  12S_patch 14R_gyr  16G_xx  18G_xy  20G_xz  22G_yx  24G_yy  26G_yz  28G_zx  30Gzy  32Gzz  34wx  36wy  38wz 40S 42delta 44c  46m_g 48ev1 50ev2 52ev3 \n")
 filenames = "./"+str(sys.argv[1])+"statistics*"
 equil = 100000000
 
@@ -36,8 +36,8 @@ if len(sys.argv) > 2:
     equil = float(sys.argv[2])
 
 for file in sorted(glob.glob(filenames), key=sort_files):
-    averages = np.zeros(21)
-    stdev = np.zeros(21)
+    averages = np.zeros(22)
+    stdev = np.zeros(22)
     gyration = np.zeros((3,3))
     N = 0
     N_patch = 0
@@ -52,7 +52,11 @@ for file in sorted(glob.glob(filenames), key=sort_files):
             for j in range(18):
                 if j == 3 and float(data[j+1]) > 0.0: 
                     N_patch += 1   
+                if float(data[j+1])>1000: 
+                    print i, line 
                 averages[j] += float(data[j+1])
+
+                   
                 #stdev[j] += np.power(float(data[j+1]),2)
             N += 1
             gyration[0,0] = float(data[7])
@@ -73,9 +77,10 @@ for file in sorted(glob.glob(filenames), key=sort_files):
             averages[18] += S  #prolateness S
             averages[19] += I_b/np.power(I_a,2) #anisotropy delta
             averages[20] += (ev[1]-ev[2])/I_a #acylindricity c
+            averages[21] += 2.*gyration[0,1]/(gyration[1,1]-gyration[0,0]) #orientational resistance
             #stdev[18] += np.power(temp, 2)
 
-    for j in range(21):
+    for j in range(22):
         if j == 4: 
             #stdev[j] = np.sqrt((1/(N_patch-1))*(stdev[j] - (1/N_patch)*np.power(averages[j],2)))
             averages[j] /= float(N_patch)
@@ -106,9 +111,10 @@ for file in sorted(glob.glob(filenames), key=sort_files):
             #print stdev[j]
             stdev[j] = np.sqrt(stdev[j]/((N-1)))
             #print stdev[j]               
-
+    
     averages[19] = 1 - 3*averages[19]
     stdev[19] *= 3
+    #averages[21] *= 27856
     stat.close()
 
    
@@ -147,7 +153,7 @@ for file in sorted(glob.glob(filenames), key=sort_files):
 
 
     f_output.write("%s %s %s" %(Arms, Lambda, Shear)) 
-    for j in range(21):
+    for j in range(22):
         f_output.write(" %f %f" %(averages[j], stdev[j]))
     for j in range(3): 
         f_output.write(" %f" %eigenvalues[j])

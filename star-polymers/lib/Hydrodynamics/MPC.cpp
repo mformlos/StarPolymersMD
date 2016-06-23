@@ -60,7 +60,8 @@ void MPC::initialize(string filename) {
 	Vector3d pos {Vector3d::Zero()};
 	Vector3d vel {Vector3d::Zero()};
 	Vector3d CMV(0., 0., 0.);
-	int count {};
+	int count_file {};
+	int count_add {};
 	for (auto& part : Fluid) {
 		if (file >> pos(0) >> pos(1) >> pos(2) >> vel(0) >> vel(1) >> vel(2)) {
 			if (fabs(round(pos(0)/BoxSize[0])) >= 1.0 || (fabs(round(pos(1)/BoxSize[1])) >= 1.0) || fabs(round(pos(2)/BoxSize[2])) >= 1.0) {
@@ -68,11 +69,12 @@ void MPC::initialize(string filename) {
 					part.Position(i) = BoxSize[i]*(Rand::real_uniform() - 0.5);
 					part.Velocity(i) = Rand::real_uniform() - 0.5;
 				}
+				count_add++;
 			}
 			else {
 				part.Position = pos;
 				part.Velocity = vel;
-				count ++;
+				count_file++;
 			}
 		}
 		else {
@@ -80,11 +82,12 @@ void MPC::initialize(string filename) {
 				part.Position(i) = BoxSize[i]*(Rand::real_uniform() - 0.5);
 				part.Velocity(i) = Rand::real_uniform() - 0.5;
 			}
+			count_add++;
 		}
 		wrap(part);
 		CMV += part.Velocity;
 	}
-	std::cout << count << std::endl;
+	std::cout << "# fluid particles from file: " << count_file << "# fluid particles added: " << count_add << std::endl;
 	CMV /= NumberOfMPCParticles;
 	for (auto& part : Fluid) {
 		part.Velocity -= CMV;
