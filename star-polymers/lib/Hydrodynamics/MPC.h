@@ -44,7 +44,7 @@ public:
 	MPC(Box&, double, int N_c, double aShear = 0., unsigned step = 1, bool angular_mom = false);
 
 	void initialize();
-	void initialize(string filename);
+	void initialize(string filename, std::array<int,3> Box_old);
 
 	//MPC routine:
 	void step(const long int& t, const double& dt);

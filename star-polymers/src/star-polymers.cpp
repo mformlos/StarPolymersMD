@@ -394,7 +394,11 @@ int main(int argc, char* argv[]) {
 	if (MPC_on) {
 		string continue_fluid {"./results/end_fluid"+ss_para_old.str()+".dat"};
 		if (file_exists(continue_fluid)) {
-			hydrodynamics.initialize(continue_fluid);
+			std::array<int,3> Box_old {};
+			Box_old[0] = stoi(find_parameter(continue_fluid, "Lx"));
+			Box_old[1] = stoi(find_parameter(continue_fluid, "Ly"));
+			Box_old[2] = stoi(find_parameter(continue_fluid, "Lz"));
+			hydrodynamics.initialize(continue_fluid, Box_old);
 			std::cout << "yeah" << std::endl;
 		}
 		else hydrodynamics.initialize(); //hydrodynamics -> initialize();

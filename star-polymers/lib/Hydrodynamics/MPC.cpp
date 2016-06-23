@@ -54,19 +54,32 @@ void MPC::initialize() {
 	}*/
 }
 
-void MPC::initialize(string filename) {
-	ifstream file {filename};
+void MPC::initialize(string filename, std::array<int,3> Box_old) {
+
+
+	fstream file {filename};
 	string line { };
 	Vector3d pos {Vector3d::Zero()};
 	Vector3d vel {Vector3d::Zero()};
 	Vector3d CMV(0., 0., 0.);
+	Vector3i Delta_Box{};
+	for (int i = 0; i < 3; i++) {
+		Delta_Box(i) = BoxSize[i]-Box_old[i];
+	}
 	int count_file {};
 	int count_add {};
 	for (auto& part : Fluid) {
 		if (file >> pos(0) >> pos(1) >> pos(2) >> vel(0) >> vel(1) >> vel(2)) {
 			if (fabs(round(pos(0)/BoxSize[0])) >= 1.0 || (fabs(round(pos(1)/BoxSize[1])) >= 1.0) || fabs(round(pos(2)/BoxSize[2])) >= 1.0) {
 				for (unsigned i = 0 ; i < 3; i++) {
-					part.Position(i) = BoxSize[i]*(Rand::real_uniform() - 0.5);
+					double rand {Rand::real_uniform()};
+					if (Delta_Box(i) > 0) {
+						if (rand < 0.5) rand = -BoxSize[i]*0.5+Delta_Box[i]*rand;
+						else rand = Box_old[i]*0.5 + Delta_Box[i]*(rand-0.5);
+					}
+					else {
+					part.Position(i) = BoxSize[i]*(rand - 0.5);
+					}
 					part.Velocity(i) = Rand::real_uniform() - 0.5;
 				}
 				count_add++;
@@ -79,7 +92,12 @@ void MPC::initialize(string filename) {
 		}
 		else {
 			for (unsigned i = 0 ; i < 3; i++) {
-				part.Position(i) = BoxSize[i]*(Rand::real_uniform() - 0.5);
+				double rand {Rand::real_uniform()};
+				if (Delta_Box(i) > 0) {
+					if (rand < 0.5) rand = -BoxSize[i]*0.5+Delta_Box[i]*rand;
+					else rand = Box_old[i]*0.5 + Delta_Box[i]*(rand-0.5);
+				}
+				else part.Position(i) = BoxSize[i]*(rand - 0.5);
 				part.Velocity(i) = Rand::real_uniform() - 0.5;
 			}
 			count_add++;
