@@ -77,9 +77,8 @@ void MPC::initialize(string filename, std::array<int,3> Box_old) {
 						if (rand < 0.5) rand = -BoxSize[i]*0.5+Delta_Box[i]*rand;
 						else rand = Box_old[i]*0.5 + Delta_Box[i]*(rand-0.5);
 					}
-					else {
-					part.Position(i) = BoxSize[i]*(rand - 0.5);
-					}
+					else rand = BoxSize[i]*(rand-0.5);
+					part.Position(i) = rand;
 					part.Velocity(i) = Rand::real_uniform() - 0.5;
 				}
 				count_add++;
@@ -97,7 +96,8 @@ void MPC::initialize(string filename, std::array<int,3> Box_old) {
 					if (rand < 0.5) rand = -BoxSize[i]*0.5+Delta_Box[i]*rand;
 					else rand = Box_old[i]*0.5 + Delta_Box[i]*(rand-0.5);
 				}
-				else part.Position(i) = BoxSize[i]*(rand - 0.5);
+				else rand = BoxSize[i]*(rand-0.5);
+				part.Position(i) = rand;
 				part.Velocity(i) = Rand::real_uniform() - 0.5;
 			}
 			count_add++;
